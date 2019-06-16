@@ -43,7 +43,7 @@ pipeline {
 
         stage ('Docker') {
             steps {
-                sh 'cp target/ramsey-mw-${VERSION}.jar target/ramsey-mw.jar
+                sh 'cp target/ramsey-mw-${VERSION}.jar target/ramsey-mw.jar'
                 sh 'echo ${VERSION} > /target/version.txt'
                 sh 'find . -ls'
                 sh 'docker build -t benferenchak/ramsey-mw:develop .'
