@@ -33,7 +33,18 @@ pipeline {
             }
         }
 
+        stage ('Docker') {
+            steps {
+                sh 'find . -ls'
+                sh 'docker build -t benferenchak/ramsey-mw:develop .'
+                withDockerRegistry([ credentialsId: "docker-hub-credentials", url: "" ]) {
+                    sh 'docker push benferenchak/ramsey-mw:develop'
+                }
+            }
+        }
+
     }
+
     post {
         success {
             mail to: 'ben.ferenchak@gmail.com',
