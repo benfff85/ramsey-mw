@@ -21,7 +21,7 @@ pipeline {
             steps {
                 script {
                     withSonarQubeEnv('SonarQube') {
-                        sh 'mvn clean sonar:sonar'
+                        sh 'mvn clean package sonar:sonar'
                     }
                 }
             }
