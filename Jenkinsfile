@@ -7,12 +7,20 @@ pipeline {
         maven 'Maven'
         jdk 'Java 10'
     }
+
+    environment {
+      IMAGE = readMavenPom().getArtifactId()
+      VERSION = readMavenPom().getVersion()
+    }
+
     stages {
         stage ('Initialize') {
             steps {
                 sh '''
                     echo "PATH = ${PATH}"
                     echo "M2_HOME = ${M2_HOME}"
+                    echo "IMAGE = ${IMAGE}"
+                    echo "VERSION = ${VERSION}"
                 '''
             }
         }
