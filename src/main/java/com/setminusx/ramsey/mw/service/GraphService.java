@@ -16,10 +16,8 @@ public class GraphService {
 
     @Autowired private GraphRepo graphRepo;
 
-    public GraphService() {}
-
-    public GraphDTO findGraphById(Integer id) {
-        Graph graph = graphRepo.findGraphById(id);
+    public GraphDTO getGraphByGraphId(Integer id) {
+        Graph graph = graphRepo.findGraphByGraphId(id);
         return mapGraphToDTO(graph);
     }
 
