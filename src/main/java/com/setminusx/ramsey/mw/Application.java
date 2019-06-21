@@ -1,4 +1,4 @@
-package com.setminusx.ramsey.mw.core;
+package com.setminusx.ramsey.mw;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

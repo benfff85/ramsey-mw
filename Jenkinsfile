@@ -25,19 +25,19 @@ pipeline {
             }
         }
 
+        stage ('Maven Compile and Package') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+
         stage('SonarQube') {
             steps {
                 script {
                     withSonarQubeEnv('SonarQube') {
-                        sh 'mvn clean package sonar:sonar'
+                        sh 'mvn sonar:sonar'
                     }
                 }
-            }
-        }
-
-        stage ('Maven Compile and Package') {
-            steps {
-                sh 'mvn clean package'
             }
         }
 

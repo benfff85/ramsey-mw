@@ -1,4 +1,4 @@
-package com.setminusx.ramsey.mw.core;
+package com.setminusx.ramsey.mw.entity;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -75,6 +75,5 @@ public class Graph {
     public void setIdentifiedDate(Date identifiedDate) {
         this.identifiedDate = identifiedDate;
     }
-
 
 }
