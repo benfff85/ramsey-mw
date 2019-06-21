@@ -24,8 +24,8 @@ public class GraphService {
     }
 
     public List<GraphDTO> getGraphsWithMinCliqueCount(int count) {
-        List<GraphDTO> graphs = new LinkedList<GraphDTO>();
-        Pageable pageable =  PageRequest.of(1,3);
+        List<GraphDTO> graphs = new LinkedList<>();
+        Pageable pageable =  PageRequest.of(1, count);
         for ( Graph graph : graphRepo.findAllByOrderByCliqueCountAsc(pageable)) {
             graphs.add(mapGraphToDTO(graph));
         }
