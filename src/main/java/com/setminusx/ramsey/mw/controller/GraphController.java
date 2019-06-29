@@ -11,7 +11,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-public class RamseyController {
+public class GraphController {
 
     @Autowired
     private GraphService graphService;
@@ -19,7 +19,7 @@ public class RamseyController {
     @GetMapping("/api/ramsey/graphs")
     public ResponseEntity<List<GraphDTO>> getGraphByType(@RequestParam() String type, @RequestParam(defaultValue = "1") String count, @RequestHeader() String rqid) {
 
-        log.info("Processing getGraphByType for rqid: " + rqid);
+        log.info("Processing getGraphByType for rqid: {}", rqid);
         if ("min".equals(type)) {
             List<GraphDTO> graphs = graphService.getGraphsWithMinCliqueCount(Integer.parseInt(count));
             return ResponseEntity.ok().body(graphs);
@@ -31,7 +31,7 @@ public class RamseyController {
     @GetMapping("/api/ramsey/graphs/{id}")
     public ResponseEntity<GraphDTO> getGraphByGraphId(@PathVariable(value = "id") Integer id, @RequestHeader() String rqid) {
 
-        log.info("Processing getGraphByGraphId for rqid: " + rqid);
+        log.info("Processing getGraphByGraphId for rqid: {}", rqid);
         GraphDTO graphDto;
         try {
             graphDto = graphService.getGraphByGraphId(id);
