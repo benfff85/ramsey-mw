@@ -33,7 +33,6 @@ public class ClientService {
         return clientRepo.findAllBySubgraphSizeAndVertexCount(subgraphSize, vertexCount).stream().map(ClientService::mapClientToDTO).collect(Collectors.toList());
     }
 
-
     private Client mapDTOToClient(ClientDTO clientDTO) {
         Client client = new Client();
         client.setClientId(clientDTO.getClientId());
