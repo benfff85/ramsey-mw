@@ -1,6 +1,8 @@
 package com.setminusx.ramsey.mw.controller;
 
 import com.setminusx.ramsey.mw.dto.ClientDTO;
+import com.setminusx.ramsey.mw.model.ClientStatus;
+import com.setminusx.ramsey.mw.model.ClientType;
 import com.setminusx.ramsey.mw.service.ClientService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +10,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static com.setminusx.ramsey.mw.utility.Constants.ERROR_HEADER;
 
 @Slf4j
 @RestController
@@ -17,52 +24,98 @@ public class ClientController {
     private ClientService clientService;
 
     @PostMapping("/api/ramsey/clients")
-    public ResponseEntity registerClient(@RequestHeader() String rqid, @RequestBody() ClientDTO clientDTO) {
+    public ResponseEntity registerClient(
+            @RequestHeader() String rqid,
+            @RequestBody() ClientDTO clientDTO) {
 
         log.info("Processing registerClient for rqid: {}", rqid);
 
         if (clientDTO.getClientId() == null) {
             log.error("Unable to save client as there is no client id");
-            return ResponseEntity.badRequest().header("Error-Description", "Client is missing an id").build();
+            return ResponseEntity.badRequest().header(ERROR_HEADER, "Client is missing an id").build();
         }
 
-        if (clientService.selectClientById(clientDTO.getClientId()) != null){
+        if (clientService.selectClientById(clientDTO.getClientId()).isPresent()) {
             log.error("Unable to register client as there is already a client with id {}", clientDTO.getClientId());
-            return ResponseEntity.badRequest().header("Error-Description", "Unable to register client as there is already a client with id " + clientDTO.getClientId()).build();
+            return ResponseEntity.badRequest().header(ERROR_HEADER, "Unable to register client as there is already a client with id " + clientDTO.getClientId()).build();
         }
 
         Date date = new Date();
         clientDTO.setCreatedDate(date);
         clientDTO.setLastPhoneHomeDate(date);
-        clientDTO.setStatus("ACTIVE");
+        clientDTO.setStatus(ClientStatus.ACTIVE);
         log.info(clientDTO.toString());
         clientService.insertClient(clientDTO);
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/api/ramsey/clients")
-    public ResponseEntity updateClient(@RequestHeader() String rqid, @RequestBody() ClientDTO clientDTO) {
+    public ResponseEntity updateClient(
+            @RequestHeader() String rqid,
+            @RequestBody() ClientDTO clientDTO) {
 
         log.info("Processing updateClient for rqid: {}", rqid);
-        log.info(clientDTO.toString());
-
 
         if (clientDTO.getClientId() == null) {
             log.error("Unable to update client as there is no client id");
-            return ResponseEntity.badRequest().header("Error-Description", "Client is missing an id").build();
+            return ResponseEntity.badRequest().header(ERROR_HEADER, "Client is missing an id").build();
         }
 
-        ClientDTO existingClientDTO = clientService.selectClientById(clientDTO.getClientId());
-        if (existingClientDTO == null){
+        Optional<ClientDTO> existingClientDTOOptional = clientService.selectClientById(clientDTO.getClientId());
+        if (!existingClientDTOOptional.isPresent()) {
             log.error("Unable to update client as there is no client with id {}", clientDTO.getClientId());
-            return ResponseEntity.badRequest().header("Error-Description", "Unable to update client as there is no client with id " + clientDTO.getClientId()).build();
+            return ResponseEntity.badRequest().header(ERROR_HEADER, "Unable to update client as there is no client with id " + clientDTO.getClientId()).build();
         }
-
-        Date date = new Date();
-        existingClientDTO.setLastPhoneHomeDate(date);
-        existingClientDTO.setStatus("ACTIVE");
+        ClientDTO existingClientDTO = existingClientDTOOptional.get();
+        existingClientDTO.setLastPhoneHomeDate(new Date());
+        existingClientDTO.setStatus(clientDTO.getStatus());
         clientService.insertClient(existingClientDTO);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/api/ramsey/clients/{id}")
+    public ResponseEntity<ClientDTO> getClientById(
+            @RequestHeader() String rqid,
+            @PathVariable() String id) {
+
+        log.info("Processing getClientById for rqid: {}", rqid);
+
+        Optional<ClientDTO> clientDTO = clientService.selectClientById(id);
+        if (!clientDTO.isPresent()) {
+            log.error("Unable to get client as there is no client with id {}", id);
+            return ResponseEntity.badRequest().header(ERROR_HEADER, "Unable to get client as there is no client with id " + id).build();
+        }
+
+        return ResponseEntity.ok().body(clientDTO.get());
+
+    }
+
+    @GetMapping("/api/ramsey/clients")
+    public ResponseEntity<List<ClientDTO>> searchForClients(
+            @RequestHeader() String rqid,
+            @RequestParam() Integer subgraphSize,
+            @RequestParam() Integer vertexCount,
+            @RequestParam(required = false) ClientType clientType,
+            @RequestParam(required = false) ClientStatus clientStatus) {
+
+        log.info("Processing searchForClients for rqid: {}", rqid);
+
+        List<ClientDTO> clients = clientService.getAll(subgraphSize, vertexCount);
+        if(clientType != null) {
+            log.info("Filtering for type: {}", clientType);
+            clients = clients.parallelStream()
+                    .filter(c -> clientType.equals(c.getType()))
+                    .collect(Collectors.toList());
+        }
+        if(clientStatus != null) {
+            log.info("Filtering for status: {}", clientStatus);
+            clients = clients.parallelStream()
+                    .filter(c -> clientStatus.equals(c.getStatus()))
+                    .collect(Collectors.toList());
+        }
+
+        return ResponseEntity.ok().body(clients);
+
     }
 
 }
