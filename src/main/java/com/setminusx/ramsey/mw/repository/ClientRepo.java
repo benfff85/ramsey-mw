@@ -7,8 +7,6 @@ import java.util.List;
 
 public interface ClientRepo extends PagingAndSortingRepository<Client, String> {
 
-    Client findClientByClientId(Integer id);
-
-    List<Client> findAllByTypeAndAndSubgraphSizeAndVertexCountAndStatus(String type, Integer subgraphSize, Integer vertexCount, String status);
+    List<Client> findAllBySubgraphSizeAndVertexCount(Integer subgraphSize, Integer vertexCount);
 
 }

@@ -1,5 +1,7 @@
 package com.setminusx.ramsey.mw.dto;
 
+import com.setminusx.ramsey.mw.model.ClientStatus;
+import com.setminusx.ramsey.mw.model.ClientType;
 import lombok.Data;
 
 import java.util.Date;
@@ -10,8 +12,8 @@ public class ClientDTO {
     private String clientId;
     private Integer subgraphSize;
     private Integer vertexCount;
-    private String type;
-    private String status;
+    private ClientType type;
+    private ClientStatus status;
     private Date createdDate;
     private Date lastPhoneHomeDate;
 
