@@ -19,10 +19,7 @@ public class ClientService {
     private ClientRepo clientRepo;
 
     public void insertClient(ClientDTO clientDTO) {
-
-        Client client = mapDTOToClient(clientDTO);
-        clientRepo.save(client);
-
+        clientRepo.save(mapDTOToClient(clientDTO));
     }
 
     public Optional<ClientDTO> selectClientById(String id) {
