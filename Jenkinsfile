@@ -5,7 +5,7 @@ pipeline {
     }
     tools {
         maven 'Maven'
-        jdk 'Java 10'
+        jdk 'Java 12'
     }
 
     environment {
