@@ -5,7 +5,7 @@ import lombok.Data;
 import java.util.Date;
 
 @Data
-public class GraphDTO {
+public class GraphDto {
 
     private Integer graphId;
     private Integer subgraphSize;

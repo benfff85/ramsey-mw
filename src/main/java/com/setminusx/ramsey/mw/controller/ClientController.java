@@ -1,6 +1,6 @@
 package com.setminusx.ramsey.mw.controller;
 
-import com.setminusx.ramsey.mw.dto.ClientDTO;
+import com.setminusx.ramsey.mw.dto.ClientDto;
 import com.setminusx.ramsey.mw.model.ClientStatus;
 import com.setminusx.ramsey.mw.model.ClientType;
 import com.setminusx.ramsey.mw.service.ClientService;
@@ -26,7 +26,7 @@ public class ClientController {
     @PostMapping("/api/ramsey/clients")
     public ResponseEntity registerClient(
             @RequestHeader() String rqid,
-            @RequestBody() ClientDTO clientDTO) {
+            @RequestBody() ClientDto clientDTO) {
 
         log.info("Processing registerClient for rqid: {}", rqid);
 
@@ -52,7 +52,7 @@ public class ClientController {
     @PutMapping("/api/ramsey/clients")
     public ResponseEntity updateClient(
             @RequestHeader() String rqid,
-            @RequestBody() ClientDTO clientDTO) {
+            @RequestBody() ClientDto clientDTO) {
 
         log.info("Processing updateClient for rqid: {}", rqid);
 
@@ -61,26 +61,26 @@ public class ClientController {
             return ResponseEntity.badRequest().header(ERROR_HEADER, "Client is missing an id").build();
         }
 
-        Optional<ClientDTO> existingClientDTOOptional = clientService.selectClientById(clientDTO.getClientId());
+        Optional<ClientDto> existingClientDTOOptional = clientService.selectClientById(clientDTO.getClientId());
         if (!existingClientDTOOptional.isPresent()) {
             log.error("Unable to update client as there is no client with id {}", clientDTO.getClientId());
             return ResponseEntity.badRequest().header(ERROR_HEADER, "Unable to update client as there is no client with id " + clientDTO.getClientId()).build();
         }
-        ClientDTO existingClientDTO = existingClientDTOOptional.get();
-        existingClientDTO.setLastPhoneHomeDate(new Date());
-        existingClientDTO.setStatus(clientDTO.getStatus());
-        clientService.insertClient(existingClientDTO);
+        ClientDto existingClientDto = existingClientDTOOptional.get();
+        existingClientDto.setLastPhoneHomeDate(new Date());
+        existingClientDto.setStatus(clientDTO.getStatus());
+        clientService.insertClient(existingClientDto);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/api/ramsey/clients/{id}")
-    public ResponseEntity<ClientDTO> getClientById(
+    public ResponseEntity<ClientDto> getClientById(
             @RequestHeader() String rqid,
             @PathVariable() String id) {
 
         log.info("Processing getClientById for rqid: {}", rqid);
 
-        Optional<ClientDTO> clientDTO = clientService.selectClientById(id);
+        Optional<ClientDto> clientDTO = clientService.selectClientById(id);
         if (!clientDTO.isPresent()) {
             log.error("Unable to get client as there is no client with id {}", id);
             return ResponseEntity.badRequest().header(ERROR_HEADER, "Unable to get client as there is no client with id " + id).build();
@@ -91,7 +91,7 @@ public class ClientController {
     }
 
     @GetMapping("/api/ramsey/clients")
-    public ResponseEntity<List<ClientDTO>> searchForClients(
+    public ResponseEntity<List<ClientDto>> searchForClients(
             @RequestHeader() String rqid,
             @RequestParam() Integer subgraphSize,
             @RequestParam() Integer vertexCount,
@@ -100,7 +100,7 @@ public class ClientController {
 
         log.info("Processing searchForClients for rqid: {}", rqid);
 
-        List<ClientDTO> clients = clientService.getAll(subgraphSize, vertexCount);
+        List<ClientDto> clients = clientService.getAll(subgraphSize, vertexCount);
         if(clientType != null) {
             log.info("Filtering for type: {}", clientType);
             clients = clients.parallelStream()

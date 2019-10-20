@@ -1,6 +1,6 @@
 package com.setminusx.ramsey.mw.controller;
 
-import com.setminusx.ramsey.mw.dto.GraphDTO;
+import com.setminusx.ramsey.mw.dto.GraphDto;
 import com.setminusx.ramsey.mw.service.GraphService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,14 +19,14 @@ public class GraphController {
     private GraphService graphService;
 
     @GetMapping("/api/ramsey/graphs")
-    public ResponseEntity<List<GraphDTO>> getGraphByType(
+    public ResponseEntity<List<GraphDto>> getGraphByType(
             @RequestParam() String type,
             @RequestParam(defaultValue = "1") String count,
             @RequestHeader() String rqid) {
 
         log.info("Processing getGraphByType for rqid: {}", rqid);
         if ("min".equals(type)) {
-            List<GraphDTO> graphs = graphService.getGraphsWithMinCliqueCount(Integer.parseInt(count));
+            List<GraphDto> graphs = graphService.getGraphsWithMinCliqueCount(Integer.parseInt(count));
             return ResponseEntity.ok().body(graphs);
         }
         return ResponseEntity.badRequest().header(ERROR_HEADER, "Invalid type: " + type).build();
@@ -34,12 +34,12 @@ public class GraphController {
     }
 
     @GetMapping("/api/ramsey/graphs/{id}")
-    public ResponseEntity<GraphDTO> getGraphByGraphId(
+    public ResponseEntity<GraphDto> getGraphByGraphId(
             @PathVariable() Integer id,
             @RequestHeader() String rqid) {
 
         log.info("Processing getGraphByGraphId for rqid: {}", rqid);
-        GraphDTO graphDto;
+        GraphDto graphDto;
         try {
             graphDto = graphService.getGraphByGraphId(id);
         } catch (Exception e) {
@@ -47,6 +47,15 @@ public class GraphController {
         }
         return ResponseEntity.ok().body(graphDto);
 
+    }
+
+    @PutMapping("/api/ramsey/graphs")
+    public ResponseEntity publishGraph(
+            @RequestBody GraphDto graph,
+            @RequestHeader() String rqid) {
+        log.info("Processing publishGraph for rqid: {}", rqid);
+        graphService.publishGraph(graph);
+        return ResponseEntity.ok().build();
     }
 
 }
