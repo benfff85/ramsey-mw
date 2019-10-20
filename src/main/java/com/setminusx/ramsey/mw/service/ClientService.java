@@ -1,6 +1,6 @@
 package com.setminusx.ramsey.mw.service;
 
-import com.setminusx.ramsey.mw.dto.ClientDTO;
+import com.setminusx.ramsey.mw.dto.ClientDto;
 import com.setminusx.ramsey.mw.entity.Client;
 import com.setminusx.ramsey.mw.model.ClientStatus;
 import com.setminusx.ramsey.mw.model.ClientType;
@@ -18,19 +18,19 @@ public class ClientService {
     @Autowired
     private ClientRepo clientRepo;
 
-    public void insertClient(ClientDTO clientDTO) {
+    public void insertClient(ClientDto clientDTO) {
         clientRepo.save(mapDTOToClient(clientDTO));
     }
 
-    public Optional<ClientDTO> selectClientById(String id) {
+    public Optional<ClientDto> selectClientById(String id) {
         return clientRepo.findById(id).map(ClientService::mapClientToDTO);
     }
 
-    public List<ClientDTO> getAll(Integer subgraphSize, Integer vertexCount) {
+    public List<ClientDto> getAll(Integer subgraphSize, Integer vertexCount) {
         return clientRepo.findAllBySubgraphSizeAndVertexCount(subgraphSize, vertexCount).stream().map(ClientService::mapClientToDTO).collect(Collectors.toList());
     }
 
-    private Client mapDTOToClient(ClientDTO clientDTO) {
+    private Client mapDTOToClient(ClientDto clientDTO) {
         Client client = new Client();
         client.setClientId(clientDTO.getClientId());
         client.setSubgraphSize(clientDTO.getSubgraphSize());
@@ -43,8 +43,8 @@ public class ClientService {
     }
 
 
-    private static ClientDTO mapClientToDTO(Client client) {
-        ClientDTO clientDTO = new ClientDTO();
+    private static ClientDto mapClientToDTO(Client client) {
+        ClientDto clientDTO = new ClientDto();
         clientDTO.setClientId(client.getClientId());
         clientDTO.setSubgraphSize(client.getSubgraphSize());
         clientDTO.setVertexCount(client.getVertexCount());

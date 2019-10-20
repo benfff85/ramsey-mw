@@ -7,7 +7,7 @@ import lombok.Data;
 import java.util.Date;
 
 @Data
-public class ClientDTO {
+public class ClientDto {
 
     private String clientId;
     private Integer subgraphSize;
