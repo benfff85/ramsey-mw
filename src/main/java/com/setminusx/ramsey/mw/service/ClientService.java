@@ -2,8 +2,6 @@ package com.setminusx.ramsey.mw.service;
 
 import com.setminusx.ramsey.mw.dto.ClientDto;
 import com.setminusx.ramsey.mw.entity.Client;
-import com.setminusx.ramsey.mw.model.ClientStatus;
-import com.setminusx.ramsey.mw.model.ClientType;
 import com.setminusx.ramsey.mw.repository.ClientRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,8 +33,8 @@ public class ClientService {
         client.setClientId(clientDTO.getClientId());
         client.setSubgraphSize(clientDTO.getSubgraphSize());
         client.setVertexCount(clientDTO.getVertexCount());
-        client.setStatus(clientDTO.getStatus().toString());
-        client.setType(clientDTO.getType().toString());
+        client.setStatus(clientDTO.getStatus());
+        client.setType(clientDTO.getType());
         client.setCreatedDate(clientDTO.getCreatedDate());
         client.setLastPhoneHomeDate(clientDTO.getLastPhoneHomeDate());
         return client;
@@ -48,8 +46,8 @@ public class ClientService {
         clientDTO.setClientId(client.getClientId());
         clientDTO.setSubgraphSize(client.getSubgraphSize());
         clientDTO.setVertexCount(client.getVertexCount());
-        clientDTO.setStatus(ClientStatus.valueOf(client.getStatus()));
-        clientDTO.setType(ClientType.valueOf(client.getType()));
+        clientDTO.setStatus(client.getStatus());
+        clientDTO.setType(client.getType());
         clientDTO.setCreatedDate(client.getCreatedDate());
         clientDTO.setLastPhoneHomeDate(client.getLastPhoneHomeDate());
         return clientDTO;

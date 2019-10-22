@@ -1,8 +1,12 @@
 package com.setminusx.ramsey.mw.entity;
 
+import com.setminusx.ramsey.mw.model.ClientStatus;
+import com.setminusx.ramsey.mw.model.ClientType;
 import lombok.Data;
 
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import java.util.Date;
 
@@ -14,8 +18,13 @@ public class Client {
     private String clientId;
     private Integer subgraphSize;
     private Integer vertexCount;
-    private String type;
-    private String status;
+
+    @Enumerated(EnumType.STRING)
+    private ClientType type;
+
+    @Enumerated(EnumType.STRING)
+    private ClientStatus status;
+
     private Date createdDate;
     private Date lastPhoneHomeDate;
 
