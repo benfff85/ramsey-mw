@@ -62,7 +62,7 @@ public class ClientController {
         }
 
         Optional<ClientDto> existingClientDTOOptional = clientService.selectClientById(clientDTO.getClientId());
-        if (existingClientDTOOptional.isEmpty()) {
+        if (!existingClientDTOOptional.isPresent()) {
             log.error("Unable to update client as there is no client with id {}", clientDTO.getClientId());
             return ResponseEntity.badRequest().header(ERROR_HEADER, "Unable to update client as there is no client with id " + clientDTO.getClientId()).build();
         }
@@ -81,7 +81,7 @@ public class ClientController {
         log.info("Processing getClientById for rqid: {}", rqid);
 
         Optional<ClientDto> clientDTO = clientService.selectClientById(id);
-        if (clientDTO.isEmpty()) {
+        if (!clientDTO.isPresent()) {
             log.error("Unable to get client as there is no client with id {}", id);
             return ResponseEntity.badRequest().header(ERROR_HEADER, "Unable to get client as there is no client with id " + id).build();
         }
