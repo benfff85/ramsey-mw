@@ -11,6 +11,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,8 +25,17 @@ public class WorkUnitService {
     @Value("${ramsey.work-unit.page-size.default}")
     private Integer defaultPageSize;
 
-    public void insertWorkUnit(WorkUnitDto workUnitDto) {
-        workUnitRepo.save(mapDTOToWorkUnit(workUnitDto));
+    public List<WorkUnitDto> insertWorkUnits(List<WorkUnitDto> workUnitDtos) {
+
+        List<WorkUnit> workUnits = workUnitDtos.stream().map(WorkUnitService::mapDTOToWorkUnit).collect(Collectors.toList());
+        Iterable<WorkUnit> createdWorkUnits = workUnitRepo.saveAll(workUnits);
+
+        List<WorkUnitDto> createdWorkUnitDtos = new ArrayList<>();
+        for (WorkUnit workUnit : createdWorkUnits) {
+            createdWorkUnitDtos.add(mapWorkUnitToDTO(workUnit));
+        }
+
+        return createdWorkUnitDtos;
     }
 
     public List<WorkUnitDto> getAll(WorkUnitStatus status, Integer vertexCount, Integer subgraphSize, Integer pageSize) {
@@ -32,12 +43,15 @@ public class WorkUnitService {
         return workUnitRepo.findAllBySubgraphSizeAndVertexCountAndStatus(subgraphSize, vertexCount, status, pageable).stream().map(WorkUnitService::mapWorkUnitToDTO).collect(Collectors.toList());
     }
 
-    public List<WorkUnitDto> getAllWithAssignment(WorkUnitStatus status, Integer vertexCount, Integer subgraphSize, String clientId, Integer pageSize) {
+    public List<WorkUnitDto> assignWorkUnit(Integer vertexCount, Integer subgraphSize, String clientId, Integer pageSize) {
         Pageable pageable = PageRequest.of(0, ObjectUtils.defaultIfNull(pageSize, defaultPageSize));
-        List<WorkUnit> workUnits = workUnitRepo.findAllBySubgraphSizeAndVertexCountAndStatus(subgraphSize, vertexCount, status, pageable);
+        Date date = new Date();
+        List<WorkUnit> workUnits = workUnitRepo.findAllBySubgraphSizeAndVertexCountAndStatus(subgraphSize, vertexCount, WorkUnitStatus.NEW, pageable);
+
         for (WorkUnit workUnit : workUnits) {
             workUnit.setAssignedClient(clientId);
             workUnit.setStatus(WorkUnitStatus.ASSIGNED);
+            workUnit.setAssignedDate(date);
         }
         workUnitRepo.saveAll(workUnits);
         return workUnits.stream().map(WorkUnitService::mapWorkUnitToDTO).collect(Collectors.toList());

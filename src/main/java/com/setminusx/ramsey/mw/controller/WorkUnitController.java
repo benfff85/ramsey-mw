@@ -12,8 +12,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Date;
 import java.util.List;
 
-import static com.setminusx.ramsey.mw.utility.Constants.ERROR_HEADER;
-
 @Slf4j
 @RestController
 public class WorkUnitController {
@@ -22,49 +20,58 @@ public class WorkUnitController {
     private WorkUnitService workUnitService;
 
     @PostMapping("/api/ramsey/work-units")
-    public ResponseEntity registerWorkUnit(
-            @RequestBody() WorkUnitDto workUnitDto) {
+    public ResponseEntity postWorkUnit(
+            @RequestParam(required = false) Integer vertexCount,
+            @RequestParam(required = false) Integer subgraphSize,
+            @RequestParam(required = false) String clientId,
+            @RequestParam(required = false) Integer pageSize,
+            @RequestBody(required = false) List<WorkUnitDto> workUnitsToCreate) {
 
-        log.info("Processing registerWorkUnit");
-        Date date = new Date();
-        workUnitDto.setCreatedDate(date);
-        workUnitDto.setAssignedDate(null);
-        workUnitDto.setCompletedDate(null);
-        workUnitDto.setProcessingStartedDate(null);
-        workUnitDto.setStatus(WorkUnitStatus.NEW);
-        workUnitDto.setCliqueCount(null);
-        workUnitDto.setAssignedClient(null);
-        workUnitDto.setPriority(WorkUnitPriority.MEDIUM);
-        log.info(workUnitDto.toString());
-        workUnitService.insertWorkUnit(workUnitDto);
-        log.info("Completed registerWorkUnit");
+        log.info("Processing postWorkUnit");
 
-        return ResponseEntity.ok().build();
+        List<WorkUnitDto> workUnits = null;
+
+        if (workUnitsToCreate != null) {
+            log.info("Posting work units");
+            Date date = new Date();
+            for (WorkUnitDto workUnitDto : workUnitsToCreate) {
+                log.debug("New work unit; setting default values");
+                if (workUnitDto.getId() == null) {
+                    workUnitDto.setCreatedDate(date);
+                    workUnitDto.setAssignedDate(null);
+                    workUnitDto.setCompletedDate(null);
+                    workUnitDto.setProcessingStartedDate(null);
+                    workUnitDto.setStatus(WorkUnitStatus.NEW);
+                    workUnitDto.setCliqueCount(null);
+                    workUnitDto.setAssignedClient(null);
+                    workUnitDto.setPriority(WorkUnitPriority.MEDIUM);
+                }
+            }
+            workUnits = workUnitService.insertWorkUnits(workUnitsToCreate);
+            log.info("Work units posted");
+        } else {
+            log.info("Assigning work units");
+            workUnits = workUnitService.assignWorkUnit(vertexCount, subgraphSize, clientId, pageSize);
+            log.info("Work units assigned");
+        }
+
+        log.info("Completed postWorkUnit");
+        return ResponseEntity.ok().body(workUnits);
+
     }
+
 
     @GetMapping("/api/ramsey/work-units")
     public ResponseEntity fetchWorkUnit(
             @RequestParam(required = false) WorkUnitStatus status,
             @RequestParam(required = false) Integer vertexCount,
             @RequestParam(required = false) Integer subgraphSize,
-            @RequestParam(required = false) boolean triggerAssignment,
-            @RequestParam(required = false) String clientId,
             @RequestParam(required = false) Integer pageSize) {
 
         log.info("Processing fetchWorkUnit");
 
-        List<WorkUnitDto> workUnits;
+        List<WorkUnitDto> workUnits = workUnitService.getAll(status, vertexCount, subgraphSize, pageSize);
 
-        if (triggerAssignment) {
-            if (clientId == null) {
-                log.error("Assignment of work units requested but no client id provided");
-                return ResponseEntity.badRequest().header(ERROR_HEADER, "Assignment of work units requested but no client id provided").build();
-            }
-            log.info("Assigning queried work units to client {}", clientId);
-            workUnits = workUnitService.getAllWithAssignment(status, vertexCount, subgraphSize, clientId, pageSize);
-        }  else {
-            workUnits = workUnitService.getAll(status, vertexCount, subgraphSize, pageSize);
-        }
         log.info("Completed fetchWorkUnit");
         return ResponseEntity.ok().body(workUnits);
 
