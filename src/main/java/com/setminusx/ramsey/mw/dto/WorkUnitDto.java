@@ -1,6 +1,7 @@
 package com.setminusx.ramsey.mw.dto;
 
 import com.setminusx.ramsey.mw.entity.Edge;
+import com.setminusx.ramsey.mw.model.WorkUnitPriority;
 import com.setminusx.ramsey.mw.model.WorkUnitStatus;
 import lombok.Data;
 
@@ -19,7 +20,9 @@ public class WorkUnitDto {
     private Integer cliqueCount;
     private Date createdDate;
     private Date assignedDate;
+    private Date processingStartedDate;
     private Date completedDate;
     private String assignedClient;
+    private WorkUnitPriority priority;
 
 }

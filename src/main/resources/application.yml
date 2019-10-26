@@ -1,0 +1,9 @@
+logging:
+  pattern:
+    level: "[%X{rqid}]%5p"
+
+ramsey:
+  work-unit:
+    page-size:
+      default: 5
+      max: 500
