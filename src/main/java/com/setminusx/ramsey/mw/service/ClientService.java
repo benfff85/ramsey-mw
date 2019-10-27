@@ -16,11 +16,12 @@ public class ClientService {
     @Autowired
     private ClientRepo clientRepo;
 
-    public void insertClient(ClientDto clientDTO) {
-        clientRepo.save(mapDTOToClient(clientDTO));
+    public ClientDto insertClient(ClientDto clientDTO) {
+        Client client = clientRepo.save(mapDTOToClient(clientDTO));
+        return mapClientToDTO(client);
     }
 
-    public Optional<ClientDto> selectClientById(String id) {
+    public Optional<ClientDto> selectClientById(Integer id) {
         return clientRepo.findById(id).map(ClientService::mapClientToDTO);
     }
 

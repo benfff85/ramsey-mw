@@ -4,10 +4,7 @@ import com.setminusx.ramsey.mw.model.ClientStatus;
 import com.setminusx.ramsey.mw.model.ClientType;
 import lombok.Data;
 
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.util.Date;
 
 @Data
@@ -15,7 +12,8 @@ import java.util.Date;
 public class Client {
 
     @Id
-    private String clientId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer clientId;
     private Integer subgraphSize;
     private Integer vertexCount;
 

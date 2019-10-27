@@ -29,24 +29,14 @@ public class ClientController {
 
         log.info("Processing registerClient");
 
-        if (clientDTO.getClientId() == null) {
-            log.error("Unable to save client as there is no client id");
-            return ResponseEntity.badRequest().header(ERROR_HEADER, "Client is missing an id").build();
-        }
-
-        if (clientService.selectClientById(clientDTO.getClientId()).isPresent()) {
-            log.error("Unable to register client as there is already a client with id {}", clientDTO.getClientId());
-            return ResponseEntity.badRequest().header(ERROR_HEADER, "Unable to register client as there is already a client with id " + clientDTO.getClientId()).build();
-        }
-
         Date date = new Date();
         clientDTO.setCreatedDate(date);
         clientDTO.setLastPhoneHomeDate(date);
         clientDTO.setStatus(ClientStatus.ACTIVE);
         log.info(clientDTO.toString());
-        clientService.insertClient(clientDTO);
+        ClientDto createdClient = clientService.insertClient(clientDTO);
         log.info("Completed registerClient");
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok().body(createdClient);
     }
 
     @PutMapping("/api/ramsey/clients")
@@ -76,7 +66,7 @@ public class ClientController {
 
     @GetMapping("/api/ramsey/clients/{id}")
     public ResponseEntity<ClientDto> getClientById(
-            @PathVariable() String id) {
+            @PathVariable() Integer id) {
 
         log.info("Processing getClientById");
 
