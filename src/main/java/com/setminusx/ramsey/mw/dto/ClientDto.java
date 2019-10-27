@@ -9,7 +9,7 @@ import java.util.Date;
 @Data
 public class ClientDto {
 
-    private String clientId;
+    private Integer clientId;
     private Integer subgraphSize;
     private Integer vertexCount;
     private ClientType type;

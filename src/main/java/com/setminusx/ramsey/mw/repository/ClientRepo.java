@@ -5,7 +5,7 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 
 import java.util.List;
 
-public interface ClientRepo extends PagingAndSortingRepository<Client, String> {
+public interface ClientRepo extends PagingAndSortingRepository<Client, Integer> {
 
     List<Client> findAllBySubgraphSizeAndVertexCount(Integer subgraphSize, Integer vertexCount);
 

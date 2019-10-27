@@ -21,40 +21,42 @@ public class GraphController {
     @GetMapping("/api/ramsey/graphs")
     public ResponseEntity<List<GraphDto>> getGraphByType(
             @RequestParam() String type,
-            @RequestParam(defaultValue = "1") String count,
-            @RequestHeader() String rqid) {
+            @RequestParam(defaultValue = "1") String count) {
 
-        log.info("Processing getGraphByType for rqid: {}", rqid);
+        log.info("Processing getGraphByType");
+        List<GraphDto> graphs;
         if ("min".equals(type)) {
-            List<GraphDto> graphs = graphService.getGraphsWithMinCliqueCount(Integer.parseInt(count));
-            return ResponseEntity.ok().body(graphs);
+            graphs = graphService.getGraphsWithMinCliqueCount(Integer.parseInt(count));
+        } else {
+            return ResponseEntity.badRequest().header(ERROR_HEADER, "Invalid type: " + type).build();
         }
-        return ResponseEntity.badRequest().header(ERROR_HEADER, "Invalid type: " + type).build();
-
+        log.info("Completed getGraphByType");
+        return ResponseEntity.ok().body(graphs);
     }
 
     @GetMapping("/api/ramsey/graphs/{id}")
     public ResponseEntity<GraphDto> getGraphByGraphId(
-            @PathVariable() Integer id,
-            @RequestHeader() String rqid) {
+            @PathVariable() Integer id) {
 
-        log.info("Processing getGraphByGraphId for rqid: {}", rqid);
+        log.info("Processing getGraphByGraphId");
         GraphDto graphDto;
         try {
             graphDto = graphService.getGraphByGraphId(id);
         } catch (Exception e) {
             return ResponseEntity.notFound().header(ERROR_HEADER, "Graph with ID " + id + " not found").build();
         }
+        log.info("Completed getGraphByGraphId");
         return ResponseEntity.ok().body(graphDto);
 
     }
 
     @PutMapping("/api/ramsey/graphs")
     public ResponseEntity publishGraph(
-            @RequestBody GraphDto graph,
-            @RequestHeader() String rqid) {
-        log.info("Processing publishGraph for rqid: {}", rqid);
+            @RequestBody GraphDto graph) {
+
+        log.info("Processing publishGraph");
         graphService.publishGraph(graph);
+        log.info("Completed publishGraph");
         return ResponseEntity.ok().build();
     }
 

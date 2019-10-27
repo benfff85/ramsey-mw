@@ -1,0 +1,18 @@
+logging:
+  level:
+    root: DEBUG
+  pattern:
+    level: "%clr([%X{rqid}]){blue} %clr(%5p){green}"
+
+ramsey:
+  work-unit:
+    page-size:
+      default: 5
+      max: 500
+
+spring:
+  jpa:
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 500
