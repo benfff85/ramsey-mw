@@ -2,10 +2,7 @@ package com.setminusx.ramsey.mw.entity;
 
 import lombok.Data;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.util.Date;
 
 @Data
@@ -17,6 +14,8 @@ public class Graph {
     private Integer graphId;
     private Integer subgraphSize;
     private Integer vertexCount;
+    @Lob
+    @Column(length = 41328)
     private String edgeData;
     private Integer cliqueCount;
     private Date identifiedDate;
