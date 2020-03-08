@@ -4,17 +4,13 @@ import com.setminusx.ramsey.mw.dto.GraphDto;
 import com.setminusx.ramsey.mw.service.GraphService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.annotation.PostConstruct;
-import java.util.List;
+
+import static java.util.Objects.nonNull;
 
 @Slf4j
 
@@ -38,15 +34,13 @@ public class TestDataConfig {
                 .queryParam("count", 5)
                 .toUriString();
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("rqid", "1");
-        HttpEntity httpEntity = new HttpEntity(headers);
         RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<List<GraphDto>> response = restTemplate.exchange(graphUri, HttpMethod.GET, httpEntity, new ParameterizedTypeReference<List<GraphDto>>() {});
-        List<GraphDto> graphs = response.getBody();
+        GraphDto[] graphs = restTemplate.getForObject(graphUri, GraphDto[].class);
 
-        for (GraphDto graph : graphs) {
-            graphService.publishGraph(graph);
+        if (nonNull(graphs)) {
+            for (GraphDto graph : graphs) {
+                graphService.publishGraph(graph);
+            }
         }
     }
 
