@@ -3,7 +3,6 @@ package com.setminusx.ramsey.mw.config;
 import com.setminusx.ramsey.mw.dto.GraphDto;
 import com.setminusx.ramsey.mw.service.GraphService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -23,8 +22,11 @@ import java.util.List;
 @Profile("local")
 public class TestDataConfig {
 
-    @Autowired
-    GraphService graphService;
+    private GraphService graphService;
+
+    public TestDataConfig(GraphService graphService) {
+        this.graphService = graphService;
+    }
 
     @PostConstruct
     private void init() {

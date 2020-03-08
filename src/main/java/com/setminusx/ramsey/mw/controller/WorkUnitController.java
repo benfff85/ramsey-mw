@@ -48,7 +48,7 @@ public class WorkUnitController {
                 }
             }
             workUnits = workUnitService.insertWorkUnits(workUnitsToCreate);
-            log.info("Work units posted");
+            log.info("Work units posted, count: {}", workUnits.size());
         } else {
             log.info("Assigning work units");
             workUnits = workUnitService.assignWorkUnit(vertexCount, subgraphSize, clientId, pageSize);
