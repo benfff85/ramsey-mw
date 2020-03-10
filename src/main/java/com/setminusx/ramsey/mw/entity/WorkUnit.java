@@ -2,6 +2,7 @@ package com.setminusx.ramsey.mw.entity;
 
 import com.setminusx.ramsey.mw.model.WorkUnitPriority;
 import com.setminusx.ramsey.mw.model.WorkUnitStatus;
+import com.setminusx.ramsey.mw.utility.EdgeListConverter;
 import lombok.Data;
 
 import javax.persistence.*;
@@ -19,7 +20,7 @@ public class WorkUnit {
     private Integer vertexCount;
     private Integer baseGraphId;
 
-    @ElementCollection
+    @Convert(converter = EdgeListConverter.class)
     private List<Edge> edgesToFlip;
 
     @Enumerated(EnumType.STRING)
