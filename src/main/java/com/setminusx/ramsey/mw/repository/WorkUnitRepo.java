@@ -11,4 +11,6 @@ public interface WorkUnitRepo extends PagingAndSortingRepository<WorkUnit, Strin
 
     List<WorkUnit> findAllBySubgraphSizeAndVertexCountAndStatus(Integer subgraphSize, Integer vertexCount, WorkUnitStatus workUnitStatus, Pageable pageable);
 
+    List<WorkUnit> findAllBySubgraphSizeAndVertexCountAndStatusAndAssignedClient(Integer subgraphSize, Integer vertexCount, WorkUnitStatus workUnitStatus, String assignedClient, Pageable pageable);
+
 }

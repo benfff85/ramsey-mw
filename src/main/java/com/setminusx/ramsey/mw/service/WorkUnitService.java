@@ -12,7 +12,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,7 +24,7 @@ public class WorkUnitService {
     @Value("${ramsey.work-unit.page-size.default}")
     private Integer defaultPageSize;
 
-    public List<WorkUnitDto> insertWorkUnits(List<WorkUnitDto> workUnitDtos) {
+    public List<WorkUnitDto> saveAll(List<WorkUnitDto> workUnitDtos) {
 
         List<WorkUnit> workUnits = workUnitDtos.stream().map(WorkUnitService::mapDTOToWorkUnit).collect(Collectors.toList());
         Iterable<WorkUnit> createdWorkUnits = workUnitRepo.saveAll(workUnits);
@@ -39,24 +38,13 @@ public class WorkUnitService {
     }
 
     public List<WorkUnitDto> getAll(WorkUnitStatus status, Integer vertexCount, Integer subgraphSize, Integer pageSize) {
-                Pageable pageable = PageRequest.of(0, ObjectUtils.defaultIfNull(pageSize, defaultPageSize));
-        return workUnitRepo.findAllBySubgraphSizeAndVertexCountAndStatus(subgraphSize, vertexCount, status, pageable).stream().map(WorkUnitService::mapWorkUnitToDTO).collect(Collectors.toList());
+        return workUnitRepo.findAllBySubgraphSizeAndVertexCountAndStatus(subgraphSize, vertexCount, status, getPageable(pageSize)).stream().map(WorkUnitService::mapWorkUnitToDTO).collect(Collectors.toList());
     }
 
-    public List<WorkUnitDto> assignWorkUnit(Integer vertexCount, Integer subgraphSize, String clientId, Integer pageSize) {
-        Pageable pageable = PageRequest.of(0, ObjectUtils.defaultIfNull(pageSize, defaultPageSize));
-        Date date = new Date();
-        List<WorkUnit> workUnits = workUnitRepo.findAllBySubgraphSizeAndVertexCountAndStatus(subgraphSize, vertexCount, WorkUnitStatus.NEW, pageable);
-
-        for (WorkUnit workUnit : workUnits) {
-            workUnit.setAssignedClient(clientId);
-            workUnit.setStatus(WorkUnitStatus.ASSIGNED);
-            workUnit.setAssignedDate(date);
-        }
-        workUnitRepo.saveAll(workUnits);
-        return workUnits.stream().map(WorkUnitService::mapWorkUnitToDTO).collect(Collectors.toList());
-
+    public List<WorkUnitDto> getAllAssignedToClient(WorkUnitStatus status, Integer vertexCount, Integer subgraphSize, String assignedClientId, Integer pageSize) {
+        return workUnitRepo.findAllBySubgraphSizeAndVertexCountAndStatusAndAssignedClient(subgraphSize, vertexCount, status, assignedClientId, getPageable(pageSize)).stream().map(WorkUnitService::mapWorkUnitToDTO).collect(Collectors.toList());
     }
+
 
     private static WorkUnit mapDTOToWorkUnit(WorkUnitDto workUnitDto) {
         WorkUnit workUnit = new WorkUnit();
@@ -92,6 +80,10 @@ public class WorkUnitService {
         workUnitDto.setAssignedClient(workUnit.getAssignedClient());
         workUnitDto.setPriority(workUnit.getPriority());
         return workUnitDto;
+    }
+
+    private Pageable getPageable(Integer pageSize) {
+        return PageRequest.of(0, ObjectUtils.defaultIfNull(pageSize, defaultPageSize));
     }
 
 }
