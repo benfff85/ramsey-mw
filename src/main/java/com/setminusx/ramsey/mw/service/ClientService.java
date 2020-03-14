@@ -2,8 +2,8 @@ package com.setminusx.ramsey.mw.service;
 
 import com.setminusx.ramsey.mw.dto.ClientDto;
 import com.setminusx.ramsey.mw.entity.Client;
+import com.setminusx.ramsey.mw.model.ClientStatus;
 import com.setminusx.ramsey.mw.repository.ClientRepo;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,8 +13,11 @@ import java.util.stream.Collectors;
 @Service
 public class ClientService {
 
-    @Autowired
     private ClientRepo clientRepo;
+
+    public ClientService(ClientRepo clientRepo) {
+        this.clientRepo = clientRepo;
+    }
 
     public ClientDto insertClient(ClientDto clientDTO) {
         Client client = clientRepo.save(mapDTOToClient(clientDTO));
@@ -25,8 +28,8 @@ public class ClientService {
         return clientRepo.findById(id).map(ClientService::mapClientToDTO);
     }
 
-    public List<ClientDto> getAll(Integer subgraphSize, Integer vertexCount) {
-        return clientRepo.findAllBySubgraphSizeAndVertexCount(subgraphSize, vertexCount).stream().map(ClientService::mapClientToDTO).collect(Collectors.toList());
+    public List<ClientDto> getAll(Integer subgraphSize, Integer vertexCount, ClientStatus clientStatus) {
+        return clientRepo.findAllBySubgraphSizeAndVertexCountAndStatus(subgraphSize, vertexCount, clientStatus).stream().map(ClientService::mapClientToDTO).collect(Collectors.toList());
     }
 
     private Client mapDTOToClient(ClientDto clientDTO) {

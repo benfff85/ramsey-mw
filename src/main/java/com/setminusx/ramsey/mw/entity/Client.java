@@ -5,7 +5,7 @@ import com.setminusx.ramsey.mw.model.ClientType;
 import lombok.Data;
 
 import javax.persistence.*;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @Entity
@@ -23,7 +23,7 @@ public class Client {
     @Enumerated(EnumType.STRING)
     private ClientStatus status;
 
-    private Date createdDate;
-    private Date lastPhoneHomeDate;
+    private LocalDateTime createdDate;
+    private LocalDateTime lastPhoneHomeDate;
 
 }
