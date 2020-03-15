@@ -5,7 +5,6 @@ import com.setminusx.ramsey.mw.entity.WorkUnit;
 import com.setminusx.ramsey.mw.model.WorkUnitStatus;
 import com.setminusx.ramsey.mw.repository.WorkUnitRepo;
 import org.apache.commons.lang3.ObjectUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,11 +17,15 @@ import java.util.stream.Collectors;
 @Service
 public class WorkUnitService {
 
-    @Autowired
-    private WorkUnitRepo workUnitRepo;
-
     @Value("${ramsey.work-unit.page-size.default}")
     private Integer defaultPageSize;
+
+    private WorkUnitRepo workUnitRepo;
+
+
+    public WorkUnitService(WorkUnitRepo workUnitRepo) {
+        this.workUnitRepo = workUnitRepo;
+    }
 
     public List<WorkUnitDto> saveAll(List<WorkUnitDto> workUnitDtos) {
 
@@ -45,6 +48,9 @@ public class WorkUnitService {
         return workUnitRepo.findAllBySubgraphSizeAndVertexCountAndStatusAndAssignedClient(subgraphSize, vertexCount, status, assignedClientId, getPageable(pageSize)).stream().map(WorkUnitService::mapWorkUnitToDTO).collect(Collectors.toList());
     }
 
+    public List<WorkUnitDto> getMostRecentForGraphId(Integer graphId) {
+        return workUnitRepo.findAllByBaseGraphIdOrderByIdDesc(graphId, getPageable(1)).stream().map(WorkUnitService::mapWorkUnitToDTO).collect(Collectors.toList());
+    }
 
     private static WorkUnit mapDTOToWorkUnit(WorkUnitDto workUnitDto) {
         WorkUnit workUnit = new WorkUnit();

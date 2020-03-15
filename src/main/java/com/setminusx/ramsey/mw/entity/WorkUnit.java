@@ -6,7 +6,7 @@ import com.setminusx.ramsey.mw.utility.EdgeListConverter;
 import lombok.Data;
 
 import javax.persistence.*;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -27,10 +27,10 @@ public class WorkUnit {
     private WorkUnitStatus status;
 
     private Integer cliqueCount;
-    private Date createdDate;
-    private Date assignedDate;
-    private Date processingStartedDate;
-    private Date completedDate;
+    private LocalDateTime createdDate;
+    private LocalDateTime assignedDate;
+    private LocalDateTime processingStartedDate;
+    private LocalDateTime completedDate;
     private String assignedClient;
 
     @Enumerated(EnumType.STRING)

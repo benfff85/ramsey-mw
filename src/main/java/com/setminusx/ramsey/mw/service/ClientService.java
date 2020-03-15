@@ -19,7 +19,7 @@ public class ClientService {
         this.clientRepo = clientRepo;
     }
 
-    public ClientDto insertClient(ClientDto clientDTO) {
+    public ClientDto save(ClientDto clientDTO) {
         Client client = clientRepo.save(mapDTOToClient(clientDTO));
         return mapClientToDTO(client);
     }

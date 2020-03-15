@@ -1,17 +1,14 @@
 package com.setminusx.ramsey.mw.controller;
 
 import com.setminusx.ramsey.mw.dto.WorkUnitDto;
-import com.setminusx.ramsey.mw.model.WorkUnitPriority;
 import com.setminusx.ramsey.mw.model.WorkUnitStatus;
 import com.setminusx.ramsey.mw.service.WorkUnitService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Date;
 import java.util.List;
 
-import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 @Slf4j
@@ -25,44 +22,21 @@ public class WorkUnitController {
     }
 
     @PostMapping("/api/ramsey/work-units")
-    public ResponseEntity<List<WorkUnitDto>> postWorkUnit(@RequestBody(required = false) List<WorkUnitDto> workUnitsToCreate) {
-
-        log.info("Processing postWorkUnit");
-        List<WorkUnitDto> workUnits = null;
-
-        if (nonNull(workUnitsToCreate)) {
-            log.info("Posting work units");
-            Date date = new Date();
-            for (WorkUnitDto workUnitDto : workUnitsToCreate) {
-                if (isNull(workUnitDto.getId())) {
-                    log.debug("New work unit; setting default values");
-                    workUnitDto.setCreatedDate(date);
-                    workUnitDto.setAssignedDate(null);
-                    workUnitDto.setCompletedDate(null);
-                    workUnitDto.setProcessingStartedDate(null);
-                    workUnitDto.setStatus(WorkUnitStatus.NEW);
-                    workUnitDto.setCliqueCount(null);
-                    workUnitDto.setAssignedClient(null);
-                    workUnitDto.setPriority(WorkUnitPriority.MEDIUM);
-                }
-            }
-            workUnits = workUnitService.saveAll(workUnitsToCreate);
-            log.info("Work units posted, count: {}", workUnits.size());
-        }
-
-        log.info("Completed postWorkUnit");
+    public ResponseEntity<List<WorkUnitDto>> saveWorkUnit(@RequestBody() List<WorkUnitDto> workUnitsToCreate) {
+        log.info("Processing saveWorkUnit");
+        List<WorkUnitDto> workUnits = workUnitService.saveAll(workUnitsToCreate);
+        log.info("Work units posted, count: {}", workUnits.size());
         return ResponseEntity.ok().body(workUnits);
-
     }
 
 
     @GetMapping("/api/ramsey/work-units")
     public ResponseEntity<List<WorkUnitDto>> fetchWorkUnit(
-            @RequestParam(required = false) WorkUnitStatus status,
-            @RequestParam(required = false) Integer vertexCount,
-            @RequestParam(required = false) Integer subgraphSize,
+            @RequestParam() WorkUnitStatus status,
+            @RequestParam() Integer vertexCount,
+            @RequestParam() Integer subgraphSize,
             @RequestParam(required = false) String assignedClientId,
-            @RequestParam(required = false) Integer pageSize) {
+            @RequestParam() Integer pageSize) {
 
         log.info("Processing fetchWorkUnit");
 
@@ -75,6 +49,15 @@ public class WorkUnitController {
 
         log.info("Completed fetchWorkUnit");
         return ResponseEntity.ok().body(workUnits);
+
+    }
+
+    @GetMapping("/api/ramsey/work-units/last")
+    public ResponseEntity<List<WorkUnitDto>> fetchLastWorkUnit(@RequestParam() Integer graphId) {
+        log.info("Processing fetchLAstWorkUnit");
+        List<WorkUnitDto> workUnit = workUnitService.getMostRecentForGraphId(graphId);
+        log.info("Completed fetchLAstWorkUnit");
+        return ResponseEntity.ok().body(workUnit);
 
     }
 

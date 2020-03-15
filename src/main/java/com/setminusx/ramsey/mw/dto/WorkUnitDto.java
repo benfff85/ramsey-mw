@@ -5,7 +5,7 @@ import com.setminusx.ramsey.mw.model.WorkUnitPriority;
 import com.setminusx.ramsey.mw.model.WorkUnitStatus;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -18,10 +18,10 @@ public class WorkUnitDto {
     private List<Edge> edgesToFlip;
     private WorkUnitStatus status;
     private Integer cliqueCount;
-    private Date createdDate;
-    private Date assignedDate;
-    private Date processingStartedDate;
-    private Date completedDate;
+    private LocalDateTime createdDate;
+    private LocalDateTime assignedDate;
+    private LocalDateTime processingStartedDate;
+    private LocalDateTime completedDate;
     private String assignedClient;
     private WorkUnitPriority priority;
 

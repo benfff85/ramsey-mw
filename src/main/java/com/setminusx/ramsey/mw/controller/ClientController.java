@@ -24,7 +24,7 @@ public class ClientController {
     @PostMapping("/api/ramsey/clients")
     public ResponseEntity<ClientDto> saveClient(@RequestBody() ClientDto clientDTO) {
         log.info("Processing saveClient");
-        ClientDto client = clientService.insertClient(clientDTO);
+        ClientDto client = clientService.save(clientDTO);
         log.info("Completed saveClient");
         return ResponseEntity.ok().body(client);
     }
