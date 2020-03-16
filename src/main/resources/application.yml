@@ -15,4 +15,4 @@ spring:
     properties:
       hibernate:
         jdbc:
-          batch_size: 500
+          batch_size: ${JDBC_BATCH_SIZE:500}
