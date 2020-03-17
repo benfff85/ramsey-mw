@@ -16,3 +16,5 @@ spring:
       hibernate:
         jdbc:
           batch_size: ${JDBC_BATCH_SIZE:500}
+        order_inserts: true
+        order_updates: true
