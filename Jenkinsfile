@@ -31,15 +31,15 @@ pipeline {
             }
         }
 
-        stage('SonarQube') {
-            steps {
-                script {
-                    withSonarQubeEnv('SonarQube') {
-                        sh 'mvn sonar:sonar'
-                    }
-                }
-            }
-        }
+//         stage('SonarQube') {
+//             steps {
+//                 script {
+//                     withSonarQubeEnv('SonarQube') {
+//                         sh 'mvn sonar:sonar'
+//                     }
+//                 }
+//             }
+//         }
 
         stage ('Docker') {
             steps {
