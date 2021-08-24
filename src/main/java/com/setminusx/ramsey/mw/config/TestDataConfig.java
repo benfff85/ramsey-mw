@@ -3,7 +3,7 @@ package com.setminusx.ramsey.mw.config;
 import com.setminusx.ramsey.mw.dto.GraphDto;
 import com.setminusx.ramsey.mw.service.GraphService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Profile;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -15,10 +15,10 @@ import static java.util.Objects.nonNull;
 @Slf4j
 
 @Component
-@Profile("local")
+@ConditionalOnProperty(prefix = "ramsey", name = "startup.initialize-test-data.enabled")
 public class TestDataConfig {
 
-    private GraphService graphService;
+    private final GraphService graphService;
 
     public TestDataConfig(GraphService graphService) {
         this.graphService = graphService;

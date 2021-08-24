@@ -6,3 +6,8 @@ spring:
     url: jdbc:mysql://172.16.0.222:3306/ramsey-test?autoReconnect=true&useSSL=false&rewriteBatchedStatements=true&allowPublicKeyRetrieval=true
     username: ${DB_USER}
     password: ${DB_PASS}
+
+ramsey:
+  startup:
+    initialize-test-data:
+      enabled: false
