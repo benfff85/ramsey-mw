@@ -3,7 +3,6 @@ package com.setminusx.ramsey.mw.controller;
 import com.setminusx.ramsey.mw.dto.GraphDto;
 import com.setminusx.ramsey.mw.service.GraphService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,8 +14,11 @@ import static com.setminusx.ramsey.mw.utility.Constants.ERROR_HEADER;
 @RestController
 public class GraphController {
 
-    @Autowired
-    private GraphService graphService;
+    private final GraphService graphService;
+
+    public GraphController(GraphService graphService) {
+        this.graphService = graphService;
+    }
 
     @GetMapping("/api/ramsey/graphs")
     public ResponseEntity<List<GraphDto>> getGraphByType(
@@ -51,13 +53,13 @@ public class GraphController {
     }
 
     @PutMapping("/api/ramsey/graphs")
-    public ResponseEntity publishGraph(
+    public ResponseEntity<GraphDto> publishGraph(
             @RequestBody GraphDto graph) {
 
         log.info("Processing publishGraph");
-        graphService.publishGraph(graph);
+        graph = graphService.publishGraph(graph);
         log.info("Completed publishGraph");
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok().body(graph);
     }
 
 }

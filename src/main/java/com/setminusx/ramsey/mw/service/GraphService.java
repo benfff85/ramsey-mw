@@ -3,7 +3,6 @@ package com.setminusx.ramsey.mw.service;
 import com.setminusx.ramsey.mw.dto.GraphDto;
 import com.setminusx.ramsey.mw.entity.Graph;
 import com.setminusx.ramsey.mw.repository.GraphRepo;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -14,7 +13,11 @@ import java.util.List;
 @Service
 public class GraphService {
 
-    @Autowired private GraphRepo graphRepo;
+    private final GraphRepo graphRepo;
+
+    public GraphService(GraphRepo graphRepo) {
+        this.graphRepo = graphRepo;
+    }
 
     public GraphDto getGraphByGraphId(Integer id) {
         Graph graph = graphRepo.findGraphByGraphId(id);
@@ -30,8 +33,8 @@ public class GraphService {
         return graphs;
     }
 
-    public void publishGraph(GraphDto graphDTO) {
-        graphRepo.save(mapDtoToGraph(graphDTO));
+    public GraphDto publishGraph(GraphDto graphDTO) {
+        return mapGraphToDto(graphRepo.save(mapDtoToGraph(graphDTO)));
     }
 
     private static GraphDto mapGraphToDto(Graph graph) {
