@@ -23,12 +23,14 @@ public class GraphController {
     @GetMapping("/api/ramsey/graphs")
     public ResponseEntity<List<GraphDto>> getGraphByType(
             @RequestParam() String type,
+            @RequestParam() Integer subgraphSize,
+            @RequestParam() Integer vertexCount,
             @RequestParam(defaultValue = "1") String count) {
 
         log.info("Processing getGraphByType");
         List<GraphDto> graphs;
         if ("min".equals(type)) {
-            graphs = graphService.getGraphsWithMinCliqueCount(Integer.parseInt(count));
+            graphs = graphService.getGraphsWithMinCliqueCount(subgraphSize, vertexCount, Integer.parseInt(count));
         } else {
             return ResponseEntity.badRequest().header(ERROR_HEADER, "Invalid type: " + type).build();
         }

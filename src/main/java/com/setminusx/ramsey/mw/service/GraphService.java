@@ -24,10 +24,10 @@ public class GraphService {
         return mapGraphToDto(graph);
     }
 
-    public List<GraphDto> getGraphsWithMinCliqueCount(int count) {
+    public List<GraphDto> getGraphsWithMinCliqueCount(Integer subgraphSize, Integer vertexCount, Integer count) {
         List<GraphDto> graphs = new LinkedList<>();
         Pageable pageable =  PageRequest.of(0, count);
-        for ( Graph graph : graphRepo.findAllByOrderByCliqueCountAsc(pageable)) {
+        for ( Graph graph : graphRepo.findAllBySubgraphSizeAndVertexCountOrderByCliqueCountAsc(subgraphSize, vertexCount, pageable)) {
             graphs.add(mapGraphToDto(graph));
         }
         return graphs;

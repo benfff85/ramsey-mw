@@ -10,6 +10,6 @@ public interface GraphRepo extends JpaRepository<Graph, Integer> {
 
     Graph findGraphByGraphId(Integer id);
 
-    List<Graph> findAllByOrderByCliqueCountAsc(Pageable pageable);
+    List<Graph> findAllBySubgraphSizeAndVertexCountOrderByCliqueCountAsc(Integer subgraphSize, Integer vertexCount, Pageable pageable);
 
 }
