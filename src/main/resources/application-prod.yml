@@ -3,6 +3,6 @@ spring:
     hibernate:
       ddl-auto: none
   datasource:
-    url: jdbc:mysql://172.16.0.222:3306/ramsey?autoReconnect=true&useSSL=false&rewriteBatchedStatements=true
+    url: jdbc:mysql://172.16.0.222:3306/ramsey?autoReconnect=true&useSSL=false&rewriteBatchedStatements=true&allowPublicKeyRetrieval=true
     username: ${DB_USER}
     password: ${DB_PASS}
