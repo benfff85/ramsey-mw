@@ -8,12 +8,11 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class ClientService {
 
-    private ClientRepo clientRepo;
+    private final ClientRepo clientRepo;
 
     public ClientService(ClientRepo clientRepo) {
         this.clientRepo = clientRepo;
@@ -29,7 +28,7 @@ public class ClientService {
     }
 
     public List<ClientDto> getAll(Integer subgraphSize, Integer vertexCount, ClientStatus clientStatus) {
-        return clientRepo.findAllBySubgraphSizeAndVertexCountAndStatus(subgraphSize, vertexCount, clientStatus).stream().map(ClientService::mapClientToDTO).collect(Collectors.toList());
+        return clientRepo.findAllBySubgraphSizeAndVertexCountAndStatus(subgraphSize, vertexCount, clientStatus).stream().map(ClientService::mapClientToDTO).toList();
     }
 
     private Client mapDTOToClient(ClientDto clientDTO) {

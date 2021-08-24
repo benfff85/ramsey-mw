@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 @RestController
 public class ClientController {
 
-    private ClientService clientService;
+    private final ClientService clientService;
 
     public ClientController(ClientService clientService) {
         this.clientService = clientService;
@@ -45,7 +45,7 @@ public class ClientController {
             log.info("Filtering for type: {}", clientType);
             clients = clients.parallelStream()
                     .filter(c -> clientType.equals(c.getType()))
-                    .collect(Collectors.toList());
+                    .toList();
         }
 
         log.info("Completed searchForClients");

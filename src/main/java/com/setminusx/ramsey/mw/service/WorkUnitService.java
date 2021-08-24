@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class WorkUnitService {
@@ -20,7 +19,7 @@ public class WorkUnitService {
     @Value("${ramsey.work-unit.page-size.default}")
     private Integer defaultPageSize;
 
-    private WorkUnitRepo workUnitRepo;
+    private final WorkUnitRepo workUnitRepo;
 
 
     public WorkUnitService(WorkUnitRepo workUnitRepo) {
@@ -29,7 +28,7 @@ public class WorkUnitService {
 
     public List<WorkUnitDto> saveAll(List<WorkUnitDto> workUnitDtos) {
 
-        List<WorkUnit> workUnits = workUnitDtos.stream().map(WorkUnitService::mapDTOToWorkUnit).collect(Collectors.toList());
+        List<WorkUnit> workUnits = workUnitDtos.stream().map(WorkUnitService::mapDTOToWorkUnit).toList();
         Iterable<WorkUnit> createdWorkUnits = workUnitRepo.saveAll(workUnits);
 
         List<WorkUnitDto> createdWorkUnitDtos = new ArrayList<>();
@@ -41,15 +40,15 @@ public class WorkUnitService {
     }
 
     public List<WorkUnitDto> getAll(WorkUnitStatus status, Integer vertexCount, Integer subgraphSize, Integer pageSize) {
-        return workUnitRepo.findAllBySubgraphSizeAndVertexCountAndStatus(subgraphSize, vertexCount, status, getPageable(pageSize)).stream().map(WorkUnitService::mapWorkUnitToDTO).collect(Collectors.toList());
+        return workUnitRepo.findAllBySubgraphSizeAndVertexCountAndStatus(subgraphSize, vertexCount, status, getPageable(pageSize)).stream().map(WorkUnitService::mapWorkUnitToDTO).toList();
     }
 
     public List<WorkUnitDto> getAllAssignedToClient(WorkUnitStatus status, Integer vertexCount, Integer subgraphSize, String assignedClientId, Integer pageSize) {
-        return workUnitRepo.findAllBySubgraphSizeAndVertexCountAndStatusAndAssignedClient(subgraphSize, vertexCount, status, assignedClientId, getPageable(pageSize)).stream().map(WorkUnitService::mapWorkUnitToDTO).collect(Collectors.toList());
+        return workUnitRepo.findAllBySubgraphSizeAndVertexCountAndStatusAndAssignedClient(subgraphSize, vertexCount, status, assignedClientId, getPageable(pageSize)).stream().map(WorkUnitService::mapWorkUnitToDTO).toList();
     }
 
     public List<WorkUnitDto> getMostRecentForGraphId(Integer graphId) {
-        return workUnitRepo.findAllByBaseGraphIdOrderByIdDesc(graphId, getPageable(1)).stream().map(WorkUnitService::mapWorkUnitToDTO).collect(Collectors.toList());
+        return workUnitRepo.findAllByBaseGraphIdOrderByIdDesc(graphId, getPageable(1)).stream().map(WorkUnitService::mapWorkUnitToDTO).toList();
     }
 
     private static WorkUnit mapDTOToWorkUnit(WorkUnitDto workUnitDto) {
