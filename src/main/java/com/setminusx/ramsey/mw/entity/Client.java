@@ -2,9 +2,9 @@ package com.setminusx.ramsey.mw.entity;
 
 import com.setminusx.ramsey.mw.model.ClientStatus;
 import com.setminusx.ramsey.mw.model.ClientType;
+import jakarta.persistence.*;
 import lombok.Data;
 
-import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @Data

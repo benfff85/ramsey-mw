@@ -1,4 +1,4 @@
-FROM adoptopenjdk:16-jre-hotspot
+FROM openjdk:21
 RUN mkdir /Ramsey
 COPY target/ramsey-mw.jar /Ramsey/
 COPY target/version.txt /Ramsey/

@@ -3,9 +3,9 @@ package com.setminusx.ramsey.mw.entity;
 import com.setminusx.ramsey.mw.model.WorkUnitPriority;
 import com.setminusx.ramsey.mw.model.WorkUnitStatus;
 import com.setminusx.ramsey.mw.utility.EdgeListConverter;
+import jakarta.persistence.*;
 import lombok.Data;
 
-import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
 

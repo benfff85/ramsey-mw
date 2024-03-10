@@ -2,13 +2,13 @@ package com.setminusx.ramsey.mw.config;
 
 import com.setminusx.ramsey.mw.dto.GraphDto;
 import com.setminusx.ramsey.mw.service.GraphService;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import javax.annotation.PostConstruct;
 
 import static java.util.Objects.nonNull;
 
