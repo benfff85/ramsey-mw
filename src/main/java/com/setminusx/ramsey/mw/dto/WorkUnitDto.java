@@ -1,6 +1,7 @@
 package com.setminusx.ramsey.mw.dto;
 
 import com.setminusx.ramsey.mw.entity.Edge;
+import com.setminusx.ramsey.mw.model.WorkUnitAnalysisType;
 import com.setminusx.ramsey.mw.model.WorkUnitPriority;
 import com.setminusx.ramsey.mw.model.WorkUnitStatus;
 import lombok.Data;
@@ -24,5 +25,6 @@ public class WorkUnitDto {
     private LocalDateTime completedDate;
     private String assignedClient;
     private WorkUnitPriority priority;
+    private WorkUnitAnalysisType workUnitAnalysisType;
 
 }

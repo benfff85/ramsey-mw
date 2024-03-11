@@ -1,5 +1,6 @@
 package com.setminusx.ramsey.mw.entity;
 
+import com.setminusx.ramsey.mw.model.WorkUnitAnalysisType;
 import com.setminusx.ramsey.mw.model.WorkUnitPriority;
 import com.setminusx.ramsey.mw.model.WorkUnitStatus;
 import com.setminusx.ramsey.mw.utility.EdgeListConverter;
@@ -35,5 +36,8 @@ public class WorkUnit {
 
     @Enumerated(EnumType.STRING)
     private WorkUnitPriority priority;
+
+    @Enumerated(EnumType.STRING)
+    private WorkUnitAnalysisType workUnitAnalysisType;
 
 }

@@ -66,6 +66,7 @@ public class WorkUnitService {
         workUnit.setVertexCount(workUnitDto.getVertexCount());
         workUnit.setAssignedClient(workUnitDto.getAssignedClient());
         workUnit.setPriority(workUnitDto.getPriority());
+        workUnit.setWorkUnitAnalysisType(workUnitDto.getWorkUnitAnalysisType());
         return workUnit;
     }
 
@@ -84,6 +85,7 @@ public class WorkUnitService {
         workUnitDto.setVertexCount(workUnit.getVertexCount());
         workUnitDto.setAssignedClient(workUnit.getAssignedClient());
         workUnitDto.setPriority(workUnit.getPriority());
+        workUnitDto.setWorkUnitAnalysisType(workUnit.getWorkUnitAnalysisType());
         return workUnitDto;
     }
 
