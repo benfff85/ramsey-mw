@@ -13,7 +13,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 import static java.util.Objects.nonNull;
 
 @Slf4j
-
 @Component
 @ConditionalOnProperty(prefix = "ramsey", name = "startup.initialize-test-data.enabled")
 public class TestDataConfig {

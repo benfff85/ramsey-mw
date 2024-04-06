@@ -1,8 +1,17 @@
 spring:
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: create  # Creates tables
+    defer-datasource-initialization: true
+  sql:
+    init:
+      mode: always  # Runs data.sql for inserts
   datasource:
-    url: jdbc:mysql://172.16.0.222:3306/ramsey-test?autoReconnect=true&useSSL=false&rewriteBatchedStatements=true&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://192.168.1.224:3306/ramsey-dev?autoReconnect=true&useSSL=false&rewriteBatchedStatements=true&allowPublicKeyRetrieval=true
     username: ${DB_USER}
     password: ${DB_PASS}
+
+ramsey:
+  startup:
+    initialize-test-data:
+      enabled: false # Pulls data at startup from production API
