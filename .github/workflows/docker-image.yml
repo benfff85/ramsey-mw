@@ -14,6 +14,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: Maven Version Check
+      run: mvn -v
     - name: Maven test
       run: mvn spring-boot:build-image -Dspring-boot.build-image.imageName=benferenchak/ramsey-mw:dev
 
