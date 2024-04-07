@@ -14,4 +14,9 @@ spring:
 ramsey:
   startup:
     initialize-test-data:
-      enabled: false # Pulls data at startup from production API
+      enabled: false # Pulls data at startup from production AP
+
+server:
+  tomcat:
+    remote-ip-header: x-forwarded-for
+    protocol-header: x-forwarded-proto
