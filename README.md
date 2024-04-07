@@ -2,9 +2,9 @@
 Middleware component for the Ramsey Project
 
 ## Environments
-| Environment | Database Address   | Database | Description                                                              |
-|-------------|:-------------------|--------|--------------------------------------------------------------------------|
-| Dev         | 192.168.1.224:3306 | ramsey | Database fully reinitialized every startup. Seeded with one sample graph | 
+| Environment | Database Address   | Database   | Description                                                              |
+|-------------|:-------------------|------------|--------------------------------------------------------------------------|
+| Dev         | 192.168.1.224:3306 | ramsey-dev | Database fully reinitialized every startup. Seeded with one sample graph | 
 
 ## Image Build and Deploy
 
@@ -36,5 +36,4 @@ This project is configured with OpenAPI 3.0 documentation, the swagger page can 
 [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
 
 ## TODO
-* Make dev profile connect to dev database
 * Add index to work_unit table (`vertex_count`,`subgraph_size`,`status`,`assigned_client`)
