@@ -2,7 +2,7 @@ name: Publish Container Image to Docker Hub
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "feature" ]
 
 jobs:
 
