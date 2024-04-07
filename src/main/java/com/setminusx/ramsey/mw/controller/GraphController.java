@@ -42,7 +42,7 @@ public class GraphController {
     public ResponseEntity<GraphDto> getGraphByGraphId(
             @PathVariable() Integer id) {
 
-        log.info("Processing getGraphByGraphId");
+        log.info("Processing getGraphByGraphId for id: {}", id);
         GraphDto graphDto;
         try {
             graphDto = graphService.getGraphByGraphId(id);
