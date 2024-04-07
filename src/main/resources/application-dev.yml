@@ -17,7 +17,7 @@ ramsey:
       enabled: false # Pulls data at startup from production AP
 
 server:
-  tomcat:
+#  tomcat:
 #    remote-ip-header: x-forwarded-for
 #    protocol-header: x-forwarded-proto
 #    redirect-context-root: false
