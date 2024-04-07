@@ -16,12 +16,12 @@ ramsey:
     initialize-test-data:
       enabled: false # Pulls data at startup from production AP
 
-server:
-#  tomcat:
-#    remote-ip-header: x-forwarded-for
-#    protocol-header: x-forwarded-proto
-#    redirect-context-root: false
-  forward-headers-strategy: framework
+#server:
+##  tomcat:
+##    remote-ip-header: x-forwarded-for
+##    protocol-header: x-forwarded-proto
+##    redirect-context-root: false
+#  forward-headers-strategy: framework
 
 #springdoc:
 #  api-docs:
