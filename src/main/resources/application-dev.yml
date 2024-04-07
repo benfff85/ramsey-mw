@@ -21,3 +21,7 @@ server:
 #    remote-ip-header: x-forwarded-for
 #    protocol-header: x-forwarded-proto
     redirect-context-root: false
+
+springdoc:
+  swagger-ui:
+    url: https://abc.com
