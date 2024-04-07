@@ -8,7 +8,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
 @Slf4j
-@Configuration
+//@Configuration
 public class SwaggerConfig {
 
     @Bean

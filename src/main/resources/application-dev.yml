@@ -17,4 +17,4 @@ ramsey:
       enabled: false # Pulls data at startup from production AP
 
 server:
-  forward-headers-strategy: framework
+  forward-headers-strategy: framework # Needed for api docs behind reverse proxy
