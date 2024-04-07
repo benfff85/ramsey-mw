@@ -15,6 +15,3 @@ ramsey:
   startup:
     initialize-test-data:
       enabled: false # Pulls data at startup from production AP
-
-server:
-  forward-headers-strategy: framework # Needed for api docs behind reverse proxy
