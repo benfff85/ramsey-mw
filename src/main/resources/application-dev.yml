@@ -23,7 +23,13 @@ server:
     redirect-context-root: false
   forward-headers-strategy: framework
 
-
+springdoc:
+  api-docs:
+    enabled: off
+    path: /api-docs/json
+  swagger-ui:
+    path: /api-docs/ # <==== mind the trailing slash
+    disable-swagger-default-url: true
 #
 #springdoc.api-docs.enabled=true
 #springdoc.api-docs.path=/api-docs/json
