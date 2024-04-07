@@ -20,3 +20,4 @@ server:
   tomcat:
     remote-ip-header: x-forwarded-for
     protocol-header: x-forwarded-proto
+    redirect-context-root: false
