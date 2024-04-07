@@ -23,7 +23,9 @@ public class SwaggerConfig {
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
 
-        source.registerCorsConfiguration("/v3/api-docs", config);
+        CorsConfiguration config2 = new CorsConfiguration().applyPermitDefaultValues();
+
+        source.registerCorsConfiguration("/v3/api-docs", config2);
         return new CorsFilter(source);
     }
 
