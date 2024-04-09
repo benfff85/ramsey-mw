@@ -10,7 +10,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -27,16 +26,9 @@ public class WorkUnitService {
     }
 
     public List<WorkUnitDto> saveAll(List<WorkUnitDto> workUnitDtos) {
-
         List<WorkUnit> workUnits = workUnitDtos.stream().map(WorkUnitService::mapDTOToWorkUnit).toList();
-        Iterable<WorkUnit> createdWorkUnits = workUnitRepo.saveAll(workUnits);
-
-        List<WorkUnitDto> createdWorkUnitDtos = new ArrayList<>();
-        for (WorkUnit workUnit : createdWorkUnits) {
-            createdWorkUnitDtos.add(mapWorkUnitToDTO(workUnit));
-        }
-
-        return createdWorkUnitDtos;
+        List<WorkUnit> createdWorkUnits = workUnitRepo.saveAll(workUnits);
+        return createdWorkUnits.stream().map(WorkUnitService::mapWorkUnitToDTO).toList();
     }
 
     public List<WorkUnitDto> getAll(WorkUnitStatus status, Integer vertexCount, Integer subgraphSize, Integer pageSize) {
