@@ -35,5 +35,15 @@ This project is configured with OpenAPI 3.0 documentation, the swagger page can 
 
 [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
 
+## Common Queries
+
+Find the average work unit analysis duration by analysis type 
+```sql
+SELECT work_unit_analysis_type, AVG(TIMESTAMPDIFF(MICROSECOND , processing_started_date, completed_date)) / 1000000 AS seconds
+FROM work_unit
+WHERE status = 'COMPLETE'
+GROUP BY work_unit_analysis_type;
+```
+
 ## TODO
 * Add index to work_unit table (`vertex_count`,`subgraph_size`,`status`,`assigned_client`)
