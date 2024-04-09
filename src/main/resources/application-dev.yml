@@ -1,11 +1,11 @@
 spring:
   jpa:
     hibernate:
-      ddl-auto: create  # Creates tables
+      ddl-auto: ${DDL_AUTO:none} # Creates tables [none, create]
     defer-datasource-initialization: true
   sql:
     init:
-      mode: always  # Runs data.sql for inserts
+      mode: ${SQL_INIT_MODE:never} # Runs data.sql for inserts [never, always]
   datasource:
     url: jdbc:mysql://192.168.1.224:3306/ramsey-dev?autoReconnect=true&useSSL=false&rewriteBatchedStatements=true&allowPublicKeyRetrieval=true
     username: ${DB_USER}
