@@ -45,5 +45,16 @@ WHERE status = 'COMPLETE'
 GROUP BY work_unit_analysis_type;
 ```
 
+Find any work unit where different analysis types produced differing clique counts
+```sql
+SELECT edges_to_flip
+FROM (SELECT edges_to_flip, COUNT(1)
+      FROM work_unit
+      WHERE status = 'COMPLETE'
+      GROUP BY edges_to_flip, clique_count) tmp
+GROUP BY edges_to_flip
+HAVING COUNT(1) > 1
+```
+
 ## TODO
 * Add index to work_unit table (`vertex_count`,`subgraph_size`,`status`,`assigned_client`)
