@@ -4,10 +4,8 @@ import com.setminusx.ramsey.mw.dto.GraphDto;
 import com.setminusx.ramsey.mw.entity.Graph;
 import com.setminusx.ramsey.mw.repository.GraphRepo;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.LinkedList;
 import java.util.List;
 
 @Service
@@ -25,12 +23,10 @@ public class GraphService {
     }
 
     public List<GraphDto> getGraphsWithMinCliqueCount(Integer subgraphSize, Integer vertexCount, Integer count) {
-        List<GraphDto> graphs = new LinkedList<>();
-        Pageable pageable =  PageRequest.of(0, count);
-        for ( Graph graph : graphRepo.findAllBySubgraphSizeAndVertexCountOrderByCliqueCountAsc(subgraphSize, vertexCount, pageable)) {
-            graphs.add(mapGraphToDto(graph));
-        }
-        return graphs;
+        return graphRepo.findAllBySubgraphSizeAndVertexCountOrderByCliqueCountAsc(subgraphSize, vertexCount, PageRequest.of(0, count))
+                .stream()
+                .map(GraphService::mapGraphToDto)
+                .toList();
     }
 
     public GraphDto publishGraph(GraphDto graphDTO) {
