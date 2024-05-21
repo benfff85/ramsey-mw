@@ -54,9 +54,9 @@ public class WorkUnitController {
 
     @GetMapping("/api/ramsey/work-units/last")
     public ResponseEntity<List<WorkUnitDto>> fetchLastWorkUnit(@RequestParam() Integer graphId) {
-        log.info("Processing fetchLAstWorkUnit");
+        log.info("Processing fetchLastWorkUnit");
         List<WorkUnitDto> workUnit = workUnitService.getMostRecentForGraphId(graphId);
-        log.info("Completed fetchLAstWorkUnit");
+        log.info("Completed fetchLastWorkUnit");
         return ResponseEntity.ok().body(workUnit);
 
     }
