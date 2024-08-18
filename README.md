@@ -56,5 +56,13 @@ GROUP BY edges_to_flip
 HAVING COUNT(1) > 1
 ```
 
-## TODO
-* Add index to work_unit table (`vertex_count`,`subgraph_size`,`status`,`assigned_client`)
+## Misc
+
+Sample Numbers
+
+| Item                | Count       |
+|---------------------|-------------|
+| Vertex              | 288         |
+| Edges               | 41,328      |
+| Edges of each color | 20,664      |
+| Single Mutations    | 427,000,896 |
