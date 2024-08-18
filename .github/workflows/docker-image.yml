@@ -17,7 +17,7 @@ jobs:
     - uses: actions/setup-java@v4
       with:
         distribution: 'temurin' # See 'Supported distributions' for available options
-        java-version: '22'
+        java-version: '21'
     - name: Maven Version Check
       run: mvn -v
     - name: Maven Image Build
