@@ -1,0 +1,5 @@
+[mysqld]
+#innodb_buffer_pool_size = 8G
+disable_log_bin
+innodb_undo_log_truncate=ON
+innodb_doublewrite=OFF

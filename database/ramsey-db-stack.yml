@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+
+  db:
+    image: mysql:latest
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: <password>
+    volumes:
+      - /Users/benjaminferenchak/IdeaProjects/ramsey/ramsey-mw/database/config-file.cnf:/etc/mysql/conf.d/config-file.cnf
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s

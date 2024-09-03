@@ -19,7 +19,7 @@ GRANT Create temporary tables ON `ramsey-dev`.* TO 'ramsey-user-dev'@'%';
 GRANT Execute ON `ramsey-dev`.* TO 'ramsey-user-dev'@'%';
 GRANT Lock tables ON `ramsey-dev`.* TO 'ramsey-user-dev'@'%';
 
-CREATE TABLE `ramsey-dev.client` (
+CREATE TABLE `ramsey-dev`.`client` (
                           `client_id` int NOT NULL AUTO_INCREMENT,
                           `subgraph_size` int DEFAULT NULL,
                           `vertex_count` int DEFAULT NULL,
@@ -30,7 +30,7 @@ CREATE TABLE `ramsey-dev.client` (
                           PRIMARY KEY (`client_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE `ramsey-dev.graph` (
+CREATE TABLE `ramsey-dev`.`graph` (
                          `clique_count` int DEFAULT NULL,
                          `graph_id` int NOT NULL AUTO_INCREMENT,
                          `subgraph_size` int DEFAULT NULL,
@@ -40,7 +40,7 @@ CREATE TABLE `ramsey-dev.graph` (
                          PRIMARY KEY (`graph_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE `ramsey-dev.work_unit` (
+CREATE TABLE `ramsey-dev`.`work_unit` (
                              `base_graph_id` int DEFAULT NULL,
                              `clique_count` int DEFAULT NULL,
                              `id` int NOT NULL AUTO_INCREMENT,
@@ -81,7 +81,7 @@ GRANT Create temporary tables ON `ramsey-test`.* TO 'ramsey-user-test'@'%';
 GRANT Execute ON `ramsey-test`.* TO 'ramsey-user-test'@'%';
 GRANT Lock tables ON `ramsey-test`.* TO 'ramsey-user-test'@'%';
 
-CREATE TABLE `ramsey-test.client` (
+CREATE TABLE `ramsey-test`.`client` (
                                      `client_id` int NOT NULL AUTO_INCREMENT,
                                      `subgraph_size` int DEFAULT NULL,
                                      `vertex_count` int DEFAULT NULL,
@@ -92,7 +92,7 @@ CREATE TABLE `ramsey-test.client` (
                                      PRIMARY KEY (`client_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE `ramsey-test.graph` (
+CREATE TABLE `ramsey-test`.`graph` (
                                     `clique_count` int DEFAULT NULL,
                                     `graph_id` int NOT NULL AUTO_INCREMENT,
                                     `subgraph_size` int DEFAULT NULL,
@@ -102,7 +102,7 @@ CREATE TABLE `ramsey-test.graph` (
                                     PRIMARY KEY (`graph_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE `ramsey-test.work_unit` (
+CREATE TABLE `ramsey-test`.`work_unit` (
                                         `base_graph_id` int DEFAULT NULL,
                                         `clique_count` int DEFAULT NULL,
                                         `id` int NOT NULL AUTO_INCREMENT,
@@ -142,7 +142,7 @@ GRANT Create temporary tables ON `ramsey`.* TO 'ramsey-user'@'%';
 GRANT Execute ON `ramsey`.* TO 'ramsey-user'@'%';
 GRANT Lock tables ON `ramsey`.* TO 'ramsey-user'@'%';
 
-CREATE TABLE `ramsey.client` (
+CREATE TABLE `ramsey`.`client` (
                                      `client_id` int NOT NULL AUTO_INCREMENT,
                                      `subgraph_size` int DEFAULT NULL,
                                      `vertex_count` int DEFAULT NULL,
@@ -153,7 +153,7 @@ CREATE TABLE `ramsey.client` (
                                      PRIMARY KEY (`client_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE `ramsey.graph` (
+CREATE TABLE `ramsey`.`graph` (
                                     `clique_count` int DEFAULT NULL,
                                     `graph_id` int NOT NULL AUTO_INCREMENT,
                                     `subgraph_size` int DEFAULT NULL,
@@ -163,7 +163,7 @@ CREATE TABLE `ramsey.graph` (
                                     PRIMARY KEY (`graph_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE `ramsey.work_unit` (
+CREATE TABLE `ramsey`.`work_unit` (
                                         `base_graph_id` int DEFAULT NULL,
                                         `clique_count` int DEFAULT NULL,
                                         `id` int NOT NULL AUTO_INCREMENT,
