@@ -1,0 +1,17 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: ${DDL_AUTO:none} # Creates tables [none, create]
+    defer-datasource-initialization: true
+  sql:
+    init:
+      mode: ${SQL_INIT_MODE:never} # Runs data.sql for inserts [never, always]
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/ramsey-dev?autoReconnect=true&useSSL=false&rewriteBatchedStatements=true&allowPublicKeyRetrieval=true
+    username: ${DB_USER}
+    password: ${DB_PASS}
+
+ramsey:
+  startup:
+    initialize-test-data:
+      enabled: false # Pulls data at startup from production AP

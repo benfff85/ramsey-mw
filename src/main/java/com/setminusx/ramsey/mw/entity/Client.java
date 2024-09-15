@@ -1,7 +1,5 @@
 package com.setminusx.ramsey.mw.entity;
 
-import com.setminusx.ramsey.mw.model.ClientStatus;
-import com.setminusx.ramsey.mw.model.ClientType;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -18,12 +16,22 @@ public class Client {
     private Integer vertexCount;
 
     @Enumerated(EnumType.STRING)
-    private ClientType type;
+    private Client.Type type;
 
     @Enumerated(EnumType.STRING)
-    private ClientStatus status;
+    private Client.Status status;
 
     private LocalDateTime createdDate;
     private LocalDateTime lastPhoneHomeDate;
+
+    public enum Status {
+        ACTIVE,
+        INACTIVE
+    }
+
+    public enum Type {
+        CLIQUECHECKER,
+        QUEUEMANAGER
+    }
 
 }

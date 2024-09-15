@@ -1,17 +1,18 @@
 package com.setminusx.ramsey.mw.controller;
 
-import com.setminusx.ramsey.mw.dto.ClientDto;
-import com.setminusx.ramsey.mw.model.ClientStatus;
-import com.setminusx.ramsey.mw.model.ClientType;
+import com.setminusx.ramsey.mw.entity.Client;
 import com.setminusx.ramsey.mw.service.ClientService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+
 @Slf4j
 @RestController
+@RequestMapping("/api/ramsey/clients")
 public class ClientController {
 
     private final ClientService clientService;
@@ -20,36 +21,48 @@ public class ClientController {
         this.clientService = clientService;
     }
 
-    @PostMapping("/api/ramsey/clients")
-    public ResponseEntity<ClientDto> saveClient(@RequestBody() ClientDto clientDTO) {
-        log.info("Processing saveClient");
-        ClientDto client = clientService.save(clientDTO);
-        log.info("Completed saveClient");
-        return ResponseEntity.ok().body(client);
+    @GetMapping
+    public List<Client> getClients(
+            @RequestParam(required = false) Integer subgraphSize,
+            @RequestParam(required = false) Integer vertexCount,
+            @RequestParam(required = false) Client.Status status,
+            @RequestParam(required = false) Client.Type type) {
+
+        log.info("Fetching clients with filters - SubgraphSize: {}, VertexCount: {}, Status: {}, Type: {}", subgraphSize, vertexCount, status, type);
+        return clientService.getClients(subgraphSize, vertexCount, status, type);
     }
 
+    @GetMapping("/{id}")
+    public Client getClientById(@PathVariable Integer id) {
+        log.info("Fetching client with ID: {}", id);
 
-    @GetMapping("/api/ramsey/clients")
-    public ResponseEntity<List<ClientDto>> searchForClients(
-            @RequestParam() Integer subgraphSize,
-            @RequestParam() Integer vertexCount,
-            @RequestParam() ClientStatus clientStatus,
-            @RequestParam(required = false) ClientType clientType
-    ) {
+        Client client = clientService.getClientById(id);
 
-        log.info("Processing searchForClients");
-
-        List<ClientDto> clients = clientService.getAll(subgraphSize, vertexCount, clientStatus);
-        if (clientType != null) {
-            log.info("Filtering for type: {}", clientType);
-            clients = clients.parallelStream()
-                    .filter(c -> clientType.equals(c.getType()))
-                    .toList();
+        if (client == null) {
+            log.warn("Client with ID: {} not found", id);
+            throw new ResponseStatusException(NOT_FOUND, "Client not found");
         }
 
-        log.info("Completed searchForClients");
-        return ResponseEntity.ok().body(clients);
+        return client;
+    }
 
+    @PostMapping
+    public Client createClient(@RequestBody Client client) {
+        log.info("Creating a new client with data: {}", client);
+        return clientService.createOrUpdateClient(client);
+    }
+
+    @PutMapping("/{id}")
+    public Client updateClient(@PathVariable Integer id, @RequestBody Client client) {
+        log.info("Updating client with ID: {} with data: {}", id, client);
+        client.setClientId(id);
+        return clientService.createOrUpdateClient(client);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteClient(@PathVariable Integer id) {
+        log.info("Deleting client with ID: {}", id);
+        clientService.deleteClient(id);
     }
 
 }
