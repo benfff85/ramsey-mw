@@ -2,6 +2,8 @@ services:
   db:
     image: mysql:latest
     container_name: ramsey-db-mysql
+    networks:
+      - ramsey-net
     ports:
       - "3306:3306"
     environment:
@@ -9,3 +11,7 @@ services:
     volumes:
       - /Users/benjaminferenchak/IdeaProjects/ramsey/ramsey-mw/database/config-file.cnf:/etc/mysql/conf.d/config-file.cnf
     restart: on-failure
+
+networks:
+  ramsey-net:
+    driver: bridge
