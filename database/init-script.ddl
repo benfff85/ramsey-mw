@@ -59,7 +59,6 @@ CREATE TABLE `ramsey-dev`.`work_unit` (
                              KEY `work_unit_subgraph_size_IDX` (`subgraph_size`,`vertex_count`,`status`,`assigned_client`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-
 CREATE DATABASE `ramsey-test` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 
 CREATE USER 'ramsey-user-test'@'%' IDENTIFIED BY '<password>';
