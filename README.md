@@ -10,12 +10,12 @@ Middleware component for the Ramsey Project
 
 Build the image using SpringBoot defaults
 ```bash
-docker build -t benferenchak/ramsey-mw:dev .
+docker build -t benferenchak/ramsey-mw:develop .
 ```
 
 Publish the image to Dockerhub
 ```bash
-docker push benferenchak/ramsey-mw:dev
+docker push benferenchak/ramsey-mw:develop
 ```
 
 Start a container using the image
@@ -27,7 +27,7 @@ docker run --restart=always \
   -e DB_USER=ramsey-user-dev \
   -e DB_PASS=<password> \
   -p 9080:8080 \
-  benferenchak/ramsey-mw:dev
+  benferenchak/ramsey-mw:develop
 ```
 
 ## Swagger
