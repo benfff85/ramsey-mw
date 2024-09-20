@@ -1,0 +1,47 @@
+services:
+  ramsey-mw:
+    image: benferenchak/ramsey-mw:dev
+    container_name: ramsey-mw
+    ports:
+      - "4040:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      DB_USER: ramsey-user-dev
+      DB_PASS: <password>
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    restart: on-failure
+
+  ramsey-queue-manager:
+    image: benferenchak/ramsey-queue-manager:dev
+    container_name: ramsey-queue-manager
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      WORK_UNIT_ANALYSIS_TYPE: TARGETED
+      WORK_UNIT_QUEUE_DEPTH_MIN: 50000
+      WORK_UNIT_QUEUE_DEPTH_MAX: 100000
+      WORK_UNIT_ASSIGNMENT_COUNT: 2000
+    depends_on:
+      - ramsey-mw
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    restart: on-failure
+
+  ramsey-worker:
+    image: benferenchak/ramsey-worker:dev
+    container_name: ramsey-worker
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      WORK_UNIT_FETCH_COUNT: 500
+      WORK_UNIT_PUBLISH_COUNT: 200
+    depends_on:
+      - ramsey-mw
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    restart: on-failure
