@@ -33,9 +33,13 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: Sanitize Git Branch Name
+        id: sanitize_branch
+        run: echo "BRANCH_NAME=${GITHUB_REF_NAME//\//-}" >> $GITHUB_ENV
+
       - name: Build and Push Multi-Platform Docker Image
         run: |
           docker buildx create --use
           docker buildx build --platform linux/amd64,linux/arm64 \
-            -t benferenchak/ramsey-mw:${{ github.ref_name }} \
+            -t benferenchak/ramsey-mw:${{ env.BRANCH_NAME }} \
             --push .
