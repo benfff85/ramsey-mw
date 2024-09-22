@@ -2,9 +2,10 @@
 Middleware component for the Ramsey Project
 
 ## Environments
-| Environment | Database Address   | Database   | Description                                                              |
-|-------------|:-------------------|------------|--------------------------------------------------------------------------|
-| Dev         | 192.168.1.224:3306 | ramsey-dev | Database fully reinitialized every startup. Seeded with one sample graph | 
+| Environment | Database Address     | Database   | Description                                                                                  |
+|-------------|:---------------------|------------|----------------------------------------------------------------------------------------------|
+| Local       | 127.0.0.1:3306       | ramsey-dev | Database not initialized, designed to be used for running in the IDE.                        |
+| Dev         | ramsey-db-mysql:3306 | ramsey-dev | Database not initialized ,designed for running in Docker and connecting to the dev database. | 
 
 ## Image Build and Deploy
 
@@ -18,7 +19,7 @@ Publish the image to Dockerhub
 docker push benferenchak/ramsey-mw:develop
 ```
 
-Start a container using the image
+Start a container using the image by either directly creating one as follows:
 ```bash
 docker run --restart=always \
   --name=ramsey-mw \
@@ -28,6 +29,12 @@ docker run --restart=always \
   -e DB_PASS=<password> \
   -p 9080:8080 \
   benferenchak/ramsey-mw:develop
+```
+
+Likewise this can be deployed as part of the docker-compose.yml file.
+
+```bash
+docker compose -f ./docker/ramsey-compose.yml -p ramsey up -d
 ```
 
 ## Swagger
