@@ -24,6 +24,7 @@ Start a container using the image by either directly creating one as follows:
 docker run --restart=always \
   --name=ramsey-mw \
   --network=ramsey-db_ramsey-net \
+  --label com.docker.compose.project=ramsey \
   -e SPRING_PROFILES_ACTIVE=dev \
   -e DB_USER=ramsey-user-dev \
   -e DB_PASS=<password> \
