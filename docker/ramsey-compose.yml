@@ -1,7 +1,6 @@
 services:
   ramsey-mw:
     image: benferenchak/ramsey-mw:develop
-    container_name: ramsey-mw
     networks:
       - ramsey-net
     ports:
@@ -17,7 +16,6 @@ services:
     restart: on-failure
   ramsey-queue-manager:
     image: benferenchak/ramsey-queue-manager:develop
-    container_name: ramsey-queue-manager
     networks:
       - ramsey-net
     environment:
@@ -33,23 +31,22 @@ services:
       options:
         max-size: "10m"
     restart: on-failure
+  ramsey-worker:
+    image: benferenchak/ramsey-worker:develop
+    networks:
+      - ramsey-net
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      WORK_UNIT_FETCH_COUNT: 500
+      WORK_UNIT_PUBLISH_COUNT: 200
+    depends_on:
+      - ramsey-mw
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    restart: on-failure
 
 networks:
   ramsey-net:
     external: true
-
-#
-#  ramsey-worker:
-#    image: benferenchak/ramsey-worker:dev
-#    container_name: ramsey-worker
-#    environment:
-#      SPRING_PROFILES_ACTIVE: local
-#      WORK_UNIT_FETCH_COUNT: 500
-#      WORK_UNIT_PUBLISH_COUNT: 200
-#    depends_on:
-#      - ramsey-mw
-#    logging:
-#      driver: json-file
-#      options:
-#        max-size: "10m"
-#    restart: on-failure

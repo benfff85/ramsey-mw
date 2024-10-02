@@ -35,7 +35,7 @@ docker run --restart=always \
 Likewise this can be deployed as part of the docker-compose.yml file.
 
 ```bash
-docker compose -f ./docker/ramsey-compose.yml -p ramsey up -d
+docker compose -f ./docker/ramsey-compose.yml -p ramsey up --scale ramsey-worker=2 -d
 ```
 
 ## Swagger
