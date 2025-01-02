@@ -9,7 +9,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: <password>
     volumes:
-      - /Users/benjaminferenchak/IdeaProjects/ramsey/ramsey-mw/database/config-file.cnf:/etc/mysql/conf.d/config-file.cnf
+      - ./config-file.cnf:/etc/mysql/conf.d/config-file.cnf
     restart: on-failure
 
 networks:
