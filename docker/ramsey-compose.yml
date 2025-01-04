@@ -25,6 +25,7 @@ services:
       WORK_UNIT_QUEUE_DEPTH_MIN: 50000
       WORK_UNIT_QUEUE_DEPTH_MAX: 100000
       WORK_UNIT_ASSIGNMENT_COUNT: 2000
+      JAVA_OPTS: -XX:UseSVE=0
     depends_on:
       - ramsey-mw
     logging:
@@ -40,6 +41,7 @@ services:
       SPRING_PROFILES_ACTIVE: dev
       WORK_UNIT_FETCH_COUNT: 500
       WORK_UNIT_PUBLISH_COUNT: 200
+      JAVA_OPTS: -XX:UseSVE=0
     depends_on:
       - ramsey-mw
     logging:
