@@ -21,3 +21,8 @@ spring:
 
 server:
   forward-headers-strategy: framework # Needed for api docs behind reverse proxy
+
+management:
+  endpoint:
+    health:
+      show-details: always
