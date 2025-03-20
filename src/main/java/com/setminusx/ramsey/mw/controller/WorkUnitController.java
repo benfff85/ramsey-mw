@@ -26,12 +26,13 @@ public class WorkUnitController {
     public List<WorkUnit> fetchWorkUnit(
             @RequestParam(required = false) Integer subgraphSize,
             @RequestParam(required = false) Integer vertexCount,
+            @RequestParam(required = false) Integer stageId,
             @RequestParam(required = false) WorkUnitStatus status,
             @RequestParam(required = false) String assignedClientId,
             @RequestParam(required = false) Integer pageSize) {
 
-        log.info("Fetching work units with filters - SubgraphSize: {}, VertexCount: {}, Status: {}, AssignedClientId: {}", subgraphSize, vertexCount, status, assignedClientId);
-        return workUnitService.getWorkUnits(status, vertexCount, subgraphSize, assignedClientId, pageSize);
+        log.info("Fetching work units with filters - SubgraphSize: {}, VertexCount: {}, StageId: {}, Status: {}, AssignedClientId: {}", subgraphSize, vertexCount, stageId, status, assignedClientId);
+        return workUnitService.getWorkUnits(status, vertexCount, subgraphSize, stageId, assignedClientId, pageSize);
     }
 
     @GetMapping("/{id}")

@@ -15,11 +15,13 @@ public interface WorkUnitRepo extends JpaRepository<WorkUnit, Integer> {
             "(:subgraphSize IS NULL OR w.subgraphSize = :subgraphSize) AND " +
             "(:vertexCount IS NULL OR w.vertexCount = :vertexCount) AND " +
             "(:status IS NULL OR w.status = :status) AND " +
+            "(:stageId IS NULL OR w.stageId = :stageId) AND " +
             "(:assignedClient IS NULL OR w.assignedClient = :assignedClient)")
-    List<WorkUnit> findBySubgraphSizeAndVertexCountAndStatusAndAssignedClient(
+    List<WorkUnit> findBySubgraphSizeAndVertexCountAndStatusAndStageIdAndAssignedClient(
             @Param("subgraphSize") Integer subgraphSize,
             @Param("vertexCount") Integer vertexCount,
             @Param("status") WorkUnitStatus status,
+            @Param("stageId") Integer stageId,
             @Param("assignedClient") String assignedClient, Pageable pageable);
 
     // TODO remove once campaign is implemented

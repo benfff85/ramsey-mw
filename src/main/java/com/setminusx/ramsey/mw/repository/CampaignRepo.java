@@ -1,6 +1,6 @@
 package com.setminusx.ramsey.mw.repository;
 
-import com.setminusx.ramsey.mw.entity.Client;
+import com.setminusx.ramsey.mw.entity.Campaign;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -9,19 +9,17 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface ClientRepo extends JpaRepository<Client, Integer> {
+public interface CampaignRepo extends JpaRepository<Campaign, Integer> {
 
-    @Query("SELECT c FROM Client c WHERE " +
+    @Query("SELECT c FROM Campaign c WHERE " +
             "(:subgraphSize IS NULL OR c.subgraphSize = :subgraphSize) AND " +
             "(:vertexCount IS NULL OR c.vertexCount = :vertexCount) AND " +
-            "(:campaignId IS NULL OR c.campaignId = :campaignId) AND " +
             "(:status IS NULL OR c.status = :status) AND " +
-            "(:type IS NULL OR c.type = :type)")
-    List<Client> findBySubgraphSizeAndVertexCountAndCampaignIdAndStatusAndType(
+            "(:strategy IS NULL OR c.strategy = :strategy)")
+    List<Campaign> findBySubgraphSizeAndVertexCountAndStatusAndStrategy(
             @Param("subgraphSize") Integer subgraphSize,
             @Param("vertexCount") Integer vertexCount,
-            @Param("campaignId") Integer campaignId,
-            @Param("status") Client.Status status,
-            @Param("type") Client.Type type);
+            @Param("status") Campaign.Status status,
+            @Param("strategy") Campaign.Strategy strategy);
 
 }

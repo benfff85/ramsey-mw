@@ -7,32 +7,30 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-public class Client {
+public class Campaign {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer clientId;
+    private Integer campaignId;
     private Integer subgraphSize;
     private Integer vertexCount;
-    private Integer campaignId;
 
     @Enumerated(EnumType.STRING)
-    private Client.Type type;
+    private Campaign.Strategy strategy;
 
     @Enumerated(EnumType.STRING)
-    private Client.Status status;
+    private Campaign.Status status;
 
     private LocalDateTime createdDate;
-    private LocalDateTime lastPhoneHomeDate;
+    private LocalDateTime updatedDate;
 
     public enum Status {
         ACTIVE,
         INACTIVE
     }
 
-    public enum Type {
-        CLIQUECHECKER,
-        QUEUEMANAGER
+    public enum Strategy {
+        COMPREHENSIVE_EDGE_PAIR_MUTATION
     }
 
 }

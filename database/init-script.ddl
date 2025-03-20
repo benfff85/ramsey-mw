@@ -23,6 +23,7 @@ CREATE TABLE `ramsey-dev`.`client` (
                           `client_id` int NOT NULL AUTO_INCREMENT,
                           `subgraph_size` int DEFAULT NULL,
                           `vertex_count` int DEFAULT NULL,
+                          `campaign_id` int DEFAULT NULL,
                           `created_date` datetime(6) DEFAULT NULL,
                           `last_phone_home_date` datetime(6) DEFAULT NULL,
                           `status` enum('ACTIVE','INACTIVE') DEFAULT NULL,
@@ -46,6 +47,7 @@ CREATE TABLE `ramsey-dev`.`work_unit` (
                              `id` int NOT NULL AUTO_INCREMENT,
                              `subgraph_size` int DEFAULT NULL,
                              `vertex_count` int DEFAULT NULL,
+                             `stage_id` int DEFAULT NULL,
                              `assigned_date` datetime(6) DEFAULT NULL,
                              `completed_date` datetime(6) DEFAULT NULL,
                              `created_date` datetime(6) DEFAULT NULL,
@@ -58,6 +60,30 @@ CREATE TABLE `ramsey-dev`.`work_unit` (
                              PRIMARY KEY (`id`),
                              KEY `work_unit_subgraph_size_IDX` (`subgraph_size`,`vertex_count`,`status`,`assigned_client`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `ramsey-dev`.`stage` (
+    `stage_id` int NOT NULL AUTO_INCREMENT,
+    `base_graph_id` int DEFAULT NULL,
+    `campaign_id` int DEFAULT NULL,
+    `latest_work_unit_id` int DEFAULT NULL,
+    `created_date` datetime(6) DEFAULT NULL,
+    `status` enum('ACTIVE','INACTIVE') DEFAULT NULL,
+    `updated_date` datetime(6) DEFAULT NULL,
+    PRIMARY KEY (`stage_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `ramsey-dev`.`campaign` (
+    `campaign_id` int NOT NULL AUTO_INCREMENT,
+    `created_date` datetime(6) DEFAULT NULL,
+    `status` enum ('ACTIVE', 'INACTIVE') DEFAULT NULL,
+    `strategy` enum ('COMPREHENSIVE_EDGE_PAIR_MUTATION') DEFAULT NULL,
+    `subgraph_size` int DEFAULT NULL,
+    `updated_date` datetime(6) DEFAULT NULL,
+    `vertex_count` int DEFAULT NULL,
+    PRIMARY KEY (`campaign_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
 
 CREATE DATABASE `ramsey-test` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 
@@ -84,6 +110,7 @@ CREATE TABLE `ramsey-test`.`client` (
                                      `client_id` int NOT NULL AUTO_INCREMENT,
                                      `subgraph_size` int DEFAULT NULL,
                                      `vertex_count` int DEFAULT NULL,
+                                     `campaign_id` int DEFAULT NULL,
                                      `created_date` datetime(6) DEFAULT NULL,
                                      `last_phone_home_date` datetime(6) DEFAULT NULL,
                                      `status` enum('ACTIVE','INACTIVE') DEFAULT NULL,
@@ -107,6 +134,7 @@ CREATE TABLE `ramsey-test`.`work_unit` (
                                         `id` int NOT NULL AUTO_INCREMENT,
                                         `subgraph_size` int DEFAULT NULL,
                                         `vertex_count` int DEFAULT NULL,
+                                        `stage_id` int DEFAULT NULL,
                                         `assigned_date` datetime(6) DEFAULT NULL,
                                         `completed_date` datetime(6) DEFAULT NULL,
                                         `created_date` datetime(6) DEFAULT NULL,
@@ -119,6 +147,29 @@ CREATE TABLE `ramsey-test`.`work_unit` (
                                         PRIMARY KEY (`id`),
                                         KEY `work_unit_subgraph_size_IDX` (`subgraph_size`,`vertex_count`,`status`,`assigned_client`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `ramsey-test`.`stage` (
+                                      `stage_id` int NOT NULL AUTO_INCREMENT,
+                                      `base_graph_id` int DEFAULT NULL,
+                                      `campaign_id` int DEFAULT NULL,
+                                      `latest_work_unit_id` int DEFAULT NULL,
+                                      `created_date` datetime(6) DEFAULT NULL,
+                                      `status` enum('ACTIVE','INACTIVE') DEFAULT NULL,
+                                      `updated_date` datetime(6) DEFAULT NULL,
+                                      PRIMARY KEY (`stage_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `ramsey-test`.`campaign` (
+                                         `campaign_id` int NOT NULL AUTO_INCREMENT,
+                                         `created_date` datetime(6) DEFAULT NULL,
+                                         `status` enum ('ACTIVE', 'INACTIVE') DEFAULT NULL,
+                                         `strategy` enum ('COMPREHENSIVE_EDGE_PAIR_MUTATION') DEFAULT NULL,
+                                         `subgraph_size` int DEFAULT NULL,
+                                         `updated_date` datetime(6) DEFAULT NULL,
+                                         `vertex_count` int DEFAULT NULL,
+                                         PRIMARY KEY (`campaign_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 
 CREATE DATABASE `ramsey` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 
@@ -145,6 +196,7 @@ CREATE TABLE `ramsey`.`client` (
                                      `client_id` int NOT NULL AUTO_INCREMENT,
                                      `subgraph_size` int DEFAULT NULL,
                                      `vertex_count` int DEFAULT NULL,
+                                     `campaign_id` int DEFAULT NULL,
                                      `created_date` datetime(6) DEFAULT NULL,
                                      `last_phone_home_date` datetime(6) DEFAULT NULL,
                                      `status` enum('ACTIVE','INACTIVE') DEFAULT NULL,
@@ -168,6 +220,7 @@ CREATE TABLE `ramsey`.`work_unit` (
                                         `id` int NOT NULL AUTO_INCREMENT,
                                         `subgraph_size` int DEFAULT NULL,
                                         `vertex_count` int DEFAULT NULL,
+                                        `stage_id` int DEFAULT NULL,
                                         `assigned_date` datetime(6) DEFAULT NULL,
                                         `completed_date` datetime(6) DEFAULT NULL,
                                         `created_date` datetime(6) DEFAULT NULL,
@@ -179,4 +232,26 @@ CREATE TABLE `ramsey`.`work_unit` (
                                         `work_unit_analysis_type` enum('COMPREHENSIVE','TARGETED','NAIVE') DEFAULT NULL,
                                         PRIMARY KEY (`id`),
                                         KEY `work_unit_subgraph_size_IDX` (`subgraph_size`,`vertex_count`,`status`,`assigned_client`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `ramsey`.`stage` (
+                                      `stage_id` int NOT NULL AUTO_INCREMENT,
+                                      `base_graph_id` int DEFAULT NULL,
+                                      `campaign_id` int DEFAULT NULL,
+                                      `latest_work_unit_id` int DEFAULT NULL,
+                                      `created_date` datetime(6) DEFAULT NULL,
+                                      `status` enum('ACTIVE','INACTIVE') DEFAULT NULL,
+                                      `updated_date` datetime(6) DEFAULT NULL,
+                                      PRIMARY KEY (`stage_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `ramsey`.`campaign` (
+                                         `campaign_id` int NOT NULL AUTO_INCREMENT,
+                                         `created_date` datetime(6) DEFAULT NULL,
+                                         `status` enum ('ACTIVE', 'INACTIVE') DEFAULT NULL,
+                                         `strategy` enum ('COMPREHENSIVE_EDGE_PAIR_MUTATION') DEFAULT NULL,
+                                         `subgraph_size` int DEFAULT NULL,
+                                         `updated_date` datetime(6) DEFAULT NULL,
+                                         `vertex_count` int DEFAULT NULL,
+                                         PRIMARY KEY (`campaign_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

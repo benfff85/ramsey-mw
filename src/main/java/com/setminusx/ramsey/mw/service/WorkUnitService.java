@@ -24,8 +24,8 @@ public class WorkUnitService {
     }
 
 
-    public List<WorkUnit> getWorkUnits(WorkUnitStatus status, Integer vertexCount, Integer subgraphSize, String assignedClientId, Integer pageSize) {
-        return workUnitRepo.findBySubgraphSizeAndVertexCountAndStatusAndAssignedClient(subgraphSize, vertexCount, status, assignedClientId, getPageable(pageSize));
+    public List<WorkUnit> getWorkUnits(WorkUnitStatus status, Integer vertexCount, Integer subgraphSize, Integer stageId, String assignedClientId, Integer pageSize) {
+        return workUnitRepo.findBySubgraphSizeAndVertexCountAndStatusAndStageIdAndAssignedClient(subgraphSize, vertexCount, status, stageId, assignedClientId, getPageable(pageSize));
     }
 
     public WorkUnit getWorkUnitById(Integer id) {

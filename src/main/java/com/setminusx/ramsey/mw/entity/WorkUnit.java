@@ -20,6 +20,7 @@ public class WorkUnit {
     private Integer subgraphSize;
     private Integer vertexCount;
     private Integer baseGraphId;
+    private Integer stageId;
 
     @Convert(converter = EdgeListConverter.class)
     private List<Edge> edgesToFlip;
