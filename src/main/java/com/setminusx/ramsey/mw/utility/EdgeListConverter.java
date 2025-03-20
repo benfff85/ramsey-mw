@@ -1,9 +1,9 @@
 package com.setminusx.ramsey.mw.utility;
 
 import com.setminusx.ramsey.mw.entity.Edge;
-
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;

@@ -11,10 +11,5 @@ spring:
     username: ${DB_USER}
     password: ${DB_PASS}
 
-ramsey:
-  startup:
-    initialize-test-data:
-      enabled: false # Pulls data at startup from production AP
-
 server:
   port: 36000

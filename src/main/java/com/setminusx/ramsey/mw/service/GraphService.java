@@ -1,6 +1,5 @@
 package com.setminusx.ramsey.mw.service;
 
-import com.setminusx.ramsey.mw.dto.GraphDto;
 import com.setminusx.ramsey.mw.entity.Graph;
 import com.setminusx.ramsey.mw.repository.GraphRepo;
 import org.springframework.data.domain.PageRequest;
@@ -17,42 +16,29 @@ public class GraphService {
         this.graphRepo = graphRepo;
     }
 
-    public GraphDto getGraphByGraphId(Integer id) {
-        Graph graph = graphRepo.findGraphByGraphId(id);
-        return mapGraphToDto(graph);
+    public Graph getGraphByGraphId(Integer id) {
+        return graphRepo.findById(id).orElse(null);
     }
 
-    public List<GraphDto> getGraphsWithMinCliqueCount(Integer subgraphSize, Integer vertexCount, Integer count) {
-        return graphRepo.findAllBySubgraphSizeAndVertexCountOrderByCliqueCountAsc(subgraphSize, vertexCount, PageRequest.of(0, count))
-                .stream()
-                .map(GraphService::mapGraphToDto)
-                .toList();
+    public Graph createOrUpdateGraph(Graph graph) {
+        return graphRepo.save(graph);
     }
 
-    public GraphDto publishGraph(GraphDto graphDTO) {
-        return mapGraphToDto(graphRepo.save(mapDtoToGraph(graphDTO)));
+    // TODO Remove once campaign is implemented
+    public List<Graph> getGraphsWithMinCliqueCount(Integer subgraphSize, Integer vertexCount, Integer count) {
+        return graphRepo.findAllBySubgraphSizeAndVertexCountOrderByCliqueCountAsc(subgraphSize, vertexCount, PageRequest.of(0, count));
     }
 
-    private static GraphDto mapGraphToDto(Graph graph) {
-        GraphDto graphDTO = new GraphDto();
-        graphDTO.setCliqueCount(graph.getCliqueCount());
-        graphDTO.setEdgeData(graph.getEdgeData());
-        graphDTO.setGraphId(graph.getGraphId());
-        graphDTO.setIdentifiedDate(graph.getIdentifiedDate());
-        graphDTO.setSubgraphSize(graph.getSubgraphSize());
-        graphDTO.setVertexCount(graph.getVertexCount());
-        return graphDTO;
+    public List<Graph> getGraphs(Integer subgraphSize, Integer vertexCount, Integer count) {
+        if (subgraphSize == null && vertexCount == null) {
+            return graphRepo.findAll(PageRequest.of(0, count)).toList();
+        } else {
+            return graphRepo.findAllBySubgraphSizeAndVertexCount(subgraphSize, vertexCount, PageRequest.of(0, count));
+        }
     }
 
-    private Graph mapDtoToGraph(GraphDto graphDTO) {
-        Graph graph = new Graph();
-        graph.setCliqueCount(graphDTO.getCliqueCount());
-        graph.setEdgeData(graphDTO.getEdgeData());
-        graph.setGraphId(graphDTO.getGraphId());
-        graph.setIdentifiedDate(graphDTO.getIdentifiedDate());
-        graph.setSubgraphSize(graphDTO.getSubgraphSize());
-        graph.setVertexCount(graphDTO.getVertexCount());
-        return graph;
+    public void deleteGraph(Integer id) {
+        graphRepo.deleteById(id);
     }
 
 }

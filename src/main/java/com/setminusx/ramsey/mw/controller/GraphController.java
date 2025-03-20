@@ -1,17 +1,18 @@
 package com.setminusx.ramsey.mw.controller;
 
-import com.setminusx.ramsey.mw.dto.GraphDto;
+import com.setminusx.ramsey.mw.entity.Graph;
 import com.setminusx.ramsey.mw.service.GraphService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
-import static com.setminusx.ramsey.mw.utility.Constants.ERROR_HEADER;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Slf4j
 @RestController
+@RequestMapping("/api/ramsey/graphs")
 public class GraphController {
 
     private final GraphService graphService;
@@ -20,48 +21,57 @@ public class GraphController {
         this.graphService = graphService;
     }
 
-    @GetMapping("/api/ramsey/graphs")
-    public ResponseEntity<List<GraphDto>> getGraphByType(
+
+    @GetMapping
+    public List<Graph> getGraphs(
             @RequestParam() String type,
             @RequestParam() Integer subgraphSize,
             @RequestParam() Integer vertexCount,
             @RequestParam(defaultValue = "1") String count) {
 
-        log.info("Processing getGraphByType");
-        List<GraphDto> graphs;
+        log.info("Fetching graphs with filters - SubgraphSize: {}, VertexCount: {}, Type: {}, Count: {}", subgraphSize, vertexCount, type, count);
+        List<Graph> graphs;
         if ("min".equals(type)) {
+            // TODO Remove once campaign is implemented
             graphs = graphService.getGraphsWithMinCliqueCount(subgraphSize, vertexCount, Integer.parseInt(count));
         } else {
-            return ResponseEntity.badRequest().header(ERROR_HEADER, "Invalid type: " + type).build();
+            graphs = graphService.getGraphs(subgraphSize, vertexCount, Integer.parseInt(count));
         }
-        log.info("Completed getGraphByType");
-        return ResponseEntity.ok().body(graphs);
+        return graphs;
     }
 
-    @GetMapping("/api/ramsey/graphs/{id}")
-    public ResponseEntity<GraphDto> getGraphByGraphId(
-            @PathVariable() Integer id) {
+    @GetMapping("/{id}")
+    public Graph getGraphByGraphId(@PathVariable() Integer id) {
+        log.info("Fetching graph with ID: {}", id);
 
-        log.info("Processing getGraphByGraphId for id: {}", id);
-        GraphDto graphDto;
-        try {
-            graphDto = graphService.getGraphByGraphId(id);
-        } catch (Exception e) {
-            return ResponseEntity.notFound().header(ERROR_HEADER, "Graph with ID " + id + " not found").build();
+        Graph graph = graphService.getGraphByGraphId(id);
+
+        if (graph == null) {
+            log.warn("Graph with ID: {} not found", id);
+            throw new ResponseStatusException(NOT_FOUND, "Graph not found");
         }
-        log.info("Completed getGraphByGraphId");
-        return ResponseEntity.ok().body(graphDto);
 
+        return graph;
     }
 
-    @PutMapping("/api/ramsey/graphs")
-    public ResponseEntity<GraphDto> publishGraph(
-            @RequestBody GraphDto graph) {
+    @PostMapping
+    public Graph createGraph(@RequestBody Graph graph) {
+        log.info("Creating a new graph with data: {}", graph);
+        return graphService.createOrUpdateGraph(graph);
+    }
 
-        log.info("Processing publishGraph");
-        graph = graphService.publishGraph(graph);
-        log.info("Completed publishGraph");
-        return ResponseEntity.ok().body(graph);
+
+    @PutMapping("/{id}")
+    public Graph updateGraph(@PathVariable() Integer id, @RequestBody Graph graph) {
+        log.info("Updating graph with ID: {} with data: {}", id, graph);
+        graph.setGraphId(id);
+        return graphService.createOrUpdateGraph(graph);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteGraph(@PathVariable Integer id) {
+        log.info("Deleting graph with ID: {}", id);
+        graphService.deleteGraph(id);
     }
 
 }
