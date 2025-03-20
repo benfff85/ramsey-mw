@@ -10,6 +10,7 @@ services:
       MYSQL_ROOT_PASSWORD: <password>
     volumes:
       - ./config-file.cnf:/etc/mysql/conf.d/config-file.cnf
+      - /Volumes/crucial-p3-nvme/storage/docker/volumes/ramsey-db/data:/var/lib/mysql
     restart: on-failure
 
 networks:
