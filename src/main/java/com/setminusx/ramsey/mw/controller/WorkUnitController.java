@@ -1,18 +1,19 @@
 package com.setminusx.ramsey.mw.controller;
 
-import com.setminusx.ramsey.mw.dto.WorkUnitDto;
+import com.setminusx.ramsey.mw.entity.WorkUnit;
 import com.setminusx.ramsey.mw.model.WorkUnitStatus;
 import com.setminusx.ramsey.mw.service.WorkUnitService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
-import static java.util.Objects.nonNull;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Slf4j
 @RestController
+@RequestMapping("/api/ramsey/work-units")
 public class WorkUnitController {
 
     private final WorkUnitService workUnitService;
@@ -21,43 +22,61 @@ public class WorkUnitController {
         this.workUnitService = workUnitService;
     }
 
-    @PostMapping("/api/ramsey/work-units")
-    public ResponseEntity<List<WorkUnitDto>> saveWorkUnit(@RequestBody() List<WorkUnitDto> workUnitsToCreate) {
-        log.info("Processing saveWorkUnit");
-        List<WorkUnitDto> workUnits = workUnitService.saveAll(workUnitsToCreate);
-        log.info("Work units posted, count: {}", workUnits.size());
-        return ResponseEntity.ok().body(workUnits);
+    @GetMapping
+    public List<WorkUnit> fetchWorkUnit(
+            @RequestParam(required = false) Integer subgraphSize,
+            @RequestParam(required = false) Integer vertexCount,
+            @RequestParam(required = false) WorkUnitStatus status,
+            @RequestParam(required = false) String assignedClientId,
+            @RequestParam(required = false) Integer pageSize) {
+
+        log.info("Fetching work units with filters - SubgraphSize: {}, VertexCount: {}, Status: {}, AssignedClientId: {}", subgraphSize, vertexCount, status, assignedClientId);
+        return workUnitService.getWorkUnits(status, vertexCount, subgraphSize, assignedClientId, pageSize);
     }
 
+    @GetMapping("/{id}")
+    public WorkUnit getWorkUnitById(@PathVariable Integer id) {
+        log.info("Fetching work unit with ID: {}", id);
 
-    @GetMapping("/api/ramsey/work-units")
-    public ResponseEntity<List<WorkUnitDto>> fetchWorkUnit(
-            @RequestParam() WorkUnitStatus status,
-            @RequestParam() Integer vertexCount,
-            @RequestParam() Integer subgraphSize,
-            @RequestParam(required = false) String assignedClientId,
-            @RequestParam() Integer pageSize) {
+        WorkUnit workUnit = workUnitService.getWorkUnitById(id);
 
-        log.info("Processing fetchWorkUnit");
-
-        List<WorkUnitDto> workUnits;
-        if (nonNull(assignedClientId)) {
-            workUnits = workUnitService.getAllAssignedToClient(status, vertexCount, subgraphSize, assignedClientId, pageSize);
-        } else {
-            workUnits = workUnitService.getAll(status, vertexCount, subgraphSize, pageSize);
+        if (workUnit == null) {
+            log.warn("Work unit with ID: {} not found", id);
+            throw new ResponseStatusException(NOT_FOUND, "Work unit not found");
         }
 
-        log.info("Completed fetchWorkUnit");
-        return ResponseEntity.ok().body(workUnits);
-
+        return workUnit;
     }
 
-    @GetMapping("/api/ramsey/work-units/last")
-    public ResponseEntity<List<WorkUnitDto>> fetchLastWorkUnit(@RequestParam() Integer graphId) {
+    @PostMapping
+    public List<WorkUnit> createWorkUnits(@RequestBody() List<WorkUnit> workUnits) {
+        log.info("Creating {} new work units", workUnits.size());
+        List<WorkUnit> createdWorkUnits = workUnitService.createOrUpdateWorkUnits(workUnits);
+        log.info("Work units created, count: {}", createdWorkUnits.size());
+        return createdWorkUnits;
+    }
+
+    @PutMapping
+    public List<WorkUnit> UpdateWorkUnits(@RequestBody() List<WorkUnit> workUnits) {
+        log.info("Updating {} work units, first work unit id {}", workUnits.size(), workUnits.getFirst().getId());
+        List<WorkUnit> updatedWorkUnits = workUnitService.createOrUpdateWorkUnits(workUnits);
+        log.info("Work units updated, count: {}, first work unit id: {}", updatedWorkUnits.size(), updatedWorkUnits.getFirst().getId());
+        return updatedWorkUnits;
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteWorkUnit(@PathVariable Integer id) {
+        log.info("Deleting work unit with ID: {}", id);
+        workUnitService.deleteWorkUnit(id);
+    }
+
+    // TODO Remove once campaign is implemented
+    @GetMapping("/last")
+    public List<WorkUnit> fetchLastWorkUnit(@RequestParam() Integer graphId) {
         log.info("Processing fetchLastWorkUnit");
-        List<WorkUnitDto> workUnit = workUnitService.getMostRecentForGraphId(graphId);
+        List<WorkUnit> workUnit = workUnitService.getMostRecentForGraphId(graphId);
         log.info("Completed fetchLastWorkUnit");
-        return ResponseEntity.ok().body(workUnit);
+        return workUnit;
 
     }
 
