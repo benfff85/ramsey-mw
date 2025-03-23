@@ -12,8 +12,6 @@ public class Client {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer clientId;
-    private Integer subgraphSize;
-    private Integer vertexCount;
     private Integer campaignId;
 
     @Enumerated(EnumType.STRING)

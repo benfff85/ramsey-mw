@@ -24,15 +24,13 @@ public class WorkUnitController {
 
     @GetMapping
     public List<WorkUnit> fetchWorkUnit(
-            @RequestParam(required = false) Integer subgraphSize,
-            @RequestParam(required = false) Integer vertexCount,
             @RequestParam(required = false) Integer stageId,
             @RequestParam(required = false) WorkUnitStatus status,
             @RequestParam(required = false) String assignedClientId,
             @RequestParam(required = false) Integer pageSize) {
 
-        log.info("Fetching work units with filters - SubgraphSize: {}, VertexCount: {}, StageId: {}, Status: {}, AssignedClientId: {}", subgraphSize, vertexCount, stageId, status, assignedClientId);
-        return workUnitService.getWorkUnits(status, vertexCount, subgraphSize, stageId, assignedClientId, pageSize);
+        log.info("Fetching work units with filters - StageId: {}, Status: {}, AssignedClientId: {}", stageId, status, assignedClientId);
+        return workUnitService.getWorkUnits(status, stageId, assignedClientId, pageSize);
     }
 
     @GetMapping("/{id}")
@@ -69,16 +67,6 @@ public class WorkUnitController {
     public void deleteWorkUnit(@PathVariable Integer id) {
         log.info("Deleting work unit with ID: {}", id);
         workUnitService.deleteWorkUnit(id);
-    }
-
-    // TODO Remove once campaign is implemented
-    @GetMapping("/last")
-    public List<WorkUnit> fetchLastWorkUnit(@RequestParam() Integer graphId) {
-        log.info("Processing fetchLastWorkUnit");
-        List<WorkUnit> workUnit = workUnitService.getMostRecentForGraphId(graphId);
-        log.info("Completed fetchLastWorkUnit");
-        return workUnit;
-
     }
 
 }

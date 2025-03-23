@@ -12,14 +12,10 @@ import java.util.List;
 public interface ClientRepo extends JpaRepository<Client, Integer> {
 
     @Query("SELECT c FROM Client c WHERE " +
-            "(:subgraphSize IS NULL OR c.subgraphSize = :subgraphSize) AND " +
-            "(:vertexCount IS NULL OR c.vertexCount = :vertexCount) AND " +
             "(:campaignId IS NULL OR c.campaignId = :campaignId) AND " +
             "(:status IS NULL OR c.status = :status) AND " +
             "(:type IS NULL OR c.type = :type)")
-    List<Client> findBySubgraphSizeAndVertexCountAndCampaignIdAndStatusAndType(
-            @Param("subgraphSize") Integer subgraphSize,
-            @Param("vertexCount") Integer vertexCount,
+    List<Client> findByCampaignIdAndStatusAndType(
             @Param("campaignId") Integer campaignId,
             @Param("status") Client.Status status,
             @Param("type") Client.Type type);

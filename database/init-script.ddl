@@ -21,8 +21,6 @@ GRANT Lock tables ON `ramsey-dev`.* TO 'ramsey-user-dev'@'%';
 
 CREATE TABLE `ramsey-dev`.`client` (
                           `client_id` int NOT NULL AUTO_INCREMENT,
-                          `subgraph_size` int DEFAULT NULL,
-                          `vertex_count` int DEFAULT NULL,
                           `campaign_id` int DEFAULT NULL,
                           `created_date` datetime(6) DEFAULT NULL,
                           `last_phone_home_date` datetime(6) DEFAULT NULL,
@@ -45,8 +43,6 @@ CREATE TABLE `ramsey-dev`.`work_unit` (
                              `base_graph_id` int DEFAULT NULL,
                              `clique_count` int DEFAULT NULL,
                              `id` int NOT NULL AUTO_INCREMENT,
-                             `subgraph_size` int DEFAULT NULL,
-                             `vertex_count` int DEFAULT NULL,
                              `stage_id` int DEFAULT NULL,
                              `assigned_date` datetime(6) DEFAULT NULL,
                              `completed_date` datetime(6) DEFAULT NULL,
@@ -58,7 +54,7 @@ CREATE TABLE `ramsey-dev`.`work_unit` (
                              `status` enum('NEW','ASSIGNED','COMPLETE','CANCELLED') DEFAULT NULL,
                              `work_unit_analysis_type` enum('COMPREHENSIVE','TARGETED','NAIVE') DEFAULT NULL,
                              PRIMARY KEY (`id`),
-                             KEY `work_unit_subgraph_size_IDX` (`subgraph_size`,`vertex_count`,`status`,`assigned_client`) USING BTREE
+                             KEY `work_unit_subgraph_size_IDX` (`stage_id`,`status`,`assigned_client`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `ramsey-dev`.`stage` (
@@ -108,8 +104,6 @@ GRANT Lock tables ON `ramsey-test`.* TO 'ramsey-user-test'@'%';
 
 CREATE TABLE `ramsey-test`.`client` (
                                      `client_id` int NOT NULL AUTO_INCREMENT,
-                                     `subgraph_size` int DEFAULT NULL,
-                                     `vertex_count` int DEFAULT NULL,
                                      `campaign_id` int DEFAULT NULL,
                                      `created_date` datetime(6) DEFAULT NULL,
                                      `last_phone_home_date` datetime(6) DEFAULT NULL,
@@ -132,8 +126,6 @@ CREATE TABLE `ramsey-test`.`work_unit` (
                                         `base_graph_id` int DEFAULT NULL,
                                         `clique_count` int DEFAULT NULL,
                                         `id` int NOT NULL AUTO_INCREMENT,
-                                        `subgraph_size` int DEFAULT NULL,
-                                        `vertex_count` int DEFAULT NULL,
                                         `stage_id` int DEFAULT NULL,
                                         `assigned_date` datetime(6) DEFAULT NULL,
                                         `completed_date` datetime(6) DEFAULT NULL,
@@ -145,7 +137,7 @@ CREATE TABLE `ramsey-test`.`work_unit` (
                                         `status` enum('NEW','ASSIGNED','COMPLETE','CANCELLED') DEFAULT NULL,
                                         `work_unit_analysis_type` enum('COMPREHENSIVE','TARGETED','NAIVE') DEFAULT NULL,
                                         PRIMARY KEY (`id`),
-                                        KEY `work_unit_subgraph_size_IDX` (`subgraph_size`,`vertex_count`,`status`,`assigned_client`) USING BTREE
+                                        KEY `work_unit_subgraph_size_IDX` (`stage_id`,`status`,`assigned_client`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `ramsey-test`.`stage` (
@@ -194,8 +186,6 @@ GRANT Lock tables ON `ramsey`.* TO 'ramsey-user'@'%';
 
 CREATE TABLE `ramsey`.`client` (
                                      `client_id` int NOT NULL AUTO_INCREMENT,
-                                     `subgraph_size` int DEFAULT NULL,
-                                     `vertex_count` int DEFAULT NULL,
                                      `campaign_id` int DEFAULT NULL,
                                      `created_date` datetime(6) DEFAULT NULL,
                                      `last_phone_home_date` datetime(6) DEFAULT NULL,
@@ -218,8 +208,6 @@ CREATE TABLE `ramsey`.`work_unit` (
                                         `base_graph_id` int DEFAULT NULL,
                                         `clique_count` int DEFAULT NULL,
                                         `id` int NOT NULL AUTO_INCREMENT,
-                                        `subgraph_size` int DEFAULT NULL,
-                                        `vertex_count` int DEFAULT NULL,
                                         `stage_id` int DEFAULT NULL,
                                         `assigned_date` datetime(6) DEFAULT NULL,
                                         `completed_date` datetime(6) DEFAULT NULL,
@@ -231,7 +219,7 @@ CREATE TABLE `ramsey`.`work_unit` (
                                         `status` enum('NEW','ASSIGNED','COMPLETE','CANCELLED') DEFAULT NULL,
                                         `work_unit_analysis_type` enum('COMPREHENSIVE','TARGETED','NAIVE') DEFAULT NULL,
                                         PRIMARY KEY (`id`),
-                                        KEY `work_unit_subgraph_size_IDX` (`subgraph_size`,`vertex_count`,`status`,`assigned_client`) USING BTREE
+                                        KEY `work_unit_subgraph_size_IDX` (`stage_id`,`status`,`assigned_client`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `ramsey`.`stage` (
