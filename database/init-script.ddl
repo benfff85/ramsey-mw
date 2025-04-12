@@ -54,7 +54,8 @@ CREATE TABLE `ramsey-dev`.`work_unit` (
                              `status` enum('NEW','ASSIGNED','COMPLETE','CANCELLED') DEFAULT NULL,
                              `work_unit_analysis_type` enum('COMPREHENSIVE','TARGETED','NAIVE') DEFAULT NULL,
                              PRIMARY KEY (`id`),
-                             KEY `work_unit_subgraph_size_IDX` (`stage_id`,`status`,`assigned_client`) USING BTREE
+                             KEY `idx_work_unit_stage_id_status` (`stage_id`,`status`) USING BTREE,
+                             KEY `idx_work_unit_assigned_client_status` (`assigned_client`,`status`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `ramsey-dev`.`stage` (
@@ -137,7 +138,8 @@ CREATE TABLE `ramsey-test`.`work_unit` (
                                         `status` enum('NEW','ASSIGNED','COMPLETE','CANCELLED') DEFAULT NULL,
                                         `work_unit_analysis_type` enum('COMPREHENSIVE','TARGETED','NAIVE') DEFAULT NULL,
                                         PRIMARY KEY (`id`),
-                                        KEY `work_unit_subgraph_size_IDX` (`stage_id`,`status`,`assigned_client`) USING BTREE
+                                        KEY `idx_work_unit_stage_id_status` (`stage_id`,`status`) USING BTREE,
+                                        KEY `idx_work_unit_assigned_client_status` (`assigned_client`,`status`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `ramsey-test`.`stage` (
@@ -219,7 +221,8 @@ CREATE TABLE `ramsey`.`work_unit` (
                                         `status` enum('NEW','ASSIGNED','COMPLETE','CANCELLED') DEFAULT NULL,
                                         `work_unit_analysis_type` enum('COMPREHENSIVE','TARGETED','NAIVE') DEFAULT NULL,
                                         PRIMARY KEY (`id`),
-                                        KEY `work_unit_subgraph_size_IDX` (`stage_id`,`status`,`assigned_client`) USING BTREE
+                                        KEY `idx_work_unit_stage_id_status` (`stage_id`,`status`) USING BTREE,
+                                        KEY `idx_work_unit_assigned_client_status` (`assigned_client`,`status`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `ramsey`.`stage` (
