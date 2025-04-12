@@ -23,13 +23,12 @@ public class ClientController {
 
     @GetMapping
     public List<Client> getClients(
-            @RequestParam(required = false) Integer subgraphSize,
-            @RequestParam(required = false) Integer vertexCount,
+            @RequestParam(required = false) Integer campaignId,
             @RequestParam(required = false) Client.Status status,
             @RequestParam(required = false) Client.Type type) {
 
-        log.info("Fetching clients with filters - SubgraphSize: {}, VertexCount: {}, Status: {}, Type: {}", subgraphSize, vertexCount, status, type);
-        return clientService.getClients(subgraphSize, vertexCount, status, type);
+        log.info("Fetching clients with filters - CampaignId: {}, Status: {}, Type: {}", campaignId, status, type);
+        return clientService.getClients(campaignId, status, type);
     }
 
     @GetMapping("/{id}")

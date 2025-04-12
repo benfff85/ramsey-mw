@@ -24,8 +24,8 @@ public class WorkUnitService {
     }
 
 
-    public List<WorkUnit> getWorkUnits(WorkUnitStatus status, Integer vertexCount, Integer subgraphSize, String assignedClientId, Integer pageSize) {
-        return workUnitRepo.findBySubgraphSizeAndVertexCountAndStatusAndAssignedClient(subgraphSize, vertexCount, status, assignedClientId, getPageable(pageSize));
+    public List<WorkUnit> getWorkUnits(WorkUnitStatus status, Integer stageId, String assignedClientId, Integer pageSize) {
+        return workUnitRepo.findByStatusAndStageIdAndAssignedClient(status, stageId, assignedClientId, getPageable(pageSize));
     }
 
     public WorkUnit getWorkUnitById(Integer id) {
@@ -38,10 +38,6 @@ public class WorkUnitService {
 
     public void deleteWorkUnit(Integer id) {
         workUnitRepo.deleteById(id);
-    }
-
-    public List<WorkUnit> getMostRecentForGraphId(Integer graphId) {
-        return workUnitRepo.findAllByBaseGraphIdOrderByIdDesc(graphId, getPageable(1));
     }
 
     private Pageable getPageable(Integer pageSize) {

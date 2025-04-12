@@ -1,7 +1,7 @@
 spring:
   jpa:
     hibernate:
-      ddl-auto: ${DDL_AUTO:none} # Creates tables [none, create]
+      ddl-auto: ${DDL_AUTO:update} # Creates tables [none, create, update]
     defer-datasource-initialization: true
   sql:
     init:

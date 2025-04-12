@@ -24,20 +24,13 @@ public class GraphController {
 
     @GetMapping
     public List<Graph> getGraphs(
-            @RequestParam() String type,
             @RequestParam() Integer subgraphSize,
             @RequestParam() Integer vertexCount,
             @RequestParam(defaultValue = "1") String count) {
 
-        log.info("Fetching graphs with filters - SubgraphSize: {}, VertexCount: {}, Type: {}, Count: {}", subgraphSize, vertexCount, type, count);
-        List<Graph> graphs;
-        if ("min".equals(type)) {
-            // TODO Remove once campaign is implemented
-            graphs = graphService.getGraphsWithMinCliqueCount(subgraphSize, vertexCount, Integer.parseInt(count));
-        } else {
-            graphs = graphService.getGraphs(subgraphSize, vertexCount, Integer.parseInt(count));
-        }
-        return graphs;
+        log.info("Fetching graphs with filters - SubgraphSize: {}, VertexCount: {}, Count: {}", subgraphSize, vertexCount, count);
+        return graphService.getGraphs(subgraphSize, vertexCount, Integer.parseInt(count));
+
     }
 
     @GetMapping("/{id}")
@@ -59,7 +52,6 @@ public class GraphController {
         log.info("Creating a new graph with data: {}", graph);
         return graphService.createOrUpdateGraph(graph);
     }
-
 
     @PutMapping("/{id}")
     public Graph updateGraph(@PathVariable() Integer id, @RequestBody Graph graph) {

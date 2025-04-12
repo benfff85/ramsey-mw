@@ -24,11 +24,6 @@ public class GraphService {
         return graphRepo.save(graph);
     }
 
-    // TODO Remove once campaign is implemented
-    public List<Graph> getGraphsWithMinCliqueCount(Integer subgraphSize, Integer vertexCount, Integer count) {
-        return graphRepo.findAllBySubgraphSizeAndVertexCountOrderByCliqueCountAsc(subgraphSize, vertexCount, PageRequest.of(0, count));
-    }
-
     public List<Graph> getGraphs(Integer subgraphSize, Integer vertexCount, Integer count) {
         if (subgraphSize == null && vertexCount == null) {
             return graphRepo.findAll(PageRequest.of(0, count)).toList();

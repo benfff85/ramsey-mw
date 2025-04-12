@@ -17,9 +17,8 @@ public class WorkUnit {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-    private Integer subgraphSize;
-    private Integer vertexCount;
     private Integer baseGraphId;
+    private Integer stageId;
 
     @Convert(converter = EdgeListConverter.class)
     private List<Edge> edgesToFlip;

@@ -8,8 +8,6 @@ import java.util.List;
 
 public interface GraphRepo extends JpaRepository<Graph, Integer> {
 
-    List<Graph> findAllBySubgraphSizeAndVertexCountOrderByCliqueCountAsc(Integer subgraphSize, Integer vertexCount, Pageable pageable);
-
     List<Graph> findAllBySubgraphSizeAndVertexCount(Integer subgraphSize, Integer vertexCount, Pageable pageable);
 
 }

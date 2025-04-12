@@ -15,11 +15,11 @@ public class ClientService {
         this.clientRepo = clientRepo;
     }
 
-    public List<Client> getClients(Integer subgraphSize, Integer vertexCount, Client.Status status, Client.Type type) {
-        if (subgraphSize == null && vertexCount == null && status == null && type == null) {
+    public List<Client> getClients(Integer campaignId, Client.Status status, Client.Type type) {
+        if (campaignId == null &&status == null && type == null) {
             return clientRepo.findAll();
         } else {
-            return clientRepo.findBySubgraphSizeAndVertexCountAndStatusAndType(subgraphSize, vertexCount, status, type);
+            return clientRepo.findByCampaignIdAndStatusAndType(campaignId, status, type);
         }
     }
 
