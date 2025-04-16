@@ -1,0 +1,20 @@
+type Query {
+    summary: SummaryResponse
+}
+
+type SummaryResponse {
+    stageSummary(stageId: Int, workUnitStatusList: [WorkUnitStatus!]): StageSummary
+}
+
+type StageSummary {
+    workUnitCount: Int!
+    stageId: Int!
+    workUnitStatusList: [WorkUnitStatus!]!
+}
+
+enum WorkUnitStatus {
+    NEW
+    ASSIGNED
+    COMPLETE
+    CANCELLED
+}

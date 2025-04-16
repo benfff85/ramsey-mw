@@ -2,7 +2,8 @@ logging:
   level:
     root: INFO
   pattern:
-    level: "%clr([%X{X-B3-TraceId}]){blue} %clr(%5p){green}"
+    dateformat: yyyy-MM-dd HH:mm:ss.SSS
+    console: "%d{${logging.pattern.dateformat}} %clr([%X{traceId:-},%X{spanId:-}]){blue} %clr(%5p){green} %clr(${PID:-}){magenta} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n%wEx"
 
 ramsey:
   work-unit:
@@ -18,6 +19,10 @@ spring:
           batch_size: ${JDBC_BATCH_SIZE:500}
         order_inserts: true
         order_updates: true
+  graphql:
+    graphiql:
+      enabled: true
+      path: /graphiql
 
 server:
   forward-headers-strategy: framework # Needed for api docs behind reverse proxy
@@ -26,3 +31,5 @@ management:
   endpoint:
     health:
       show-details: always
+  tracing:
+    enabled: false

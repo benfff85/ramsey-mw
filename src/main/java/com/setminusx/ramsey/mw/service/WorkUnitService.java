@@ -40,6 +40,10 @@ public class WorkUnitService {
         workUnitRepo.deleteById(id);
     }
 
+    public Long getWorkUnitCountByStageIdAndStatus(Integer stageId, List<WorkUnitStatus> workUnitStatusList) {
+        return workUnitRepo.countWorkUnitsByStageIdAndStatus(stageId, workUnitStatusList);
+    }
+
     private Pageable getPageable(Integer pageSize) {
         return PageRequest.of(0, ObjectUtils.defaultIfNull(pageSize, defaultPageSize));
     }
