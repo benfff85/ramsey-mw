@@ -27,4 +27,11 @@ public interface WorkUnitRepo extends JpaRepository<WorkUnit, Integer> {
             @Param("stageId") Integer stageId,
             @Param("workUnitStatusList") List<WorkUnitStatus> workUnitStatusList);
 
+    @Query("SELECT COUNT(w) FROM WorkUnit w WHERE " +
+            "w.assignedClient = :clientId AND " +
+            "w.status IN :workUnitStatusList")
+    long countWorkUnitsByClientIdAndStatus(
+            @Param("clientId") String clientId,
+            @Param("workUnitStatusList") List<WorkUnitStatus> workUnitStatusList);
+
 }
