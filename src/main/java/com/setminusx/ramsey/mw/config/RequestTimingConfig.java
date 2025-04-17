@@ -3,6 +3,8 @@ package com.setminusx.ramsey.mw.config;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.context.annotation.Profile;
 import org.springframework.graphql.server.WebGraphQlInterceptor;
 import org.springframework.graphql.server.WebGraphQlRequest;
 import org.springframework.graphql.server.WebGraphQlResponse;
@@ -14,6 +16,7 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @Component
+@Profile({"local", "dev"})
 public class RequestTimingConfig implements WebMvcConfigurer, WebGraphQlInterceptor {
 
     private static final String START_TIME_ATTRIBUTE = "startTime";
@@ -22,13 +25,13 @@ public class RequestTimingConfig implements WebMvcConfigurer, WebGraphQlIntercep
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new HandlerInterceptor() {
             @Override
-            public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+            public boolean preHandle(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull Object handler) {
                 request.setAttribute(START_TIME_ATTRIBUTE, System.currentTimeMillis());
                 return true;
             }
 
             @Override
-            public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
+            public void afterCompletion(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull Object handler, Exception ex) {
                 long startTime = (Long) request.getAttribute(START_TIME_ATTRIBUTE);
                 long duration = System.currentTimeMillis() - startTime;
                 log.info("REST Request {} {} completed in {}ms with status {}", 
@@ -41,11 +44,11 @@ public class RequestTimingConfig implements WebMvcConfigurer, WebGraphQlIntercep
     }
 
     @Override
-    public Mono<WebGraphQlResponse> intercept(WebGraphQlRequest request, Chain chain) {
+    public @NotNull Mono<WebGraphQlResponse> intercept(@NotNull WebGraphQlRequest request, Chain chain) {
         long startTime = System.currentTimeMillis();
         return chain.next(request).map(response -> {
             long duration = System.currentTimeMillis() - startTime;
-            log.info("GraphQL Request {} completed in {}ms with {} errors", 
+            log.info("GraphQL Request {} completed in {}ms with {} errors",
                 request.getOperationName() != null ? request.getOperationName() : "anonymous",
                 duration,
                 response.getErrors().size());
