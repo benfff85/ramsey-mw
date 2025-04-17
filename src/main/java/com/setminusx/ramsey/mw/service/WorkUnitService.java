@@ -44,6 +44,10 @@ public class WorkUnitService {
         return workUnitRepo.countWorkUnitsByStageIdAndStatus(stageId, workUnitStatusList);
     }
 
+    public Long getWorkUnitCountByClientIdAndStatus(String clientId,  List<WorkUnitStatus> workUnitStatusList) {
+        return workUnitRepo.countWorkUnitsByClientIdAndStatus(clientId, workUnitStatusList);
+    }
+
     private Pageable getPageable(Integer pageSize) {
         return PageRequest.of(0, ObjectUtils.defaultIfNull(pageSize, defaultPageSize));
     }

@@ -11,4 +11,11 @@ public class SummaryResponse {
         private int stageId;
         private List<WorkUnitStatus> workUnitStatusList;
     }
+
+    @Data
+    public static class ClientSummary {
+        private long workUnitCount;
+        private String clientId;
+        private List<WorkUnitStatus> workUnitStatusList;
+    }
 }

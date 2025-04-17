@@ -35,4 +35,14 @@ public class SummaryGraphQLController {
         stageSummary.setWorkUnitCount(workUnitService.getWorkUnitCountByStageIdAndStatus(stageId, workUnitStatusList));
         return stageSummary;
     }
+
+    @SchemaMapping(typeName = "SummaryResponse")
+    public SummaryResponse.ClientSummary clientSummary(@Argument String clientId, @Argument List<WorkUnitStatus> workUnitStatusList) {
+        log.info("Fetching client summary for clientId: {}, workUnitStatusList: {}", clientId, workUnitStatusList);
+        SummaryResponse.ClientSummary clientSummary = new SummaryResponse.ClientSummary();
+        clientSummary.setClientId(clientId);
+        clientSummary.setWorkUnitStatusList(workUnitStatusList);
+        clientSummary.setWorkUnitCount(workUnitService.getWorkUnitCountByClientIdAndStatus(clientId, workUnitStatusList));
+        return clientSummary;
+    }
 }
