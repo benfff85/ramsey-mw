@@ -50,6 +50,22 @@ services:
         max-size: "10m"
     restart: on-failure
 
+  ramsey-ui:
+    image: benferenchak/ramsey-ui:develop
+    networks:
+      - ramsey-net
+    ports:
+      - "8501:8501"
+    environment:
+      API_BASE_URL: http://ramsey-mw:8080
+    depends_on:
+      - ramsey-mw
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    restart: on-failure
+
 networks:
   ramsey-net:
     external: true
