@@ -1,4 +1,5 @@
 services:
+
   ramsey-mw:
     image: benferenchak/ramsey-mw:develop
     networks:
@@ -9,12 +10,13 @@ services:
       SPRING_PROFILES_ACTIVE: dev
       DB_USER: ramsey-user-dev
       DB_PASS: <password>
-      JAVA_OPTS: -XX:UseSVE=0
+      LOGGING_LEVEL_ROOT: OFF
     logging:
       driver: json-file
       options:
         max-size: "10m"
     restart: on-failure
+
   ramsey-queue-manager:
     image: benferenchak/ramsey-queue-manager:develop
     networks:
@@ -22,10 +24,10 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: dev
       WORK_UNIT_ANALYSIS_TYPE: TARGETED
-      WORK_UNIT_QUEUE_DEPTH_MIN: 50000
-      WORK_UNIT_QUEUE_DEPTH_MAX: 100000
-      WORK_UNIT_ASSIGNMENT_COUNT: 2000
-      JAVA_OPTS: -XX:UseSVE=0
+      WORK_UNIT_QUEUE_DEPTH_MIN: 32000000
+      WORK_UNIT_QUEUE_DEPTH_MAX: 64000000
+      WORK_UNIT_ASSIGNMENT_COUNT: 250000
+      LOGGING_LEVEL_ROOT: OFF
     depends_on:
       - ramsey-mw
     logging:
@@ -33,15 +35,18 @@ services:
       options:
         max-size: "10m"
     restart: on-failure
+
   ramsey-worker:
     image: benferenchak/ramsey-worker:develop
     networks:
       - ramsey-net
     environment:
       SPRING_PROFILES_ACTIVE: dev
-      WORK_UNIT_FETCH_COUNT: 500
-      WORK_UNIT_PUBLISH_COUNT: 200
-      JAVA_OPTS: -XX:UseSVE=0
+      WORK_UNIT_FETCH_COUNT: 50000
+      WORK_UNIT_PUBLISH_COUNT: 50000
+      WORK_UNIT_ROUTER_FREQ: 10000
+      LOGGING_LEVEL_ROOT: WARN
+      MW_HOST: http://ramsey-mw:8080
     depends_on:
       - ramsey-mw
     logging:
