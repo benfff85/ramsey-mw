@@ -35,7 +35,7 @@ docker run --restart=always \
 Likewise this can be deployed as part of the docker-compose.yml file.
 
 ```bash
-docker compose -f ./docker/ramsey-compose.yml -p ramsey up --scale ramsey-worker=2 -d
+docker compose -f ./docker/ramsey-compose.yml -p ramsey up --scale ramsey-mw=1 --scale ramsey-queue-manager=1 --scale ramsey-worker=1 --scale ramsey-ui=1 -d
 ```
 
 ## Swagger
@@ -66,23 +66,12 @@ query {
 
 ## Common Queries
 
-Find the average work unit analysis duration by analysis type 
+Find the count of work units by stage and status
 ```sql
-SELECT work_unit_analysis_type, AVG(TIMESTAMPDIFF(MICROSECOND , processing_started_date, completed_date)) / 1000000 AS seconds
-FROM work_unit
-WHERE status = 'COMPLETE'
-GROUP BY work_unit_analysis_type;
-```
-
-Find any work unit where different analysis types produced differing clique counts
-```sql
-SELECT edges_to_flip
-FROM (SELECT edges_to_flip, COUNT(1)
-      FROM work_unit
-      WHERE status = 'COMPLETE'
-      GROUP BY edges_to_flip, clique_count) tmp
-GROUP BY edges_to_flip
-HAVING COUNT(1) > 1
+SELECT status, COUNT(1) 
+FROM `ramsey-dev`.work_unit 
+WHERE stage_id = 1 
+GROUP BY status;
 ```
 
 ## Misc
