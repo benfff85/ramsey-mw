@@ -1,6 +1,5 @@
 package com.setminusx.ramsey.mw.repository;
 
-import com.setminusx.ramsey.mw.entity.Campaign;
 import com.setminusx.ramsey.mw.entity.Stage;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,11 +11,11 @@ import java.util.List;
 @Repository
 public interface StageRepo extends JpaRepository<Stage, Integer> {
 
-    @Query("SELECT s FROM Stage s WHERE " +
-            "(:campaignId IS NULL OR s.campaignId = :campaignId) AND " +
-            "(:status IS NULL OR s.status = :status)")
-    List<Stage> findByCampaignIdAndStatus(
-            @Param("campaignId") Integer campaignId,
-            @Param("status") Stage.Status status);
+        @Query("SELECT s FROM Stage s WHERE " +
+                        "(:campaignId IS NULL OR s.campaignId = :campaignId) AND " +
+                        "(:status IS NULL OR s.status = :status)")
+        List<Stage> findByCampaignIdAndStatus(
+                        @Param("campaignId") Integer campaignId,
+                        @Param("status") Stage.Status status);
 
 }

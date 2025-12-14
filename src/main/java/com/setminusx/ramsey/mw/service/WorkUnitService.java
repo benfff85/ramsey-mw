@@ -3,13 +3,13 @@ package com.setminusx.ramsey.mw.service;
 import com.setminusx.ramsey.mw.entity.WorkUnit;
 import com.setminusx.ramsey.mw.model.WorkUnitStatus;
 import com.setminusx.ramsey.mw.repository.WorkUnitRepo;
-import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class WorkUnitService {
@@ -18,14 +18,14 @@ public class WorkUnitService {
     @Value("${ramsey.work-unit.page-size.default}")
     private Integer defaultPageSize;
 
-
     public WorkUnitService(WorkUnitRepo workUnitRepo) {
         this.workUnitRepo = workUnitRepo;
     }
 
-
-    public List<WorkUnit> getWorkUnits(WorkUnitStatus status, Integer stageId, String assignedClientId, Integer pageSize) {
-        return workUnitRepo.findByStatusAndStageIdAndAssignedClient(status, stageId, assignedClientId, getPageable(pageSize));
+    public List<WorkUnit> getWorkUnits(WorkUnitStatus status, Integer stageId, String assignedClientId,
+            Integer pageSize) {
+        return workUnitRepo.findByStatusAndStageIdAndAssignedClient(status, stageId, assignedClientId,
+                getPageable(pageSize));
     }
 
     public WorkUnit getWorkUnitById(Integer id) {
@@ -44,12 +44,12 @@ public class WorkUnitService {
         return workUnitRepo.countWorkUnitsByStageIdAndStatus(stageId, workUnitStatusList);
     }
 
-    public Long getWorkUnitCountByClientIdAndStatus(String clientId,  List<WorkUnitStatus> workUnitStatusList) {
+    public Long getWorkUnitCountByClientIdAndStatus(String clientId, List<WorkUnitStatus> workUnitStatusList) {
         return workUnitRepo.countWorkUnitsByClientIdAndStatus(clientId, workUnitStatusList);
     }
 
     private Pageable getPageable(Integer pageSize) {
-        return PageRequest.of(0, ObjectUtils.defaultIfNull(pageSize, defaultPageSize));
+        return PageRequest.of(0, Objects.requireNonNullElse(pageSize, defaultPageSize));
     }
 
 }
