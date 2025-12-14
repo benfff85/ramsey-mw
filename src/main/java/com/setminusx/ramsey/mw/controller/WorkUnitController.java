@@ -29,7 +29,8 @@ public class WorkUnitController {
             @RequestParam(required = false) String assignedClientId,
             @RequestParam(required = false) Integer pageSize) {
 
-        log.info("Fetching work units with filters - StageId: {}, Status: {}, AssignedClientId: {}", stageId, status, assignedClientId);
+        log.info("Fetching work units with filters - StageId: {}, Status: {}, AssignedClientId: {}", stageId, status,
+                assignedClientId);
         return workUnitService.getWorkUnits(status, stageId, assignedClientId, pageSize);
     }
 
@@ -57,9 +58,13 @@ public class WorkUnitController {
 
     @PutMapping
     public List<WorkUnit> UpdateWorkUnits(@RequestBody() List<WorkUnit> workUnits) {
+        if (workUnits.isEmpty()) {
+            return workUnits;
+        }
         log.info("Updating {} work units, first work unit id {}", workUnits.size(), workUnits.getFirst().getId());
         List<WorkUnit> updatedWorkUnits = workUnitService.createOrUpdateWorkUnits(workUnits);
-        log.info("Work units updated, count: {}, first work unit id: {}", updatedWorkUnits.size(), updatedWorkUnits.getFirst().getId());
+        log.info("Work units updated, count: {}, first work unit id: {}", updatedWorkUnits.size(),
+                updatedWorkUnits.getFirst().getId());
         return updatedWorkUnits;
     }
 
