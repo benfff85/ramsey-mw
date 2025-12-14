@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-ramsey-mw-local",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.setminusx.ramsey.mw.Application",
+            "projectName": "ramsey-mw",
+            "args": "",
+            "env": {
+                "DB_USER": "ramsey-user-dev",
+                "DB_PASS": "<password>"
+            },
+            "vmArgs": "-Dspring.profiles.active=local"
+        }
+    ]
+}
