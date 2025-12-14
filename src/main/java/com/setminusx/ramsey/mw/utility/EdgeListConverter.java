@@ -14,7 +14,6 @@ import static org.apache.commons.lang3.StringUtils.*;
 @Converter
 public class EdgeListConverter implements AttributeConverter<List<Edge>, String> {
 
-
     @Override
     public String convertToDatabaseColumn(List<Edge> edges) {
         return "{" + edges.stream().map(Edge::toString).collect(Collectors.joining(",")) + "}";
@@ -22,8 +21,8 @@ public class EdgeListConverter implements AttributeConverter<List<Edge>, String>
 
     @Override
     public List<Edge> convertToEntityAttribute(String string) {
-        string = remove(string, "{");
-        string = remove(string, "}");
+        string = string.replace("{", "");
+        string = string.replace("}", "");
         String[] edgeStrings = string.split(",");
         List<Edge> edges = new ArrayList<>();
         for (String edgeString : edgeStrings) {
