@@ -16,6 +16,7 @@ services:
       options:
         max-size: "10m"
     restart: on-failure
+    mem_limit: 2g
 
   ramsey-queue-manager:
     image: benferenchak/ramsey-queue-manager:develop
@@ -35,6 +36,7 @@ services:
       options:
         max-size: "10m"
     restart: on-failure
+    mem_limit: 2g
 
   ramsey-worker:
     image: benferenchak/ramsey-worker:develop
