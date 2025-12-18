@@ -1,7 +1,15 @@
 services:
 
+  redis:
+    image: redis:8.4-alpine
+    networks:
+      - ramsey-net
+    ports:
+      - "6379:6379"
+    mem_limit: 8g
+
   ramsey-mw:
-    image: benferenchak/ramsey-mw:develop
+    image: benferenchak/ramsey-mw:redis-queueing
     networks:
       - ramsey-net
     ports:
@@ -9,8 +17,12 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: dev
       DB_USER: ramsey-user-dev
-      DB_PASS: <password>
-      LOGGING_LEVEL_ROOT: OFF
+      DB_PASS: ${MYSQL_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      LOGGING_LEVEL_ROOT: INFO
+    depends_on:
+      - redis
     logging:
       driver: json-file
       options:
@@ -19,18 +31,20 @@ services:
     mem_limit: 2g
 
   ramsey-queue-manager:
-    image: benferenchak/ramsey-queue-manager:develop
+    image: benferenchak/ramsey-queue-manager:redis-queueing
     networks:
       - ramsey-net
     environment:
       SPRING_PROFILES_ACTIVE: dev
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       WORK_UNIT_ANALYSIS_TYPE: TARGETED
-      WORK_UNIT_QUEUE_DEPTH_MIN: 32000000
-      WORK_UNIT_QUEUE_DEPTH_MAX: 64000000
-      WORK_UNIT_ASSIGNMENT_COUNT: 250000
-      LOGGING_LEVEL_ROOT: OFF
+      WORK_UNIT_QUEUE_DEPTH_MIN: 4000000
+      WORK_UNIT_QUEUE_DEPTH_MAX: 8000000
+      LOGGING_LEVEL_ROOT: INFO
     depends_on:
       - ramsey-mw
+      - redis
     logging:
       driver: json-file
       options:
@@ -58,22 +72,44 @@ services:
     restart: on-failure
     mem_limit: 2g
 
-  ramsey-ui:
-    image: benferenchak/ramsey-ui:develop
+  ramsey-worker-rust:
+    image: benferenchak/ramsey-worker-rust:redis-queueing
     networks:
       - ramsey-net
-    ports:
-      - "8501:8501"
     environment:
-      API_BASE_URL: http://ramsey-mw:8080
-      STAGE_ID: 3
+      RAMSEY_API_URL: http://ramsey-mw:8080/api/ramsey
+      RAMSEY_CAMPAIGN_ID: 1
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      WORK_UNIT_FETCH_COUNT: 50000
+      WORK_UNIT_PUBLISH_COUNT: 50000
+      CLIENT_PHONE_HOME_FREQ: 60000
     depends_on:
       - ramsey-mw
+      - redis
     logging:
       driver: json-file
       options:
         max-size: "10m"
     restart: on-failure
+    mem_limit: 2g
+
+  # ramsey-ui:
+  #   image: benferenchak/ramsey-ui:develop
+  #   networks:
+  #     - ramsey-net
+  #   ports:
+  #     - "8501:8501"
+  #   environment:
+  #     API_BASE_URL: http://ramsey-mw:8080
+  #     STAGE_ID: 3
+  #   depends_on:
+  #     - ramsey-mw
+  #   logging:
+  #     driver: json-file
+  #     options:
+  #       max-size: "10m"
+  #   restart: on-failure
 
 networks:
   ramsey-net:

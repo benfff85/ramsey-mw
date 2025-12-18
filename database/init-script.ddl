@@ -80,6 +80,15 @@ CREATE TABLE `ramsey-dev`.`campaign` (
     PRIMARY KEY (`campaign_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+CREATE TABLE `ramsey-dev`.work_result (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    base_graph_id INT,
+    stage_id INT,
+    edges_to_flip VARCHAR(255),
+    clique_count INT,
+    work_unit_analysis_type VARCHAR(50)
+);
+
 
 
 CREATE DATABASE `ramsey-test` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
