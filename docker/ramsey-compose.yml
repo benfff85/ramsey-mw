@@ -18,6 +18,7 @@ services:
       SPRING_PROFILES_ACTIVE: dev
       DB_USER: ramsey-user-dev
       DB_PASS: ${MYSQL_PASSWORD}
+      JDBC_BATCH_SIZE: 5000
       REDIS_HOST: redis
       REDIS_PORT: 6379
       LOGGING_LEVEL_ROOT: INFO
