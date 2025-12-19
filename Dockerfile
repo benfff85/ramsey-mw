@@ -26,6 +26,9 @@ COPY --from=build /app/target/ramsey-mw-*.jar /app/ramsey-mw.jar
 # JVM memory and container awareness settings
 ENV JAVA_OPTS="-XX:InitialRAMPercentage=75.0 -XX:MaxRAMPercentage=75.0 -XX:+UseZGC -XX:+UseCompactObjectHeaders"
 
+# Install curl for health checks (as root, before switching user)
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+
 # Add a non-root user and switch to it
 RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 USER appuser
@@ -34,8 +37,8 @@ USER appuser
 EXPOSE 8080
 
 # Add a health check
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:8080/health || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8080/actuator/health || exit 1
 
 # Specify the command to run the application with JAVA_OPTS from the environment
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/ramsey-mw.jar"]
