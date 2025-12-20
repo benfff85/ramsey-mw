@@ -1,16 +1,17 @@
 services:
   db:
-    image: mysql:latest
+    image: mysql:9.5
     container_name: ramsey-db-mysql
     networks:
       - ramsey-net
     ports:
       - "3306:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: <password>
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - ./config-file.cnf:/etc/mysql/conf.d/config-file.cnf
       - /Volumes/crucial-p3-nvme/storage/docker/volumes/ramsey-db/data:/var/lib/mysql
+      - /Volumes/crucial-p3-nvme/storage/docker/volumes/ramsey-db/tmp:/var/lib/mysql/tmp
     restart: on-failure
 
 networks:

@@ -10,3 +10,8 @@ spring:
     url: jdbc:mysql://ramsey-db-mysql:3306/ramsey-dev?autoReconnect=true&useSSL=false&rewriteBatchedStatements=true&allowPublicKeyRetrieval=true
     username: ${DB_USER}
     password: ${DB_PASS}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+

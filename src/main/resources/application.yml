@@ -16,7 +16,7 @@ spring:
     properties:
       hibernate:
         jdbc:
-          batch_size: ${JDBC_BATCH_SIZE:500}
+          batch_size: ${JDBC_BATCH_SIZE:5000}
         order_inserts: true
         order_updates: true
   graphql:
