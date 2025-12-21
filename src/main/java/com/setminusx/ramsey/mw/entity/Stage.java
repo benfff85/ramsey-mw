@@ -23,6 +23,17 @@ public class Stage {
     private LocalDateTime createdDate;
     private LocalDateTime updatedDate;
 
+    @PrePersist
+    protected void onCreate() {
+        createdDate = LocalDateTime.now();
+        updatedDate = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedDate = LocalDateTime.now();
+    }
+
     public enum Status {
         ACTIVE,
         INACTIVE

@@ -9,7 +9,7 @@ services:
     mem_limit: 8g
 
   ramsey-mw:
-    image: benferenchak/ramsey-mw:redis-queueing
+    image: benferenchak/ramsey-mw:stage-progression
     networks:
       - ramsey-net
     ports:
@@ -32,7 +32,7 @@ services:
     mem_limit: 2g
 
   ramsey-queue-manager:
-    image: benferenchak/ramsey-queue-manager:redis-queueing
+    image: benferenchak/ramsey-queue-manager:stage-progression
     networks:
       - ramsey-net
     environment:
@@ -65,7 +65,10 @@ services:
       LOGGING_LEVEL_ROOT: WARN
       MW_HOST: http://ramsey-mw:8080
     depends_on:
-      - ramsey-mw
+      ramsey-mw:
+        condition: service_healthy
+      redis:
+        condition: service_started
     logging:
       driver: json-file
       options:
@@ -74,7 +77,7 @@ services:
     mem_limit: 2g
 
   ramsey-worker-rust:
-    image: benferenchak/ramsey-worker-rust:redis-queueing
+    image: benferenchak/ramsey-worker-rust:stage-progression
     networks:
       - ramsey-net
     environment:
@@ -83,11 +86,14 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       WORK_UNIT_FETCH_COUNT: 50000
-      WORK_UNIT_PUBLISH_COUNT: 50000
+      WORK_UNIT_PUBLISH_COUNT: 10000
       CLIENT_PHONE_HOME_FREQ: 60000
+      PUBLISH_RESULTS: "false"
     depends_on:
-      - ramsey-mw
-      - redis
+      ramsey-mw:
+        condition: service_healthy
+      redis:
+        condition: service_started
     logging:
       driver: json-file
       options:
