@@ -88,6 +88,7 @@ services:
       WORK_UNIT_FETCH_COUNT: 50000
       WORK_UNIT_PUBLISH_COUNT: 10000
       CLIENT_PHONE_HOME_FREQ: 60000
+      PUBLISH_RESULTS: "false"
     depends_on:
       ramsey-mw:
         condition: service_healthy
