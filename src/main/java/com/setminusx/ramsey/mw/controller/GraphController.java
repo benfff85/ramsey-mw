@@ -21,27 +21,36 @@ public class GraphController {
         this.graphService = graphService;
     }
 
-
     @GetMapping
     public List<Graph> getGraphs(
             @RequestParam() Integer subgraphSize,
             @RequestParam() Integer vertexCount,
             @RequestParam(defaultValue = "1") String count) {
 
-        log.info("Fetching graphs with filters - SubgraphSize: {}, VertexCount: {}, Count: {}", subgraphSize, vertexCount, count);
+        log.info("Fetching graphs with filters - SubgraphSize: {}, VertexCount: {}, Count: {}", subgraphSize,
+                vertexCount, count);
         return graphService.getGraphs(subgraphSize, vertexCount, Integer.parseInt(count));
 
     }
 
     @GetMapping("/{id}")
-    public Graph getGraphByGraphId(@PathVariable() Integer id) {
-        log.info("Fetching graph with ID: {}", id);
+    public Graph getGraphByGraphId(
+            @PathVariable() Integer id,
+            @RequestParam(required = false) String edgesToFlip) {
+
+        log.info("Fetching graph with ID: {}, edgesToFlip: {}", id, edgesToFlip);
 
         Graph graph = graphService.getGraphByGraphId(id);
 
         if (graph == null) {
             log.warn("Graph with ID: {} not found", id);
             throw new ResponseStatusException(NOT_FOUND, "Graph not found");
+        }
+
+        // If edgesToFlip is provided, derive a new graph (not persisted)
+        if (edgesToFlip != null && !edgesToFlip.isEmpty()) {
+            log.info("Deriving graph from base {} with edges: {}", id, edgesToFlip);
+            return graphService.deriveGraph(graph, edgesToFlip);
         }
 
         return graph;
