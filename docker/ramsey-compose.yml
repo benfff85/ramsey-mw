@@ -9,7 +9,7 @@ services:
     mem_limit: 8g
 
   ramsey-mw:
-    image: benferenchak/ramsey-mw:stage-progression
+    image: benferenchak/ramsey-mw:develop
     networks:
       - ramsey-net
     ports:
@@ -32,7 +32,7 @@ services:
     mem_limit: 2g
 
   ramsey-queue-manager:
-    image: benferenchak/ramsey-queue-manager:stage-progression
+    image: benferenchak/ramsey-queue-manager:develop
     networks:
       - ramsey-net
     environment:
@@ -53,31 +53,8 @@ services:
     restart: on-failure
     mem_limit: 2g
 
-  ramsey-worker:
-    image: benferenchak/ramsey-worker:develop
-    networks:
-      - ramsey-net
-    environment:
-      SPRING_PROFILES_ACTIVE: dev
-      WORK_UNIT_FETCH_COUNT: 50000
-      WORK_UNIT_PUBLISH_COUNT: 50000
-      WORK_UNIT_ROUTER_FREQ: 10000
-      LOGGING_LEVEL_ROOT: WARN
-      MW_HOST: http://ramsey-mw:8080
-    depends_on:
-      ramsey-mw:
-        condition: service_healthy
-      redis:
-        condition: service_started
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-    restart: on-failure
-    mem_limit: 2g
-
   ramsey-worker-rust:
-    image: benferenchak/ramsey-worker-rust:stage-progression
+    image: benferenchak/ramsey-worker-rust:develop
     networks:
       - ramsey-net
     environment:
@@ -87,6 +64,7 @@ services:
       REDIS_PORT: 6379
       WORK_UNIT_FETCH_COUNT: 50000
       WORK_UNIT_PUBLISH_COUNT: 10000
+      WORK_UNIT_POLL_FREQ: 5000
       CLIENT_PHONE_HOME_FREQ: 60000
       PUBLISH_RESULTS: "false"
     depends_on:
@@ -101,22 +79,24 @@ services:
     restart: on-failure
     mem_limit: 2g
 
-  # ramsey-ui:
-  #   image: benferenchak/ramsey-ui:develop
-  #   networks:
-  #     - ramsey-net
-  #   ports:
-  #     - "8501:8501"
-  #   environment:
-  #     API_BASE_URL: http://ramsey-mw:8080
-  #     STAGE_ID: 3
-  #   depends_on:
-  #     - ramsey-mw
-  #   logging:
-  #     driver: json-file
-  #     options:
-  #       max-size: "10m"
-  #   restart: on-failure
+  ramsey-ui:
+    image: benferenchak/ramsey-ui:develop
+    networks:
+      - ramsey-net
+    ports:
+      - "8501:8501"
+    environment:
+      API_BASE_URL: http://ramsey-mw:8080
+      RAMSEY_CAMPAIGN_ID: 1
+    depends_on:
+      ramsey-mw:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    restart: on-failure
+    mem_limit: 2g
 
 networks:
   ramsey-net:
