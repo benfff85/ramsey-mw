@@ -19,9 +19,9 @@ public class WorkResultController {
     }
 
     @PostMapping
-    public List<WorkResult> submitResults(@RequestBody List<WorkResult> results) {
+    public void submitResults(@RequestBody List<WorkResult> results) {
         log.info("Submitting {} work results", results.size());
-        return workResultService.saveResults(results);
+        workResultService.saveResults(results);
     }
 
     @GetMapping

@@ -65,7 +65,10 @@ services:
       LOGGING_LEVEL_ROOT: WARN
       MW_HOST: http://ramsey-mw:8080
     depends_on:
-      - ramsey-mw
+      ramsey-mw:
+        condition: service_healthy
+      redis:
+        condition: service_started
     logging:
       driver: json-file
       options:
@@ -86,8 +89,10 @@ services:
       WORK_UNIT_PUBLISH_COUNT: 10000
       CLIENT_PHONE_HOME_FREQ: 60000
     depends_on:
-      - ramsey-mw
-      - redis
+      ramsey-mw:
+        condition: service_healthy
+      redis:
+        condition: service_started
     logging:
       driver: json-file
       options:
