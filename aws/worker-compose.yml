@@ -1,0 +1,23 @@
+services:
+  ramsey-worker-rust:
+    image: benferenchak/ramsey-worker-rust:develop
+    environment:
+      RAMSEY_API_URL: http://www.setminusx.com:36000/api/ramsey
+      RAMSEY_CAMPAIGN_ID: 1
+      REDIS_HOST: www.setminusx.com
+      REDIS_PORT: 36002
+      WORK_UNIT_FETCH_COUNT: 50000
+      WORK_UNIT_PUBLISH_COUNT: 10000
+      WORK_UNIT_POLL_FREQ: 5000
+      CLIENT_PHONE_HOME_FREQ: 60000
+      PUBLISH_RESULTS: "false"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    restart: on-failure
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          memory: 1G
