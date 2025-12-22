@@ -5,7 +5,7 @@ services:
     networks:
       - ramsey-net
     ports:
-      - "6379:6379"
+      - "36002:6379"
     mem_limit: 8g
 
   ramsey-mw:
@@ -13,7 +13,7 @@ services:
     networks:
       - ramsey-net
     ports:
-      - "4040:8080"
+      - "36000:8080"
     environment:
       SPRING_PROFILES_ACTIVE: dev
       DB_USER: ramsey-user-dev
@@ -84,7 +84,7 @@ services:
     networks:
       - ramsey-net
     ports:
-      - "8501:8501"
+      - "36003:8501"
     environment:
       API_BASE_URL: http://ramsey-mw:8080
       RAMSEY_CAMPAIGN_ID: 1

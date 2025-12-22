@@ -5,7 +5,7 @@ services:
     networks:
       - ramsey-net
     ports:
-      - "3306:3306"
+      - "36001:3306"
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
     volumes:

@@ -4,8 +4,8 @@ Middleware component for the Ramsey Project
 ## Environments
 | Environment | Database Address     | Database   | Description                                                                                  |
 |-------------|:---------------------|------------|----------------------------------------------------------------------------------------------|
-| Local       | 127.0.0.1:3306       | ramsey-dev | Database not initialized, designed to be used for running in the IDE.                        |
-| Dev         | ramsey-db-mysql:3306 | ramsey-dev | Database not initialized ,designed for running in Docker and connecting to the dev database. | 
+| Local       | 127.0.0.1:36001      | ramsey-dev | Database not initialized, designed to be used for running in the IDE.                        |
+| Dev         | ramsey-db-mysql:3306 | ramsey-dev | Database not initialized, designed for running in Docker and connecting to the dev database. | 
 
 ## Image Build and Deploy
 
@@ -23,26 +23,35 @@ Start a container using the image by either directly creating one as follows:
 ```bash
 docker run --restart=always \
   --name=ramsey-mw \
-  --network=ramsey-db_ramsey-net \
+  --network=ramsey-net \
   --label com.docker.compose.project=ramsey \
   -e SPRING_PROFILES_ACTIVE=dev \
   -e DB_USER=ramsey-user-dev \
   -e DB_PASS=<password> \
-  -p 9080:8080 \
+  -p 36000:8080 \
   benferenchak/ramsey-mw:develop
 ```
 
 Likewise this can be deployed as part of the docker-compose.yml file.
 
 ```bash
-docker compose -f ./docker/ramsey-compose.yml -p ramsey up --scale ramsey-mw=1 --scale ramsey-queue-manager=1 --scale ramsey-worker=1 --scale ramsey-ui=1 -d
+docker compose -f ./docker/ramsey-compose.yml -p ramsey up --scale ramsey-mw=1 --scale ramsey-queue-manager=1 --scale ramsey-worker-rust=10 --scale ramsey-ui=1 -d
 ```
+
+## Port Mappings
+
+| Service | External Port | Internal Port |
+|---------|---------------|---------------|
+| MW | 36000 | 8080 |
+| Database | 36001 | 3306 |
+| Redis | 36002 | 6379 |
+| UI | 36003 | 8501 |
 
 ## Swagger
 
 This project is configured with OpenAPI 3.0 documentation, the swagger page can be located at:
 
-[http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+[http://localhost:36000/swagger-ui/index.html](http://localhost:36000/swagger-ui/index.html)
 
 ## GraphQL
 
