@@ -88,6 +88,8 @@ services:
     environment:
       API_BASE_URL: http://ramsey-mw:8080
       RAMSEY_CAMPAIGN_ID: 1
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     depends_on:
       ramsey-mw:
         condition: service_healthy
