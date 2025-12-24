@@ -53,9 +53,10 @@ EOF
 # Pull the latest image
 docker pull benferenchak/ramsey-worker-rust:latest
 
-# Start workers (using --scale since deploy.replicas requires swarm mode)
-# Adjust scale based on instance size: 1 for c8g.medium, 4 for c8g.xlarge, etc.
-docker-compose up -d --scale ramsey-worker-rust=64
+# Start workers - scale to match CPU core count
+CPU_COUNT=$(nproc)
+echo "Detected $CPU_COUNT CPU cores, starting $CPU_COUNT workers"
+docker-compose up -d --scale ramsey-worker-rust=$CPU_COUNT
 
 # Log completion
 echo "Ramsey workers started at $(date)" >> /var/log/ramsey-startup.log
