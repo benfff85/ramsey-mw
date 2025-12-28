@@ -27,7 +27,7 @@ cd /opt/ramsey
 cat > docker-compose.yml << 'EOF'
 services:
   ramsey-worker-rust:
-    image: benferenchak/ramsey-worker-rust:latest
+    image: benferenchak/ramsey-worker-rust:develop-neoverse-v2
     environment:
       RAMSEY_API_URL: http://www.setminusx.com:36000/api/ramsey
       RAMSEY_CAMPAIGN_ID: 1
@@ -51,7 +51,7 @@ services:
 EOF
 
 # Pull the latest image
-docker pull benferenchak/ramsey-worker-rust:latest
+docker pull benferenchak/ramsey-worker-rust:develop-neoverse-v2
 
 # Start workers - scale to match CPU core count
 CPU_COUNT=$(nproc)
