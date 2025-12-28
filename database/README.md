@@ -3,8 +3,7 @@
 ## Inject Password to Configs
 
 ```bash
-export mysql_pass="<password>" 
-sed "s/<password>/$mysql_pass/g" ramsey-db-compose.yml > ramsey-db-compose-sensitive.yml
+export MYSQL_PASSWORD="<password>" 
 sed "s/<password>/$mysql_pass/g" init-script.ddl > init-script-sensitive.ddl
 ```
 
@@ -13,7 +12,7 @@ sed "s/<password>/$mysql_pass/g" init-script.ddl > init-script-sensitive.ddl
 Create the MySQL instance  with docker by deploying the compose defined in `ramsey-db-compose.yml`
 
 ```bash
-docker compose -f ramsey-db-compose-sensitive.yml -p ramsey-db up -d
+docker compose -f ramsey-db-compose.yml -p ramsey-db up -d
 ```
 
 ## Initialize DDL
