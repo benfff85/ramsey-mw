@@ -25,3 +25,8 @@ hs_err_pid*
 /.idea/
 /ramsey-mw.iml
 /target/
+
+# nginx-proxy sensitive files
+nginx-proxy/ssl/
+nginx-proxy/certbot/
+nginx-proxy/*.bak
