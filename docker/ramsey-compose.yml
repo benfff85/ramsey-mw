@@ -1,3 +1,5 @@
+name: ramsey
+
 services:
 
   redis:
@@ -7,6 +9,13 @@ services:
     ports:
       - "36002:6379"
     mem_limit: 8g
+    logging:
+      driver: loki
+      options:
+        loki-url: https://loki.setminusx.com/loki/api/v1/push
+        loki-retries: 5
+        loki-batch-size: 50
+        loki-external-labels: "machine=MacBook-Pro-M4Max-1,service_name={{.Name}}"
 
   ramsey-mw:
     image: benferenchak/ramsey-mw:develop
@@ -25,9 +34,12 @@ services:
     depends_on:
       - redis
     logging:
-      driver: json-file
+      driver: loki
       options:
-        max-size: "10m"
+        loki-url: https://loki.setminusx.com/loki/api/v1/push
+        loki-retries: 5
+        loki-batch-size: 50
+        loki-external-labels: "machine=MacBook-Pro-M4Max-1,service_name={{.Name}}"
     restart: on-failure
     mem_limit: 2g
 
@@ -49,9 +61,12 @@ services:
       - ramsey-mw
       - redis
     logging:
-      driver: json-file
+      driver: loki
       options:
-        max-size: "10m"
+        loki-url: https://loki.setminusx.com/loki/api/v1/push
+        loki-retries: 5
+        loki-batch-size: 50
+        loki-external-labels: "machine=MacBook-Pro-M4Max-1,service_name={{.Name}}"
     restart: on-failure
     mem_limit: 2g
 
@@ -75,11 +90,15 @@ services:
       redis:
         condition: service_started
     logging:
-      driver: json-file
+      driver: loki
       options:
-        max-size: "10m"
+        loki-url: https://loki.setminusx.com/loki/api/v1/push
+        loki-retries: 5
+        loki-batch-size: 50
+        loki-external-labels: "machine=MacBook-Pro-M4Max-1,service_name={{.Name}}"
     restart: on-failure
     mem_limit: 2g
+    scale: 14
 
   ramsey-ui:
     image: benferenchak/ramsey-ui:develop
@@ -96,9 +115,12 @@ services:
       ramsey-mw:
         condition: service_healthy
     logging:
-      driver: json-file
+      driver: loki
       options:
-        max-size: "10m"
+        loki-url: https://loki.setminusx.com/loki/api/v1/push
+        loki-retries: 5
+        loki-batch-size: 50
+        loki-external-labels: "machine=MacBook-Pro-M4Max-1,service_name={{.Name}}"
     restart: on-failure
     mem_limit: 2g
 

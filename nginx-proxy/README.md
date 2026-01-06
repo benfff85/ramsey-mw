@@ -37,7 +37,9 @@ docker exec certbot certbot certonly --webroot \
   -d ramsey-mw.setminusx.com \
   -d portainer.setminusx.com \
   -d openwebui.setminusx.com \
-  -d jupyter.setminusx.com
+  -d jupyter.setminusx.com \
+  -d grafana.setminusx.com \
+  -d loki.setminusx.com
 ```
 
 Expected output:
@@ -119,6 +121,8 @@ docker exec certbot certbot certonly --webroot \
   -d portainer.setminusx.com \
   -d openwebui.setminusx.com \
   -d jupyter.setminusx.com \
+  -d grafana.setminusx.com \
+  -d loki.setminusx.com \
   -d NEW_SUBDOMAIN.setminusx.com
 ```
 
@@ -140,6 +144,8 @@ docker exec nginx-proxy nginx -s reload
 | `portainer.setminusx.com` | HTTPS (redirect from HTTP) | `host.docker.internal:9000` (portainer) |
 | `openwebui.setminusx.com` | HTTPS (redirect from HTTP) | `host.docker.internal:11800` (openwebui) |
 | `jupyter.setminusx.com` | HTTPS (redirect from HTTP) | `host.docker.internal:8888` (jupyter) |
+| `grafana.setminusx.com` | HTTPS (redirect from HTTP) | `host.docker.internal:35000` (grafana) |
+| `loki.setminusx.com` | HTTPS (redirect from HTTP) | `host.docker.internal:35001` (loki) |
 
 ---
 
