@@ -1,0 +1,44 @@
+name: grafana
+
+services:
+
+  loki:
+    image: grafana/loki:3.6.3
+    container_name: loki
+    ports:
+      - "35001:3100"
+    volumes:
+      - ./loki-config.yml:/etc/loki/local-config.yaml
+      - loki-data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - grafana-net
+    restart: unless-stopped
+    mem_limit: 1g
+
+  grafana:
+    image: grafana/grafana:12.3.1
+    container_name: grafana
+    ports:
+      - "35000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: false
+    depends_on:
+      - loki
+    networks:
+      - grafana-net
+    restart: unless-stopped
+    mem_limit: 512m
+
+networks:
+  grafana-net:
+    driver: bridge
+
+volumes:
+  loki-data:
+  grafana-data:

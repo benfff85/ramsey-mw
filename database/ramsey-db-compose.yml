@@ -1,3 +1,5 @@
+name: ramsey-db
+
 services:
   db:
     image: mysql:9.5
