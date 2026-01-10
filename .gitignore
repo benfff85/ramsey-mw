@@ -30,3 +30,6 @@ hs_err_pid*
 nginx-proxy/ssl/
 nginx-proxy/certbot/
 nginx-proxy/*.bak
+
+# Mac
+.DS_Store
