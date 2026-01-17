@@ -40,7 +40,7 @@ services:
         loki-url: https://loki.setminusx.com/loki/api/v1/push
         loki-retries: 5
         loki-batch-size: 50
-        loki-external-labels: "machine=vast-ai,service_name={{.Name}}"
+        loki-external-labels: "machine=Vast-AI,service_name={{.Name}}"
     restart: always
 EOF
 
