@@ -7,7 +7,6 @@ Configuration files for deploying Ramsey workers on AWS EC2 Spot Instances.
 | File | Description |
 |------|-------------|
 | `ec2-user-data.sh` | EC2 launch template user data script |
-| `worker-compose.yml` | Docker Compose file for workers |
 
 ## EC2 Launch Template Setup
 
@@ -65,7 +64,7 @@ docker-compose down                                    # Stop
 ## Cost Savings
 
 Spot instances typically save 60-90% vs on-demand:
-| Instance | On-Demand | Spot (typical) |
-|----------|-----------|----------------|
-| c8g.medium | ~$0.034/hr | ~$0.01/hr |
-| c8g.xlarge | ~$0.136/hr | ~$0.04/hr |
+| Instance | Cores | On-Demand | Spot (typical) |
+|----------|-------|-----------|----------------|
+| c8g.medium | 1 | ~$0.034/hr | ~$0.01/hr |
+| c8g.xlarge | 4 | ~$0.136/hr | ~$0.04/hr |
