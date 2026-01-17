@@ -1,0 +1,27 @@
+name: ramsey
+
+services:
+
+  ramsey-worker-rust:
+    image: benferenchak/ramsey-worker-rust:develop
+    environment:
+      RAMSEY_API_URL: http://ramsey-mw.setminusx.com/api/ramsey
+      RAMSEY_CAMPAIGN_ID: 1
+      REDIS_HOST: www.setminusx.com
+      REDIS_PORT: 36002
+      WORK_UNIT_FETCH_COUNT: 50000
+      WORK_UNIT_PUBLISH_COUNT: 10000
+      WORK_UNIT_POLL_FREQ: 5000
+      CLIENT_PHONE_HOME_FREQ: 60000
+      PUBLISH_RESULTS: "false"
+    logging:
+      driver: loki
+      options:
+        loki-url: http://loki.setminusx.com/loki/api/v1/push
+        loki-retries: 5
+        loki-batch-size: 50
+        loki-external-labels: "machine=MacBook-Pro-M1-1,service_name={{.Name}}"
+    restart: on-failure
+    mem_limit: 2g
+
+# docker compose -f ./docker/m1-worker/ramsey-compose.yml up --scale ramsey-worker-rust=8 -d
