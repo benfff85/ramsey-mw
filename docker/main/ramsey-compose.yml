@@ -3,7 +3,8 @@ name: ramsey
 services:
 
   redis:
-    image: redis:8.4-alpine
+    image: docker.dragonflydb.io/dragonflydb/dragonfly:latest
+    command: dragonfly --maxmemory 7gb
     networks:
       - ramsey-net
     ports:
