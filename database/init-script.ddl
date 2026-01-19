@@ -66,6 +66,8 @@ CREATE TABLE `ramsey-dev`.`stage` (
     `created_date` datetime(6) DEFAULT NULL,
     `status` enum('ACTIVE','INACTIVE') DEFAULT NULL,
     `updated_date` datetime(6) DEFAULT NULL,
+    `work_enumeration_strategy` varchar(50) DEFAULT NULL,
+    `details` text DEFAULT NULL,
     PRIMARY KEY (`stage_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -77,6 +79,7 @@ CREATE TABLE `ramsey-dev`.`campaign` (
     `subgraph_size` int DEFAULT NULL,
     `updated_date` datetime(6) DEFAULT NULL,
     `vertex_count` int DEFAULT NULL,
+    `total_pairs` bigint DEFAULT NULL,
     PRIMARY KEY (`campaign_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -159,6 +162,8 @@ CREATE TABLE `ramsey-test`.`stage` (
                                       `created_date` datetime(6) DEFAULT NULL,
                                       `status` enum('ACTIVE','INACTIVE') DEFAULT NULL,
                                       `updated_date` datetime(6) DEFAULT NULL,
+                                      `work_enumeration_strategy` varchar(50) DEFAULT NULL,
+                                      `details` text DEFAULT NULL,
                                       PRIMARY KEY (`stage_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -170,6 +175,7 @@ CREATE TABLE `ramsey-test`.`campaign` (
                                          `subgraph_size` int DEFAULT NULL,
                                          `updated_date` datetime(6) DEFAULT NULL,
                                          `vertex_count` int DEFAULT NULL,
+                                         `total_pairs` bigint DEFAULT NULL,
                                          PRIMARY KEY (`campaign_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -242,6 +248,8 @@ CREATE TABLE `ramsey`.`stage` (
                                       `created_date` datetime(6) DEFAULT NULL,
                                       `status` enum('ACTIVE','INACTIVE') DEFAULT NULL,
                                       `updated_date` datetime(6) DEFAULT NULL,
+                                      `work_enumeration_strategy` varchar(50) DEFAULT NULL,
+                                      `details` text DEFAULT NULL,
                                       PRIMARY KEY (`stage_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -253,5 +261,6 @@ CREATE TABLE `ramsey`.`campaign` (
                                          `subgraph_size` int DEFAULT NULL,
                                          `updated_date` datetime(6) DEFAULT NULL,
                                          `vertex_count` int DEFAULT NULL,
+                                         `total_pairs` bigint DEFAULT NULL,
                                          PRIMARY KEY (`campaign_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
