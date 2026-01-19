@@ -18,7 +18,6 @@ public class Stage {
 
     private Integer baseGraphId;
     private Integer campaignId;
-    private Integer latestWorkUnitId;
 
     @Enumerated(EnumType.STRING)
     private WorkEnumerationStrategy workEnumerationStrategy;

@@ -39,30 +39,10 @@ CREATE TABLE `ramsey-dev`.`graph` (
                          PRIMARY KEY (`graph_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE `ramsey-dev`.`work_unit` (
-                             `base_graph_id` int DEFAULT NULL,
-                             `clique_count` int DEFAULT NULL,
-                             `id` int NOT NULL AUTO_INCREMENT,
-                             `stage_id` int DEFAULT NULL,
-                             `assigned_date` datetime(6) DEFAULT NULL,
-                             `completed_date` datetime(6) DEFAULT NULL,
-                             `created_date` datetime(6) DEFAULT NULL,
-                             `processing_started_date` datetime(6) DEFAULT NULL,
-                             `assigned_client` varchar(255) DEFAULT NULL,
-                             `edges_to_flip` varchar(255) DEFAULT NULL,
-                             `priority` enum('LOW','MEDIUM','HIGH') DEFAULT NULL,
-                             `status` enum('NEW','ASSIGNED','COMPLETE','CANCELLED') DEFAULT NULL,
-                             `work_unit_analysis_type` enum('COMPREHENSIVE','TARGETED','NAIVE') DEFAULT NULL,
-                             PRIMARY KEY (`id`),
-                             KEY `idx_work_unit_stage_id_status` (`stage_id`,`status`) USING BTREE,
-                             KEY `idx_work_unit_assigned_client_status` (`assigned_client`,`status`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
 CREATE TABLE `ramsey-dev`.`stage` (
     `stage_id` int NOT NULL AUTO_INCREMENT,
     `base_graph_id` int DEFAULT NULL,
     `campaign_id` int DEFAULT NULL,
-    `latest_work_unit_id` int DEFAULT NULL,
     `created_date` datetime(6) DEFAULT NULL,
     `status` enum('ACTIVE','INACTIVE') DEFAULT NULL,
     `updated_date` datetime(6) DEFAULT NULL,
@@ -135,30 +115,10 @@ CREATE TABLE `ramsey-test`.`graph` (
                                     PRIMARY KEY (`graph_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE `ramsey-test`.`work_unit` (
-                                        `base_graph_id` int DEFAULT NULL,
-                                        `clique_count` int DEFAULT NULL,
-                                        `id` int NOT NULL AUTO_INCREMENT,
-                                        `stage_id` int DEFAULT NULL,
-                                        `assigned_date` datetime(6) DEFAULT NULL,
-                                        `completed_date` datetime(6) DEFAULT NULL,
-                                        `created_date` datetime(6) DEFAULT NULL,
-                                        `processing_started_date` datetime(6) DEFAULT NULL,
-                                        `assigned_client` varchar(255) DEFAULT NULL,
-                                        `edges_to_flip` varchar(255) DEFAULT NULL,
-                                        `priority` enum('LOW','MEDIUM','HIGH') DEFAULT NULL,
-                                        `status` enum('NEW','ASSIGNED','COMPLETE','CANCELLED') DEFAULT NULL,
-                                        `work_unit_analysis_type` enum('COMPREHENSIVE','TARGETED','NAIVE') DEFAULT NULL,
-                                        PRIMARY KEY (`id`),
-                                        KEY `idx_work_unit_stage_id_status` (`stage_id`,`status`) USING BTREE,
-                                        KEY `idx_work_unit_assigned_client_status` (`assigned_client`,`status`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
 CREATE TABLE `ramsey-test`.`stage` (
                                       `stage_id` int NOT NULL AUTO_INCREMENT,
                                       `base_graph_id` int DEFAULT NULL,
                                       `campaign_id` int DEFAULT NULL,
-                                      `latest_work_unit_id` int DEFAULT NULL,
                                       `created_date` datetime(6) DEFAULT NULL,
                                       `status` enum('ACTIVE','INACTIVE') DEFAULT NULL,
                                       `updated_date` datetime(6) DEFAULT NULL,
@@ -221,30 +181,10 @@ CREATE TABLE `ramsey`.`graph` (
                                     PRIMARY KEY (`graph_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE `ramsey`.`work_unit` (
-                                        `base_graph_id` int DEFAULT NULL,
-                                        `clique_count` int DEFAULT NULL,
-                                        `id` int NOT NULL AUTO_INCREMENT,
-                                        `stage_id` int DEFAULT NULL,
-                                        `assigned_date` datetime(6) DEFAULT NULL,
-                                        `completed_date` datetime(6) DEFAULT NULL,
-                                        `created_date` datetime(6) DEFAULT NULL,
-                                        `processing_started_date` datetime(6) DEFAULT NULL,
-                                        `assigned_client` varchar(255) DEFAULT NULL,
-                                        `edges_to_flip` varchar(255) DEFAULT NULL,
-                                        `priority` enum('LOW','MEDIUM','HIGH') DEFAULT NULL,
-                                        `status` enum('NEW','ASSIGNED','COMPLETE','CANCELLED') DEFAULT NULL,
-                                        `work_unit_analysis_type` enum('COMPREHENSIVE','TARGETED','NAIVE') DEFAULT NULL,
-                                        PRIMARY KEY (`id`),
-                                        KEY `idx_work_unit_stage_id_status` (`stage_id`,`status`) USING BTREE,
-                                        KEY `idx_work_unit_assigned_client_status` (`assigned_client`,`status`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
 CREATE TABLE `ramsey`.`stage` (
                                       `stage_id` int NOT NULL AUTO_INCREMENT,
                                       `base_graph_id` int DEFAULT NULL,
                                       `campaign_id` int DEFAULT NULL,
-                                      `latest_work_unit_id` int DEFAULT NULL,
                                       `created_date` datetime(6) DEFAULT NULL,
                                       `status` enum('ACTIVE','INACTIVE') DEFAULT NULL,
                                       `updated_date` datetime(6) DEFAULT NULL,
