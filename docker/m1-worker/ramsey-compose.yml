@@ -17,7 +17,7 @@ services:
     logging:
       driver: loki
       options:
-        loki-url: http://loki.setminusx.com/loki/api/v1/push
+        loki-url: https://loki.setminusx.com/loki/api/v1/push
         loki-retries: 5
         loki-batch-size: 50
         loki-external-labels: "machine=MacBook-Pro-M1-1,service_name={{.Name}}"
