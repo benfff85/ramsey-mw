@@ -53,34 +53,13 @@ This project is configured with OpenAPI 3.0 documentation, the swagger page can 
 
 [http://localhost:36000/swagger-ui/index.html](http://localhost:36000/swagger-ui/index.html)
 
-## GraphQL
-
-GraphQL can be explored using the GraphiQL page at:
-
-[http://localhost:36000/graphiql](http://localhost:36000/graphiql)
-
-To fetch a stage summary use the following query:
-
-```graphql
-query {
-    summary {
-        stageSummary(stageId: 1, workUnitStatusList: [NEW]) {
-            stageId
-            workUnitCount
-            workUnitStatusList
-        }
-    }
-}
-```
-
 ## Common Queries
 
-Find the count of work units by stage and status
+Find the count of results by stage:
 ```sql
-SELECT status, COUNT(1) 
-FROM `ramsey-dev`.work_unit 
-WHERE stage_id = 1 
-GROUP BY status;
+SELECT stage_id, COUNT(1) 
+FROM `ramsey-dev`.work_result 
+GROUP BY stage_id;
 ```
 
 ## Misc

@@ -1,4 +1,4 @@
-INSERT INTO `ramsey-dev`.campaign (campaign_id, created_date, status, strategy, subgraph_size, updated_date, vertex_count) VALUES (1, '2025-03-20 18:53:30.989000', 'ACTIVE', 'COMPREHENSIVE_EDGE_PAIR_MUTATION', 8, '2025-03-20 18:53:30.989000', 288);
+INSERT INTO `ramsey-dev`.campaign (campaign_id, created_date, status, strategy, subgraph_size, updated_date, vertex_count, total_pairs) VALUES (1, '2025-03-20 18:53:30.989000', 'ACTIVE', 'COMPREHENSIVE_EDGE_PAIR_MUTATION', 8, '2025-03-20 18:53:30.989000', 288, 427000896);
 
 INSERT INTO `ramsey-dev`.stage (stage_id, base_graph_id, campaign_id, created_date, status, updated_date, latest_work_unit_id) VALUES (1, 1, 1, '2025-03-20 18:49:39.713000', 'ACTIVE', '2025-03-20 18:49:39.713000', null);
 

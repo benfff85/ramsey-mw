@@ -14,6 +14,7 @@ public class Campaign {
     private Integer campaignId;
     private Integer subgraphSize;
     private Integer vertexCount;
+    private Long totalPairs;
 
     @Enumerated(EnumType.STRING)
     private Campaign.Strategy strategy;

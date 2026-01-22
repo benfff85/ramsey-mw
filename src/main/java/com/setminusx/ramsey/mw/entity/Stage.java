@@ -18,7 +18,12 @@ public class Stage {
 
     private Integer baseGraphId;
     private Integer campaignId;
-    private Integer latestWorkUnitId;
+
+    @Enumerated(EnumType.STRING)
+    private WorkEnumerationStrategy workEnumerationStrategy;
+
+    @Column(columnDefinition = "TEXT")
+    private String details;
 
     private LocalDateTime createdDate;
     private LocalDateTime updatedDate;
@@ -37,6 +42,12 @@ public class Stage {
     public enum Status {
         ACTIVE,
         INACTIVE
+    }
+
+    public enum WorkEnumerationStrategy {
+        BASIC,
+        SINGLE_EDGE_CARDINALITY,
+        DUAL_EDGE_CARDINALITY
     }
 
 }
