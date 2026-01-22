@@ -7,13 +7,10 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@lombok.RequiredArgsConstructor
 public class StageService {
 
     private final StageRepo stageRepo;
-
-    public StageService(StageRepo stageRepo) {
-        this.stageRepo = stageRepo;
-    }
 
     public List<Stage> getStages(Integer campaignId, Stage.Status status) {
         if (campaignId == null && status == null) {

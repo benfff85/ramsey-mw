@@ -16,17 +16,13 @@ import java.util.List;
  */
 @Slf4j
 @Service
+@lombok.RequiredArgsConstructor
 public class RedisQueueService {
 
     private static final String QUEUE_KEY_PREFIX = "work_queue:";
 
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
-
-    public RedisQueueService(StringRedisTemplate redisTemplate, ObjectMapper objectMapper) {
-        this.redisTemplate = redisTemplate;
-        this.objectMapper = objectMapper;
-    }
 
     /**
      * Push a work item to the queue for a given stage.

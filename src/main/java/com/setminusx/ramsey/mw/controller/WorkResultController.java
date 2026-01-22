@@ -10,13 +10,10 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/api/ramsey/results")
+@lombok.RequiredArgsConstructor
 public class WorkResultController {
 
     private final WorkResultService workResultService;
-
-    public WorkResultController(WorkResultService workResultService) {
-        this.workResultService = workResultService;
-    }
 
     @PostMapping
     public void submitResults(@RequestBody List<WorkResult> results) {

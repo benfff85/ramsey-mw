@@ -13,13 +13,10 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 @Slf4j
 @RestController
 @RequestMapping("/api/ramsey/graphs")
+@lombok.RequiredArgsConstructor
 public class GraphController {
 
     private final GraphService graphService;
-
-    public GraphController(GraphService graphService) {
-        this.graphService = graphService;
-    }
 
     @GetMapping
     public List<Graph> getGraphs(

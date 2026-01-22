@@ -7,13 +7,10 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@lombok.RequiredArgsConstructor
 public class WorkResultService {
 
     private final WorkResultRepo workResultRepo;
-
-    public WorkResultService(WorkResultRepo workResultRepo) {
-        this.workResultRepo = workResultRepo;
-    }
 
     public List<WorkResult> saveResults(List<WorkResult> results) {
         return workResultRepo.saveAll(results);
