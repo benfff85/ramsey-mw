@@ -15,6 +15,9 @@ systemctl enable docker
 # Add ec2-user to docker group
 usermod -a -G docker ec2-user
 
+# Install Loki Docker logging plugin
+docker plugin install grafana/loki-docker-driver:latest --alias loki --grant-all-permissions 2>/dev/null || true
+
 # Install Docker Compose
 curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 chmod +x /usr/local/bin/docker-compose
@@ -39,9 +42,14 @@ services:
       CLIENT_PHONE_HOME_FREQ: 60000
       PUBLISH_RESULTS: "false"
     logging:
-      driver: json-file
+      driver: loki
       options:
-        max-size: "10m"
+        loki-url: "https://loki.setminusx.com/loki/api/v1/push"
+        mode: non-blocking
+        max-buffer-size: 4m
+        loki-retries: 5
+        loki-batch-size: 1000
+        loki-external-labels: "machine=AWS-EC2,service_name={{.Name}}"
     restart: always
     deploy:
       replicas: 1
