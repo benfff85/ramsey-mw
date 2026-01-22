@@ -37,9 +37,11 @@ services:
     logging:
       driver: loki
       options:
-        loki-url: https://loki.setminusx.com/loki/api/v1/push
+        loki-url: "https://loki.setminusx.com/loki/api/v1/push"
+        mode: non-blocking
+        max-buffer-size: 4m
         loki-retries: 5
-        loki-batch-size: 50
+        loki-batch-size: 1000
         loki-external-labels: "machine=Vast-AI,service_name={{.Name}}"
     restart: always
 EOF
