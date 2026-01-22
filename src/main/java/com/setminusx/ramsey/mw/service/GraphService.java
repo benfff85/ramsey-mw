@@ -11,13 +11,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
+@lombok.RequiredArgsConstructor
 public class GraphService {
 
     private final GraphRepo graphRepo;
-
-    public GraphService(GraphRepo graphRepo) {
-        this.graphRepo = graphRepo;
-    }
 
     public Graph getGraphByGraphId(Integer id) {
         return graphRepo.findById(id).orElse(null);

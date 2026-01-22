@@ -13,13 +13,10 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 @Slf4j
 @RestController
 @RequestMapping("/api/ramsey/campaigns")
+@lombok.RequiredArgsConstructor
 public class CampaignController {
 
     private final CampaignService campaignService;
-
-    public CampaignController(CampaignService campaignService) {
-        this.campaignService = campaignService;
-    }
 
     @GetMapping
     public List<Campaign> getCampaigns(
@@ -28,7 +25,8 @@ public class CampaignController {
             @RequestParam(required = false) Campaign.Status status,
             @RequestParam(required = false) Campaign.Strategy strategy) {
 
-        log.info("Fetching Campaigns with filters - SubgraphSize: {}, VertexCount: {}, Status: {}, Strategy: {}", subgraphSize, vertexCount, status, strategy);
+        log.info("Fetching Campaigns with filters - SubgraphSize: {}, VertexCount: {}, Status: {}, Strategy: {}",
+                subgraphSize, vertexCount, status, strategy);
         return campaignService.getCampaigns(subgraphSize, vertexCount, status, strategy);
     }
 
@@ -44,6 +42,12 @@ public class CampaignController {
         }
 
         return campaign;
+    }
+
+    @GetMapping("/{id}/progression")
+    public List<com.setminusx.ramsey.mw.dto.ProgressionDTO> getCampaignProgression(@PathVariable Integer id) {
+        log.info("Fetching progression for campaign with ID: {}", id);
+        return campaignService.getCampaignProgression(id);
     }
 
     @PostMapping

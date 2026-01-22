@@ -1,5 +1,6 @@
 package com.setminusx.ramsey.mw.repository;
 
+import com.setminusx.ramsey.mw.dto.ProgressionDTO;
 import com.setminusx.ramsey.mw.entity.Stage;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -17,5 +18,14 @@ public interface StageRepo extends JpaRepository<Stage, Integer> {
         List<Stage> findByCampaignIdAndStatus(
                         @Param("campaignId") Integer campaignId,
                         @Param("status") Stage.Status status);
+
+        @Query("SELECT new com.setminusx.ramsey.mw.dto.ProgressionDTO(s.stageId, s.baseGraphId, g.cliqueCount, s.createdDate, s.status) "
+                        +
+                        "FROM Stage s, Graph g " +
+                        "WHERE s.baseGraphId = g.graphId " +
+                        "AND s.campaignId = :campaignId " +
+                        "ORDER BY s.createdDate ASC")
+        List<ProgressionDTO> findProgressionByCampaignId(
+                        @Param("campaignId") Integer campaignId);
 
 }

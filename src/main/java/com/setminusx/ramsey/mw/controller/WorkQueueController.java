@@ -14,13 +14,10 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/api/ramsey/queue")
+@lombok.RequiredArgsConstructor
 public class WorkQueueController {
 
     private final RedisQueueService redisQueueService;
-
-    public WorkQueueController(RedisQueueService redisQueueService) {
-        this.redisQueueService = redisQueueService;
-    }
 
     /**
      * Pop work items from the queue.

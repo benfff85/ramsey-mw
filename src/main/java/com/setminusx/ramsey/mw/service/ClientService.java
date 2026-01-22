@@ -7,16 +7,13 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@lombok.RequiredArgsConstructor
 public class ClientService {
 
     private final ClientRepo clientRepo;
 
-    public ClientService(ClientRepo clientRepo) {
-        this.clientRepo = clientRepo;
-    }
-
     public List<Client> getClients(Integer campaignId, Client.Status status, Client.Type type) {
-        if (campaignId == null &&status == null && type == null) {
+        if (campaignId == null && status == null && type == null) {
             return clientRepo.findAll();
         } else {
             return clientRepo.findByCampaignIdAndStatusAndType(campaignId, status, type);

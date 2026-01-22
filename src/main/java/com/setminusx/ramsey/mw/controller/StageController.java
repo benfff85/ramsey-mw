@@ -13,13 +13,10 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 @Slf4j
 @RestController
 @RequestMapping("/api/ramsey/stages")
+@lombok.RequiredArgsConstructor
 public class StageController {
 
     private final StageService stageService;
-
-    public StageController(StageService stageService) {
-        this.stageService = stageService;
-    }
 
     @GetMapping
     public List<Stage> getStages(
