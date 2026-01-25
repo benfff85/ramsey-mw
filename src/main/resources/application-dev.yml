@@ -7,9 +7,15 @@ spring:
     init:
       mode: ${SQL_INIT_MODE:never} # Runs data.sql for inserts [never, always]
   datasource:
-    url: jdbc:mysql://ramsey-db-mysql:3306/ramsey-dev?autoReconnect=true&useSSL=false&rewriteBatchedStatements=true&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://ramsey-db-mysql:3306/ramsey-dev?autoReconnect=true&useSSL=false&rewriteBatchedStatements=true&allowPublicKeyRetrieval=true&cachePrepStmts=true&prepStmtCacheSize=250&prepStmtCacheSqlLimit=2048&useServerPrepStmts=true
     username: ${DB_USER}
     password: ${DB_PASS}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 30000
+      max-lifetime: 1800000
   data:
     redis:
       host: ${REDIS_HOST:localhost}
