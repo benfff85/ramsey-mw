@@ -10,6 +10,7 @@ services:
     ports:
       - "36002:6379"
     mem_limit: 8g
+    scale: 1
     logging:
       driver: loki
       options:
@@ -46,7 +47,8 @@ services:
         loki-batch-size: 1000
         loki-external-labels: "machine=MacBook-Pro-M4Max-1,service_name={{.Name}}"
     restart: on-failure
-    mem_limit: 2g
+    mem_limit: 8g
+    scale: 1
 
   ramsey-queue-manager:
     image: benferenchak/ramsey-queue-manager:develop
@@ -59,6 +61,8 @@ services:
       WORK_UNIT_ANALYSIS_TYPE: TARGETED
       CLIENT_TIMEOUT_CHECK_FREQ: 300000
       WORK_ENUMERATION_STRATEGY: "DUAL_EDGE_CARDINALITY"  # Set to DUAL_EDGE_CARDINALITY for counter-based mode
+      TOP_RESULTS_COUNT: 10
+      EXHAUSTION_DELAY_MS: 60000
       LOGGING_LEVEL_ROOT: INFO
     depends_on:
       - ramsey-mw
@@ -74,6 +78,7 @@ services:
         loki-external-labels: "machine=MacBook-Pro-M4Max-1,service_name={{.Name}}"
     restart: on-failure
     mem_limit: 2g
+    scale: 1
 
   ramsey-worker-rust:
     image: benferenchak/ramsey-worker-rust:develop
@@ -89,6 +94,8 @@ services:
       WORK_UNIT_POLL_FREQ: 5000
       CLIENT_PHONE_HOME_FREQ: 60000
       PUBLISH_RESULTS: "false"
+      TOP_RESULTS_COUNT: 10
+      WORKER_COUNT: 1
     depends_on:
       ramsey-mw:
         condition: service_healthy
@@ -132,6 +139,7 @@ services:
         loki-external-labels: "machine=MacBook-Pro-M4Max-1,service_name={{.Name}}"
     restart: on-failure
     mem_limit: 2g
+    scale: 1
 
 networks:
   ramsey-net:
