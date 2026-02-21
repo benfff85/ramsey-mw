@@ -34,6 +34,8 @@ services:
       WORK_UNIT_POLL_FREQ: 5000
       CLIENT_PHONE_HOME_FREQ: 60000
       PUBLISH_RESULTS: "false"
+      TOP_RESULTS_COUNT: 10
+      WORKER_COUNT: 1
     logging:
       driver: loki
       options:
