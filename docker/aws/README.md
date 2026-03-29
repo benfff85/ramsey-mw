@@ -32,8 +32,8 @@ Or use **Fleet request** for multiple instances across AZs.
 ## Service Endpoints
 
 Workers connect to:
-- **Middleware**: `http://www.setminusx.com:36000`
-- **Redis**: `www.setminusx.com:36002`
+- **Middleware**: `http://www.setminusx.cloud:36000`
+- **Redis**: `www.setminusx.cloud:36002`
 
 ## Scaling
 

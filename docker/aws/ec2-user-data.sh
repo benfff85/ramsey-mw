@@ -32,9 +32,9 @@ services:
   ramsey-worker-rust:
     image: benferenchak/ramsey-worker-rust:develop-neoverse-v2
     environment:
-      RAMSEY_API_URL: http://www.setminusx.com:36000/api/ramsey
+      RAMSEY_API_URL: http://www.setminusx.cloud:36000/api/ramsey
       RAMSEY_CAMPAIGN_ID: 1
-      REDIS_HOST: www.setminusx.com
+      REDIS_HOST: www.setminusx.cloud
       REDIS_PORT: 36002
       WORK_UNIT_FETCH_COUNT: 50000
       WORK_UNIT_PUBLISH_COUNT: 10000
@@ -46,7 +46,7 @@ services:
     logging:
       driver: loki
       options:
-        loki-url: "https://loki.setminusx.com/loki/api/v1/push"
+        loki-url: "https://loki.setminusx.cloud/loki/api/v1/push"
         mode: non-blocking
         max-buffer-size: 4m
         loki-retries: 5

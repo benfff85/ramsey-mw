@@ -1,6 +1,6 @@
 # Nginx Reverse Proxy with Let's Encrypt SSL
 
-Reverse proxy for setminusx.com with SSL termination using Let's Encrypt certificates.
+Reverse proxy for setminusx.cloud with SSL termination using Let's Encrypt certificates.
 
 ## Deployment via Portainer
 
@@ -32,21 +32,21 @@ docker exec certbot certbot certonly --webroot \
   --email ben.ferenchak@gmail.com \
   --agree-tos \
   --no-eff-email \
-  -d www.setminusx.com \
-  -d ramsey-ui.setminusx.com \
-  -d ramsey-mw.setminusx.com \
-  -d portainer.setminusx.com \
-  -d openwebui.setminusx.com \
-  -d jupyter.setminusx.com \
-  -d grafana.setminusx.com \
-  -d loki.setminusx.com
+  -d www.setminusx.cloud \
+  -d ramsey-ui.setminusx.cloud \
+  -d ramsey-mw.setminusx.cloud \
+  -d portainer.setminusx.cloud \
+  -d openwebui.setminusx.cloud \
+  -d jupyter.setminusx.cloud \
+  -d grafana.setminusx.cloud \
+  -d loki.setminusx.cloud
 ```
 
 Expected output:
 ```
 Successfully received certificate.
-Certificate is saved at: /etc/letsencrypt/live/www.setminusx.com/fullchain.pem
-Key is saved at:         /etc/letsencrypt/live/www.setminusx.com/privkey.pem
+Certificate is saved at: /etc/letsencrypt/live/www.setminusx.cloud/fullchain.pem
+Key is saved at:         /etc/letsencrypt/live/www.setminusx.cloud/privkey.pem
 ```
 
 ### Step 3: Switch to HTTPS config
@@ -63,7 +63,7 @@ docker exec nginx-proxy nginx -s reload
 
 ### Step 5: Verify
 
-Visit https://www.setminusx.com - you should see a valid Let's Encrypt certificate!
+Visit https://www.setminusx.cloud - you should see a valid Let's Encrypt certificate!
 
 ---
 
@@ -115,15 +115,15 @@ docker exec certbot certbot certonly --webroot \
   --agree-tos \
   --no-eff-email \
   --expand \
-  -d www.setminusx.com \
-  -d ramsey-ui.setminusx.com \
-  -d ramsey-mw.setminusx.com \
-  -d portainer.setminusx.com \
-  -d openwebui.setminusx.com \
-  -d jupyter.setminusx.com \
-  -d grafana.setminusx.com \
-  -d loki.setminusx.com \
-  -d NEW_SUBDOMAIN.setminusx.com
+  -d www.setminusx.cloud \
+  -d ramsey-ui.setminusx.cloud \
+  -d ramsey-mw.setminusx.cloud \
+  -d portainer.setminusx.cloud \
+  -d openwebui.setminusx.cloud \
+  -d jupyter.setminusx.cloud \
+  -d grafana.setminusx.cloud \
+  -d loki.setminusx.cloud \
+  -d NEW_SUBDOMAIN.setminusx.cloud
 ```
 
 ### Step 4: Reload nginx again
@@ -138,14 +138,14 @@ docker exec nginx-proxy nginx -s reload
 
 | Domain | Protocol | Backend |
 |--------|----------|---------|
-| `www.setminusx.com` | HTTPS (redirect from HTTP) | `host.docker.internal:36003` (ramsey-ui) |
-| `ramsey-ui.setminusx.com` | HTTPS (redirect from HTTP) | `host.docker.internal:36003` (ramsey-ui) |
-| `ramsey-mw.setminusx.com` | HTTP and HTTPS | `host.docker.internal:36000` (ramsey-mw) |
-| `portainer.setminusx.com` | HTTPS (redirect from HTTP) | `host.docker.internal:9000` (portainer) |
-| `openwebui.setminusx.com` | HTTPS (redirect from HTTP) | `host.docker.internal:11800` (openwebui) |
-| `jupyter.setminusx.com` | HTTPS (redirect from HTTP) | `host.docker.internal:8888` (jupyter) |
-| `grafana.setminusx.com` | HTTPS (redirect from HTTP) | `host.docker.internal:35000` (grafana) |
-| `loki.setminusx.com` | HTTPS (redirect from HTTP) | `host.docker.internal:35001` (loki) |
+| `www.setminusx.cloud` | HTTPS (redirect from HTTP) | `host.docker.internal:36003` (ramsey-ui) |
+| `ramsey-ui.setminusx.cloud` | HTTPS (redirect from HTTP) | `host.docker.internal:36003` (ramsey-ui) |
+| `ramsey-mw.setminusx.cloud` | HTTP and HTTPS | `host.docker.internal:36000` (ramsey-mw) |
+| `portainer.setminusx.cloud` | HTTPS (redirect from HTTP) | `host.docker.internal:9000` (portainer) |
+| `openwebui.setminusx.cloud` | HTTPS (redirect from HTTP) | `host.docker.internal:11800` (openwebui) |
+| `jupyter.setminusx.cloud` | HTTPS (redirect from HTTP) | `host.docker.internal:8888` (jupyter) |
+| `grafana.setminusx.cloud` | HTTPS (redirect from HTTP) | `host.docker.internal:35000` (grafana) |
+| `loki.setminusx.cloud` | HTTPS (redirect from HTTP) | `host.docker.internal:35001` (loki) |
 
 ---
 
@@ -188,8 +188,8 @@ docker logs -f certbot
 ## Certificate Location
 
 Certificates are stored in the certbot container at:
-- Certificate: `/etc/letsencrypt/live/www.setminusx.com/fullchain.pem`
-- Private Key: `/etc/letsencrypt/live/www.setminusx.com/privkey.pem`
+- Certificate: `/etc/letsencrypt/live/www.setminusx.cloud/fullchain.pem`
+- Private Key: `/etc/letsencrypt/live/www.setminusx.cloud/privkey.pem`
 
 These are mounted to nginx at `/etc/nginx/ssl/`.
 
