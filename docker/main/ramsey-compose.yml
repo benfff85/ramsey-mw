@@ -14,7 +14,7 @@ services:
     logging:
       driver: loki
       options:
-        loki-url: "https://loki.setminusx.com/loki/api/v1/push"
+        loki-url: "https://loki.setminusx.cloud/loki/api/v1/push"
         mode: non-blocking
         max-buffer-size: 4m
         loki-retries: 5
@@ -40,7 +40,7 @@ services:
     logging:
       driver: loki
       options:
-        loki-url: "https://loki.setminusx.com/loki/api/v1/push"
+        loki-url: "https://loki.setminusx.cloud/loki/api/v1/push"
         mode: non-blocking
         max-buffer-size: 4m
         loki-retries: 5
@@ -70,7 +70,7 @@ services:
     logging:
       driver: loki
       options:
-        loki-url: "https://loki.setminusx.com/loki/api/v1/push"
+        loki-url: "https://loki.setminusx.cloud/loki/api/v1/push"
         mode: non-blocking
         max-buffer-size: 4m
         loki-retries: 5
@@ -104,7 +104,7 @@ services:
     logging:
       driver: loki
       options:
-        loki-url: "https://loki.setminusx.com/loki/api/v1/push"
+        loki-url: "https://loki.setminusx.cloud/loki/api/v1/push"
         mode: non-blocking
         max-buffer-size: 4m
         loki-retries: 5
@@ -131,7 +131,7 @@ services:
     logging:
       driver: loki
       options:
-        loki-url: "https://loki.setminusx.com/loki/api/v1/push"
+        loki-url: "https://loki.setminusx.cloud/loki/api/v1/push"
         mode: non-blocking
         max-buffer-size: 4m
         loki-retries: 5
