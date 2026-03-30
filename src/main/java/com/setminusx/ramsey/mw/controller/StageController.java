@@ -21,9 +21,13 @@ public class StageController {
     @GetMapping
     public List<Stage> getStages(
             @RequestParam(required = false) Integer campaignId,
-            @RequestParam(required = false) Stage.Status status) {
+            @RequestParam(required = false) Stage.Status status,
+            @RequestParam(required = false) Integer count) {
 
-        log.info("Fetching stages with filters - CampaignId: {}, Status: {}", campaignId, status);
+        log.info("Fetching stages with filters - CampaignId: {}, Status: {}, Count: {}", campaignId, status, count);
+        if (count != null) {
+            return stageService.getRecentStages(campaignId, status, count);
+        }
         return stageService.getStages(campaignId, status);
     }
 

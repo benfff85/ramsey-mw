@@ -2,6 +2,7 @@ package com.setminusx.ramsey.mw.service;
 
 import com.setminusx.ramsey.mw.entity.Stage;
 import com.setminusx.ramsey.mw.repository.StageRepo;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,6 +19,10 @@ public class StageService {
         } else {
             return stageRepo.findByCampaignIdAndStatus(campaignId, status);
         }
+    }
+
+    public List<Stage> getRecentStages(Integer campaignId, Stage.Status status, int count) {
+        return stageRepo.findRecentByCampaignIdAndStatus(campaignId, status, PageRequest.of(0, count));
     }
 
     public Stage getStageById(Integer id) {
