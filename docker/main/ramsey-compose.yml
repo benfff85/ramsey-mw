@@ -115,7 +115,7 @@ services:
     mem_limit: 2g
     scale: 14
 
-  ramsey-worker-sa:
+  ramsey-worker-rust-sa:
     image: benferenchak/ramsey-worker-rust:develop
     networks:
       - ramsey-net
@@ -130,6 +130,7 @@ services:
       SA_MAX_FLIP_COUNT: 4
       CLIENT_PHONE_HOME_FREQ: 60000
       TOP_RESULTS_COUNT: 10
+      WORKER_COUNT: 1
     depends_on:
       ramsey-mw:
         condition: service_healthy
