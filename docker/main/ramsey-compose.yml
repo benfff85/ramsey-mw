@@ -115,6 +115,39 @@ services:
     mem_limit: 2g
     scale: 14
 
+  ramsey-worker-sa:
+    image: benferenchak/ramsey-worker-rust:develop
+    networks:
+      - ramsey-net
+    environment:
+      RAMSEY_API_URL: http://ramsey-mw:8080/api/ramsey
+      RAMSEY_CAMPAIGN_ID: 1
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      WORKER_MODE: SIMULATED_ANNEALING
+      SA_MAX_ITERATIONS: 100000
+      SA_INITIAL_TEMP: 100.0
+      SA_MAX_FLIP_COUNT: 4
+      CLIENT_PHONE_HOME_FREQ: 60000
+      TOP_RESULTS_COUNT: 10
+    depends_on:
+      ramsey-mw:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    logging:
+      driver: loki
+      options:
+        loki-url: "https://loki.setminusx.com/loki/api/v1/push"
+        mode: non-blocking
+        max-buffer-size: 4m
+        loki-retries: 5
+        loki-batch-size: 1000
+        loki-external-labels: "machine=MacBook-Pro-M4Max-1,service_name={{.Name}}"
+    restart: on-failure
+    mem_limit: 2g
+    scale: 3
+
   ramsey-ui:
     image: benferenchak/ramsey-ui:develop
     networks:
