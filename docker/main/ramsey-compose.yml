@@ -138,7 +138,7 @@ services:
     logging:
       driver: loki
       options:
-        loki-url: "https://loki.setminusx.com/loki/api/v1/push"
+        loki-url: "https://loki.setminusx.cloud/loki/api/v1/push"
         mode: non-blocking
         max-buffer-size: 4m
         loki-retries: 5
@@ -146,7 +146,7 @@ services:
         loki-external-labels: "machine=MacBook-Pro-M4Max-1,service_name={{.Name}}"
     restart: on-failure
     mem_limit: 2g
-    scale: 3
+    scale: 1
 
   ramsey-ui:
     image: benferenchak/ramsey-ui:develop
