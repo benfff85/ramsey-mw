@@ -239,7 +239,7 @@ If the graph has an automorphism group of order k, then only 1/k of the edge pai
 | Local MaxSAT optimizer (Tier 2) | Potentially large (multi-edge) | 3-5 days | Try after Tier 1 |
 | Multi-edge flip (3+) from roadmap | Medium | 2 days | Still valuable |
 | Graph symmetry pruning | No clique reduction, faster search | 5 days | Complementary |
-| Better starting graphs (Paley/circulant) | Potentially huge (fresh start) | 2-3 days | **Most likely path to breakthrough** |
+| ~~Better starting graphs (Paley/circulant)~~ | ~~Potentially huge (fresh start)~~ | ~~2-3 days~~ | **Investigated & closed** — see `paley-graph-investigation.md` |
 
 ---
 
@@ -250,6 +250,8 @@ The most impactful thing SAT-adjacent research tells us about Ramsey lower bound
 Your current graph has 980K cliques. The best-known constructions for R(8,8) candidates (Paley graphs on prime orders near 288, circulant graphs with carefully chosen connection sets) may start with significantly fewer cliques. If a Paley graph on 281 vertices (GF(281), a prime) starts with 500K cliques instead of 980K, you've saved yourself hundreds of thousands of stages of local search.
 
 **This is not a SAT problem — it's a number theory / finite geometry problem.** But it's arguably more impactful than any SAT technique for your goal.
+
+> **Update (2026-04-05):** Paley graphs were investigated and this avenue is now **closed**. See `paley-graph-investigation.md` for full details. Summary: Paley(281) has 0 eight-cliques but only 281 vertices — adding even one vertex creates 100M+ cliques due to the ~3M latent 7-cliques. Paley(289) has 11.2M cliques at 289 vertices — 11x worse than the evolved graph. The current graph at 980K already outperforms all known algebraic constructions at 288 vertices. The "better starting graph" avenue does not appear viable for R(8,8) at this vertex count.
 
 ---
 
@@ -262,7 +264,7 @@ Your current graph has 980K cliques. The best-known constructions for R(8,8) can
 | Can SAT-inspired heuristics help? | **Yes.** Clique-guided mutation (WalkSAT-style) is cheap and directly implementable. |
 | Is SAT better than your current approach? | **Not as a replacement.** As a complement to exhaustive search, local MaxSAT could find moves that 2-flip search misses. |
 | What's the single best next step? | **Clique overlap analysis** to understand the constraint landscape, then **clique-guided mutation** to exploit it. |
-| What's the most likely path to a breakthrough? | **Better starting graphs** from algebraic constructions, not SAT. |
+| What's the most likely path to a breakthrough? | ~~Better starting graphs~~ (closed — see Paley investigation). Remaining best bets: **variable-depth search** and **tabu search** — see `deep-analysis-path-forward.md`. |
 
 ---
 

@@ -74,6 +74,12 @@ The Ramsey number search landscape has many local minima connected by narrow pat
 Impact
 Effort
 
+> **Outcome (2026-04-02):** SA was implemented (`sa.rs`) and deployed as a SIMULATED_ANNEALING worker mode. Configuration: 15K iterations per schedule, initial_temp=1000, cooling_rate=0.999, 2 red + 2 blue edge flips per iteration. Run from a base of 980,666 cliques. After 45K+ total iterations across 3 schedules, **zero improvements were found**. SA was shut down.
+>
+> **Post-mortem analysis (see `deep-analysis-path-forward.md`):** Three root causes identified: (1) Each iteration used `get_cliques_comprehensive()` (full Bron-Kerbosch recount) instead of incremental evaluation via CliqueCollection — ~1000x too expensive per iteration, limiting total iterations to thousands instead of millions. (2) Temperature started at 1000 but the observed oscillation basin is only ~40 cliques wide — temp was 25x too aggressive initially, accepting essentially random moves. (3) Perturbation size (4 edges) was too similar to the exhaustive 2-flip neighborhood already proven to be a local minimum; needed 10-50 edge perturbations to escape the basin.
+>
+> **Tabu search was not attempted** and remains a viable path — see `deep-analysis-path-forward.md` for detailed analysis.
+
 ### Exploit Graph Symmetries (Automorphism Pruning)
 $0 Rust Algorithm
 Many edge pairs produce isomorphic derived graphs. If the base graph has a non-trivial automorphism group, you can reduce the search space by only considering one representative from each orbit of edge pairs under the automorphism action.
