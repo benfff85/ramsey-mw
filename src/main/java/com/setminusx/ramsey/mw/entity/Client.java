@@ -30,7 +30,8 @@ public class Client {
 
     public enum Type {
         CLIQUECHECKER,
-        QUEUEMANAGER
+        QUEUEMANAGER,
+        SIMULATED_ANNEALING
     }
 
 }

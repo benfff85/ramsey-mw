@@ -25,7 +25,7 @@ CREATE TABLE `ramsey-dev`.`client` (
                           `created_date` datetime(6) DEFAULT NULL,
                           `last_phone_home_date` datetime(6) DEFAULT NULL,
                           `status` enum('ACTIVE','INACTIVE') DEFAULT NULL,
-                          `type` enum('CLIQUECHECKER','QUEUEMANAGER') DEFAULT NULL,
+                          `type` enum('CLIQUECHECKER','QUEUEMANAGER','SIMULATED_ANNEALING') DEFAULT NULL,
                           PRIMARY KEY (`client_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -101,7 +101,7 @@ CREATE TABLE `ramsey-test`.`client` (
                                      `created_date` datetime(6) DEFAULT NULL,
                                      `last_phone_home_date` datetime(6) DEFAULT NULL,
                                      `status` enum('ACTIVE','INACTIVE') DEFAULT NULL,
-                                     `type` enum('CLIQUECHECKER','QUEUEMANAGER') DEFAULT NULL,
+                                     `type` enum('CLIQUECHECKER','QUEUEMANAGER','SIMULATED_ANNEALING') DEFAULT NULL,
                                      PRIMARY KEY (`client_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -167,7 +167,7 @@ CREATE TABLE `ramsey`.`client` (
                                      `created_date` datetime(6) DEFAULT NULL,
                                      `last_phone_home_date` datetime(6) DEFAULT NULL,
                                      `status` enum('ACTIVE','INACTIVE') DEFAULT NULL,
-                                     `type` enum('CLIQUECHECKER','QUEUEMANAGER') DEFAULT NULL,
+                                     `type` enum('CLIQUECHECKER','QUEUEMANAGER','SIMULATED_ANNEALING') DEFAULT NULL,
                                      PRIMARY KEY (`client_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
