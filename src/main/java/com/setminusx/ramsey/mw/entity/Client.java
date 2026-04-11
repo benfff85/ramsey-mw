@@ -31,7 +31,8 @@ public class Client {
     public enum Type {
         CLIQUECHECKER,
         QUEUEMANAGER,
-        SIMULATED_ANNEALING
+        SIMULATED_ANNEALING,
+        VARIABLE_DEPTH_SEARCH
     }
 
 }
