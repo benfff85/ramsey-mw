@@ -22,7 +22,7 @@ services:
         loki-external-labels: "machine=MacBook-Pro-M4Max-1,service_name={{.Name}}"
 
   ramsey-mw:
-    image: benferenchak/ramsey-mw:develop
+    image: benferenchak/ramsey-mw:feature-variable-depth-search
     networks:
       - ramsey-net
     ports:
@@ -130,6 +130,41 @@ services:
       SA_COOLING_RATE: 0.999
       SA_MIN_PAIRS: 2
       SA_MAX_PAIRS: 2
+      CLIENT_PHONE_HOME_FREQ: 60000
+      TOP_RESULTS_COUNT: 50
+      WORKER_COUNT: 1
+    depends_on:
+      ramsey-mw:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    logging:
+      driver: loki
+      options:
+        loki-url: "https://loki.setminusx.cloud/loki/api/v1/push"
+        mode: non-blocking
+        max-buffer-size: 4m
+        loki-retries: 5
+        loki-batch-size: 1000
+        loki-external-labels: "machine=MacBook-Pro-M4Max-1,service_name={{.Name}}"
+    restart: on-failure
+    mem_limit: 2g
+    scale: 1
+
+  ramsey-worker-rust-vds:
+    image: benferenchak/ramsey-worker-rust:feature-variable-depth-search
+    networks:
+      - ramsey-net
+    environment:
+      RAMSEY_API_URL: http://ramsey-mw:8080/api/ramsey
+      RAMSEY_CAMPAIGN_ID: 1
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      WORKER_MODE: VARIABLE_DEPTH_SEARCH
+      VDS_MAX_DEPTH: 4
+      VDS_TOP_FIRST_EDGES: 500
+      VDS_BRANCHING_FACTOR: 20
+      VDS_WORSENING_TOLERANCE: 100
       CLIENT_PHONE_HOME_FREQ: 60000
       TOP_RESULTS_COUNT: 50
       WORKER_COUNT: 1
