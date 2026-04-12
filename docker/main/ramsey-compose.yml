@@ -146,7 +146,7 @@ services:
         loki-external-labels: "machine=MacBook-Pro-M4Max-1,service_name={{.Name}}"
     restart: on-failure
     mem_limit: 2g
-    scale: 1
+    scale: 0
 
   ramsey-worker-rust-vds:
     image: benferenchak/ramsey-worker-rust:develop
@@ -158,10 +158,10 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       WORKER_MODE: VARIABLE_DEPTH_SEARCH
-      VDS_MAX_DEPTH: 4
-      VDS_TOP_FIRST_EDGES: 200
-      VDS_BRANCHING_FACTOR: 20
-      VDS_WORSENING_TOLERANCE: 50000
+      VDS_MAX_DEPTH: 8
+      VDS_TOP_FIRST_EDGES: 100
+      VDS_BRANCHING_FACTOR: 15
+      VDS_WORSENING_TOLERANCE: 500
       TOP_RESULTS_COUNT: 50
       WORKER_COUNT: 1
     depends_on:
