@@ -22,7 +22,7 @@ services:
         loki-external-labels: "machine=MacBook-Pro-M4Max-1,service_name={{.Name}}"
 
   ramsey-mw:
-    image: benferenchak/ramsey-mw:feature-remove-client-tracking
+    image: benferenchak/ramsey-mw:develop
     networks:
       - ramsey-net
     ports:
@@ -51,7 +51,7 @@ services:
     scale: 1
 
   ramsey-queue-manager:
-    image: benferenchak/ramsey-queue-manager:feature-remove-client-tracking
+    image: benferenchak/ramsey-queue-manager:develop
     networks:
       - ramsey-net
     environment:
@@ -81,7 +81,7 @@ services:
     scale: 1
 
   ramsey-worker-rust:
-    image: benferenchak/ramsey-worker-rust:feature-remove-client-tracking
+    image: benferenchak/ramsey-worker-rust:develop
     networks:
       - ramsey-net
     environment:
@@ -114,7 +114,7 @@ services:
     scale: 14
 
   ramsey-worker-rust-sa:
-    image: benferenchak/ramsey-worker-rust:feature-remove-client-tracking
+    image: benferenchak/ramsey-worker-rust:develop
     networks:
       - ramsey-net
     environment:
@@ -149,7 +149,7 @@ services:
     scale: 1
 
   ramsey-worker-rust-vds:
-    image: benferenchak/ramsey-worker-rust:feature-remove-client-tracking
+    image: benferenchak/ramsey-worker-rust:develop
     networks:
       - ramsey-net
     environment:
