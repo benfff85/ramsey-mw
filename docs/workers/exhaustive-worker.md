@@ -37,7 +37,7 @@ For each edge pair, the worker computes the resulting clique count using an incr
 4. Compute: `new_total = base_total - broken + new_cliques`.
 5. Unflip the edges to restore the graph.
 
-The `CliqueCollection` is built once per stage by enumerating all cliques of the target size (8-cliques for 288 vertices) using a comprehensive Bron-Kerbosch pass. It provides O(1) lookup of which cliques contain a given edge, enabling the incremental formula above.
+The `CliqueCollection` is built once per stage by enumerating all cliques of the target size (8-cliques for 282 vertices) using a comprehensive Bron-Kerbosch pass. It provides O(1) lookup of which cliques contain a given edge, enabling the incremental formula above.
 
 ### Early Termination
 
@@ -66,7 +66,7 @@ ramsey-worker-rust:
   image: benferenchak/ramsey-worker-rust:develop
   environment:
     RAMSEY_API_URL: http://ramsey-mw:8080/api/ramsey
-    RAMSEY_CAMPAIGN_ID: 1
+    RAMSEY_CAMPAIGN_ID: 2
     REDIS_HOST: redis
     REDIS_PORT: 6379
     WORK_UNIT_FETCH_COUNT: 250000
@@ -79,18 +79,18 @@ ramsey-worker-rust:
 ## Sample Log Output
 
 ```
-[2026-04-13T12:37:17.343Z] Processed 250000 work items in 285444ms
-[2026-04-13T12:38:13.528Z] Processed 250000 work items in 56184ms
-[2026-04-13T12:48:22.651Z] Added to top-50 results for stage 4994: clique_count=980120
-[2026-04-13T12:48:25.932Z] Added to top-50 results for stage 4994: clique_count=980102
+[2026-05-02T14:37:17.343Z] Processed 250000 work items in 285444ms
+[2026-05-02T14:38:13.528Z] Processed 250000 work items in 56184ms
+[2026-05-02T14:48:22.651Z] Added to top-50 results for stage 7065: clique_count=791944
+[2026-05-02T14:48:25.932Z] Added to top-50 results for stage 7065: clique_count=791942
 ```
 
 The first batch of a new stage takes longer (~285s) because it includes building the graph and clique collection. Subsequent batches process in ~55-65s. "Added to top-50" lines appear when a mutation beats the current worst in the top-N set.
 
 ## Performance Characteristics
 
-- At 288 vertices with the DUAL_EDGE_CARDINALITY strategy, the total search space per stage is ~427 million edge pairs.
-- With 14 workers each claiming 250K batches, a full stage exhaustion takes ~90 minutes.
+- At 282 vertices with the DUAL_EDGE_CARDINALITY strategy, the total search space per stage is ~392.5 million edge pairs.
+- With 14 workers each claiming 250K batches, a full stage exhaustion takes ~80–90 minutes.
 - The first batch per stage is ~4-5x slower due to clique collection construction.
 - Graph and clique collection are cached across stages when the base graph is reused.
 
