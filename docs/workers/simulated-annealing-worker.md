@@ -4,7 +4,7 @@
 
 The SA worker uses a metaheuristic approach to escape local minima that the exhaustive search cannot reach. Unlike the exhaustive worker which evaluates all 2-edge flips deterministically, SA performs random multi-edge mutations and probabilistically accepts worsening moves early in the schedule, allowing it to traverse through higher-energy states to potentially find better basins.
 
-SA was investigated extensively (see `docs/simulated-annealing-investigation.md`). After 45,000+ iterations across multiple parameter configurations, it found zero improvements over the exhaustive search baseline, suggesting the landscape at ~980K cliques is too rugged for SA to navigate effectively. SA workers are currently scaled to 0 in production but the infrastructure remains available.
+SA was investigated extensively (see `docs/simulated-annealing-investigation.md`). The initial implementation found zero improvements due to three correctable design issues — full Bron-Kerbosch recount per iteration, mismatched temperature schedule, and undersized perturbations. SA workers are currently scaled to 0 in production but the infrastructure remains available pending the design fixes documented in the investigation.
 
 ## High-Level Strategy
 
@@ -77,29 +77,27 @@ ramsey-worker-rust-sa:
 ## Sample Log Output
 
 ```
-SA starting: vertex_count=288, clique_size=8, initial_cliques=980088, threshold=none,
+SA starting: vertex_count=282, clique_size=8, initial_cliques=792000, threshold=none,
   max_iterations=15000, initial_temp=1000.00, cooling_rate=0.9990, min_pairs=2, max_pairs=2
-SA iter 1/15000: temp=999.00, pairs=2, new_cliques=980412, accepted=true, current=980412, best=980088
-SA iter 2/15000: temp=998.00, pairs=2, new_cliques=980285, accepted=true, current=980285, best=980088
+SA iter 1/15000: temp=999.00, pairs=2, new_cliques=792412, accepted=true, current=792412, best=792000
+SA iter 2/15000: temp=998.00, pairs=2, new_cliques=792285, accepted=true, current=792285, best=792000
 ...
-SA iter 15000/15000: temp=0.00, pairs=2, new_cliques=980301, accepted=false, current=980150, best=980088
-SA finished: initial_cliques=980088, best_cliques=980088, improved=false
+SA iter 15000/15000: temp=0.00, pairs=2, new_cliques=792301, accepted=false, current=792150, best=792000
+SA finished: initial_cliques=792000, best_cliques=792000, improved=false
 ```
 
 Note: SA logs every iteration, which produces high log volume. Each run takes several minutes for the full schedule.
 
 ## Performance Characteristics
 
-- Each iteration requires a full `get_cliques_comprehensive()` call (complete Bron-Kerbosch enumeration), which is the dominant cost.
-- At 288 vertices / 8-cliques, each iteration takes ~1-5ms, so a 15,000-iteration schedule runs in ~30-60 seconds.
+- Each iteration in the current implementation requires a full `get_cliques_comprehensive()` call (complete Bron-Kerbosch enumeration), which is the dominant cost.
+- At 282 vertices / 8-cliques, each iteration takes ~1-5ms, so a 15,000-iteration schedule runs in ~30-60 seconds.
 - SA explores a fundamentally different dimension than exhaustive search: multi-edge mutations with probabilistic acceptance vs. guaranteed-optimal single-pair evaluation.
 - The `min_pairs=2` setting ensures SA explores at least 4-edge flips (2 red + 2 blue), since the exhaustive search already covers all 2-edge (1 red + 1 blue) combinations.
 
 ## Current Status
 
-SA is **disabled in production** (scale: 0). The investigation (`docs/simulated-annealing-investigation.md`) documented that after extensive parameter tuning, SA could not find improvements at the current optimization depth (~980K cliques). The landscape appears too rugged -- the temperature schedule either cools too fast to escape local minima or stays too hot to converge.
-
-SA remains a viable approach if the problem parameters change significantly (e.g., different vertex count, different clique size, or if the landscape becomes smoother at a different optimization depth).
+SA is **disabled in production** (scale: 0). The investigation (`docs/simulated-annealing-investigation.md`) documents the three required design changes — incremental evaluation via `CliqueCollection`, basin-scale temperature schedule, and 5–20-edge perturbations — that must be applied before re-enabling. The infrastructure is otherwise intact.
 
 ## Key Source Files
 

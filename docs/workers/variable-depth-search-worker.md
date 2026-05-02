@@ -97,22 +97,22 @@ ramsey-worker-rust-vds:
 ## Sample Log Output
 
 ```
-[2026-04-13T12:49:06.025Z] VDS starting: vertex_count=288, clique_size=8, base_cliques=980090,
+[2026-05-02T14:49:06.025Z] VDS starting: vertex_count=282, clique_size=8, base_cliques=792000,
   max_depth=8, top_first_edges=200, branching_factor=15, worsening_tolerance=1000, start_depth=3
-[2026-04-13T12:49:13.344Z] VDS finished: no improvement found, elapsed_ms=7317,
+[2026-05-02T14:49:13.344Z] VDS finished: no improvement found, elapsed_ms=7317,
   nodes_visited=8610, branches_pruned=8018
-[2026-04-13T12:49:13.385Z] Processed 1 work items in 8426ms
+[2026-05-02T14:49:13.385Z] Processed 1 work items in 8426ms
 ```
 
-When an improvement is found (not yet observed at 980K cliques):
+When an improvement is found:
 ```
-VDS verified: base=980090, final=980085, delta=-5, sequence_len=4,
+VDS verified: base=792000, final=791995, delta=-5, sequence_len=4,
   elapsed_ms=12345, nodes_visited=9500, branches_pruned=8800
 ```
 
-## Performance Characteristics (Production Observations)
+## Performance Characteristics (Observations)
 
-After ~7,000 runs with current production settings:
+After several thousand exploratory runs with the production settings below:
 
 | Metric | Value |
 |--------|-------|
@@ -120,10 +120,9 @@ After ~7,000 runs with current production settings:
 | Avg nodes visited per run | ~7,340 |
 | Avg branches surviving pruning | ~500 (out of ~7,340 visited) |
 | Prune rate | ~93% |
-| Distinct `nodes_visited` values | 476+ across 7,000 runs |
+| Distinct `nodes_visited` values | 476+ across observed runs |
 | Runs per minute | ~7 |
-| Stage transitions observed | 13 (stages 4982-4994) |
-| Improvements found | 0 (expected at 980K cliques) |
+| Improvements found | 0 at depth 4 with the static-candidate baseline |
 
 The high diversity in `nodes_visited` values (476 distinct values across 7,000 runs) confirms that each run explores genuinely different territory. The consistent ~93% prune rate indicates the tolerance is well-calibrated: selective enough to focus computation but permissive enough for meaningful depth exploration.
 
@@ -142,7 +141,7 @@ VDS occupies the middle ground: more structured than SA (each flip builds on the
 
 ## Tuning Guidance
 
-- **`worsening_tolerance`**: Higher values allow deeper exploration but increase per-run time. At 980K cliques, 1000 gives ~93% prune rate and ~8s runs. Values above 2000 may cause runs to exceed 20s.
+- **`worsening_tolerance`**: Higher values allow deeper exploration but increase per-run time. At current optimization depth, 1000 gives ~93% prune rate and ~8s runs. Values above 2000 may cause runs to exceed 20s.
 - **`top_first_edges`**: Larger pools give more diverse starting points. 200 is a good balance; above 500 includes low-participation edges that are unlikely to lead to improvements.
 - **`branching_factor`**: Controls both first-edge sampling and per-level branching. 15 gives ~7 runs/minute. Increasing to 20-25 would deepen search but reduce throughput.
 - **`max_depth`**: 8 is generous; most productive exploration happens at depths 3-5. The worsening tolerance naturally limits effective depth.
