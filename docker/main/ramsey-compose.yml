@@ -4,13 +4,16 @@ services:
 
   redis:
     image: docker.dragonflydb.io/dragonflydb/dragonfly:latest
-    command: dragonfly --maxmemory 7gb
+    command: dragonfly --maxmemory 7gb --snapshot_cron "*/5 * * * *" --dbfilename dump --dir /data
     networks:
       - ramsey-net
     ports:
       - "36002:6379"
+    volumes:
+      - dragonfly-data:/data
     mem_limit: 8g
     scale: 1
+    restart: on-failure
     logging:
       driver: loki
       options:
@@ -660,3 +663,6 @@ services:
 networks:
   ramsey-net:
     external: true
+
+volumes:
+  dragonfly-data:
