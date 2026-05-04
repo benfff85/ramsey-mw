@@ -1,13 +1,65 @@
 # Tabu Search + Clique-Guided Mutation — Implementation Plan
 
-**Date:** 2026-05-03
+**Date:** 2026-05-03 (updated 2026-05-04)
 **Author:** Ben Ferenchak + Claude
-**Status:** Planning — implementation has not started.
+**Status:** Implemented; smoke-tested locally; A/B against exhaustive pending. See "Implementation Notes" below.
 
 **Related documents:**
 - `may-2026-next-steps.md` — Tier 1.1, the proven-technique build this plan implements
 - `vds-enhancements.md` — VDS retirement context; tabu replaces VDS as the next algorithmic experiment
 - `simulated-annealing-investigation.md` — SA design lessons (incremental evaluation, balanced moves) that apply directly here
+
+---
+
+## Implementation Notes (2026-05-04)
+
+The plan below was followed substantially as written, with one mid-build correction worth recording.
+
+### What was built
+
+- `src/tabu.rs` (615 lines, 11 unit tests) — `TabuConfig`, `TabuRunResult`, `run_tabu`, plus internal `TabuList` and `DestroyedSet` helpers
+- Worker integration: `WORKER_MODE=TABU_CLIQUE_GUIDED` slot, `cycle_tabu_search` mirroring `cycle_simulated_annealing`, full bitstring submission to top-N (long trajectories may walk far from base)
+- Compose: `ramsey-worker-rust-tabu` service at `scale: 0`, image tag `tabu-test` for local smoke testing (the published `:develop` tag does not yet contain TABU_CLIQUE_GUIDED)
+
+### Mid-build correction: per-pair delta evaluation
+
+The plan specified `evaluate_pair_delta` would use `get_new_cliques_with_limit` for incremental delta. The first build mistakenly used `get_cliques_comprehensive` (full Bron-Kerbosch recount) instead, and the smoke test exposed the cost: a single tabu run with `pool_size=5, max_iterations=5000` did not complete in 14+ minutes on the production graph (282v, ~790K 8-cliques). With `pool_size=20`, full recount per pair would have made each iteration prohibitively expensive.
+
+**Fix:** swapped `evaluate_pair_delta` to use two `get_new_cliques` calls (the no-limit wrapper around `get_new_cliques_with_limit`):
+
+```rust
+fn evaluate_pair_delta(graph, clique_size, red, blue) -> i32 {
+    let edges = [red.clone(), blue.clone()];
+    let destroyed = get_new_cliques(graph, clique_size, &edges); // pre-flip
+    graph.flip_edges(&edges);
+    let created = get_new_cliques(graph, clique_size, &edges);   // post-flip
+    graph.flip_edges(&edges);                                    // restore
+    created - destroyed
+}
+```
+
+**Why this works:** `get_new_cliques_with_limit` is edge-seeded Bron-Kerbosch — it counts only monochromatic cliques containing the seeded edges in their current color. Pre-flip call gives the count of cliques *destroyed* by the move (mono-cliques currently containing those edges); post-flip call gives the count *created* (mono-cliques in the new graph containing those edges in their new color). Difference is exact delta. Same primitive the exhaustive engine uses, orders of magnitude cheaper than full enumeration.
+
+**Why this doesn't introduce staleness issues:** the function operates on the live graph state, not on the static `CliqueCollection`. The CliqueCollection is used only for candidate generation (sampling surviving cliques + ranking by participation), where some staleness is acceptable. Move scoring is exact regardless of trajectory length.
+
+A unit test (`evaluate_pair_delta_matches_full_recount`) verifies the incremental delta exactly equals `(post_flip_count - pre_flip_count)` from a full recount on a small graph.
+
+### Smoke test result
+
+Local image `benferenchak/ramsey-worker-rust:tabu-test` deployed at scale 1 against campaign 2 stage 7162 (790,395 cliques):
+
+- Container boots cleanly, picks up `WORKER_MODE=TABU_CLIQUE_GUIDED` and all `TABU_*` env vars
+- Connects to Redis, loads stage config, builds graph + CliqueCollection from production base graph
+- "Tabu starting" logs the right config; CPU pegged at 100% (active iteration, not hung)
+- Pre-fix: did not complete in 14+ minutes
+- Post-fix: TBD (Monitor armed for completion or errors)
+
+### Open follow-ups
+
+1. **Confirm post-fix per-iteration cost** is reasonable (target: minutes per 5,000-iteration smoke run, hours per 50,000-iteration production run).
+2. **Publish a `:develop` image** containing the TABU_CLIQUE_GUIDED mode before scaling up the A/B (currently only the local `:tabu-test` tag has it).
+3. **Restore production settings** in compose (`max_iterations=50000`, `restart_after=5000`, `pool_size=20`) once smoke test confirms the delta fix works.
+4. **Run A/B** per the decision matrix below.
 
 ---
 
