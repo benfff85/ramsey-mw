@@ -36,7 +36,12 @@ All four items shipped 2026-05-03:
 
 ## Tier 1 — High Leverage, Empirically Validated
 
-### 1.1 Tabu search + clique-guided mutation *(~1 week, do first)*
+### 1.1 Tabu search + clique-guided mutation *(implementation complete 2026-05-04; A/B pending)*
+
+**Status update:** code implemented and smoke-tested; A/B run against exhaustive is pending publication of a `:develop` image with the new mode and restoration of production settings. See `tabu-search-investigation.md` for the implementation notes (including the mid-build delta-evaluation correction) and full decision matrix.
+
+The plan below is preserved for context.
+
 
 This is a genuinely new algorithm — not an incremental improvement on what we have. The published Ramsey literature (Exoo's tabu search establishing R(3,13)≥59, R(4,10)≥80, R(4,11)≥96, R(4,12)≥106, R(4,13)≥118, R(4,14)≥129, R(5,8)≥95; Pullan & Hoos's DLS-MC for max-clique; Zhang et al. on guided mutation) consistently shows that the combination is what works — clique-aware move selection without tabu memory oscillates badly, and tabu without clique-guided move selection wastes most of its moves on irrelevant edges.
 
