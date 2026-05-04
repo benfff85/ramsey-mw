@@ -115,7 +115,7 @@ services:
         loki-external-labels: "machine=MacBook-Pro-M4Max-1,service_name={{.Name}}"
     restart: on-failure
     mem_limit: 2g
-    scale: 14
+    scale: 10
 
   ramsey-worker-rust-sa:
     image: benferenchak/ramsey-worker-rust:develop
@@ -188,7 +188,7 @@ services:
     scale: 0
 
   ramsey-worker-rust-tabu:
-    image: benferenchak/ramsey-worker-rust:develop
+    image: benferenchak/ramsey-worker-rust:tabu-test
     networks:
       - ramsey-net
     environment:
@@ -197,12 +197,12 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       WORKER_MODE: TABU_CLIQUE_GUIDED
-      TABU_MAX_ITERATIONS: 50000
-      TABU_BASE_TENURE: 200
-      TABU_MAX_TENURE: 400
-      TABU_RESTART_AFTER: 5000
-      TABU_CANDIDATE_POOL_SIZE: 20
-      TABU_DIVERSIFICATION_PAIRS: 15
+      TABU_MAX_ITERATIONS: 5000
+      TABU_BASE_TENURE: 30
+      TABU_MAX_TENURE: 60
+      TABU_RESTART_AFTER: 1000
+      TABU_CANDIDATE_POOL_SIZE: 10
+      TABU_DIVERSIFICATION_PAIRS: 20
       TOP_RESULTS_COUNT: 50
       WORKER_COUNT: 1
     depends_on:
@@ -221,7 +221,7 @@ services:
         loki-external-labels: "machine=MacBook-Pro-M4Max-1,service_name={{.Name}}"
     restart: on-failure
     mem_limit: 2g
-    scale: 0
+    scale: 4
 
   ramsey-ui:
     image: benferenchak/ramsey-ui:develop

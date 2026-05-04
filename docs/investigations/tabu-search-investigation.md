@@ -44,22 +44,60 @@ fn evaluate_pair_delta(graph, clique_size, red, blue) -> i32 {
 
 A unit test (`evaluate_pair_delta_matches_full_recount`) verifies the incremental delta exactly equals `(post_flip_count - pre_flip_count)` from a full recount on a small graph.
 
-### Smoke test result
+### Smoke Test Findings (2026-05-04)
 
-Local image `benferenchak/ramsey-worker-rust:tabu-test` deployed at scale 1 against campaign 2 stage 7162 (790,395 cliques):
+All smoke runs were against campaign 2 (~790K cliques on 282 vertices) using the local `:tabu-test` image at scale 1.
 
-- Container boots cleanly, picks up `WORKER_MODE=TABU_CLIQUE_GUIDED` and all `TABU_*` env vars
-- Connects to Redis, loads stage config, builds graph + CliqueCollection from production base graph
-- "Tabu starting" logs the right config; CPU pegged at 100% (active iteration, not hung)
-- Pre-fix: did not complete in 14+ minutes
-- Post-fix: TBD (Monitor armed for completion or errors)
+| Run | `pool_size` | `max_iter` | `tenure` | `restart_after` | Wall-clock | Improvements |
+|-----|-------------|------------|----------|-----------------|------------|--------------|
+| 1 (pre-fix) | 5 | 5,000 | 200 | 1,000 | did not complete in 14+ min | — |
+| 2 (post-fix) | 5 | 5,000 | 200 | 1,000 | ~9 min | 0 |
+| 3 | 5 | 5,000 | 200 | 1,000 | ~9 min | 0 |
+| 4 | 10 | 10,000 | 200 | 2,000 | ~18 min | 0 |
 
-### Open follow-ups
+**The delta-evaluation fix works.** Run 1's full-recount per pair eval was 100× too expensive; switching to edge-seeded `get_new_cliques` brought per-iteration cost into the right range. After the fix, all runs completed cleanly with zero crashes or anomalies.
 
-1. **Confirm post-fix per-iteration cost** is reasonable (target: minutes per 5,000-iteration smoke run, hours per 50,000-iteration production run).
-2. **Publish a `:develop` image** containing the TABU_CLIQUE_GUIDED mode before scaling up the A/B (currently only the local `:tabu-test` tag has it).
-3. **Restore production settings** in compose (`max_iterations=50000`, `restart_after=5000`, `pool_size=20`) once smoke test confirms the delta fix works.
-4. **Run A/B** per the decision matrix below.
+**Per-iteration cost is fairly insensitive to pool size.** Both pool=5 and pool=10 ran at roughly 30–110ms/iter — much less variance than the projected 4× from pair-eval count alone. The likely explanation: each diversification triggers a full `get_cliques_comprehensive` recount, and with 5 diversifications per smoke run that recount cost is comparable to the per-iteration scoring cost. This is good news for production scaling — pool=10 with `max_iter=5000` runs in ~10 min, comparable to one stage advance cadence.
+
+**Wider pool didn't change the outcome.** Doubling pool size (4× more pair candidates per iteration) and doubling iteration budget produced no improvements. Three independent runs at smoke settings, on two different active stages, all returned 0 improvements with 5 diversifications each.
+
+**Concurrent context — exhaustive was advancing stages.** During the smoke runs, exhaustive workers advanced campaign 2 from stage 7162 (790,395 cliques) to 7167 (790,332). Tabu found 0; exhaustive contributed all the progress. Same failure pattern as the retired VDS experiment.
+
+### Parameter Retune (2026-05-04, before multi-day run)
+
+The most likely cause of zero improvements at smoke settings: **`base_tabu_tenure=200` was too aggressive**. The classical `sqrt(num_edges)` heuristic for tabu tenure assumes a candidate pool that's a meaningful fraction of the action space. With 39,621 edges total, a tenure of 200 would be fine if the active candidate pool were thousands — but our pool is ~30 edges per iteration (clique-seeded ~28 + top-participation ~10). Tenuring 200 edges across both colors blocks a sizeable fraction of the high-quality candidate space. Exoo's papers and Pullan-Hoos DLS-MC use much shorter tenures (typically 7–50) for problems with similarly-narrow active pools.
+
+| Param | Smoke | Multi-day | Rationale |
+|-------|-------|-----------|-----------|
+| `pool_size` | 10 | **10** | Practical ceiling — pool=20 was projected at 24 hr/run |
+| `max_iterations` | 10,000 | **5,000** | ~10 min/run; bounds stage staleness to one run |
+| `base_tabu_tenure` | 200 | **30** | Classical SAT-tabu range; blocks immediate cycles without over-restricting candidate pool |
+| `max_tabu_tenure` | 400 | **60** | 2× base, conventional |
+| `restart_after` | 2,000 | **1,000** | 5 diversification cycles per run, more aggressive |
+| `diversification_pair_count` | 15 | **20** | Larger jolt to escape stuck regions |
+
+### Multi-Day Deployment (2026-05-04)
+
+Compose updated with the retuned settings; fleet split adjusted:
+
+- `ramsey-worker-rust` (exhaustive): 14 → **10 workers**
+- `ramsey-worker-rust-tabu`: 0 → **4 workers** (still on the local `:tabu-test` tag)
+
+Total compute unchanged. Persistent monitor watching all 4 tabu workers for `improvements=N≥1`, `Added to top-50` lines, panics, or any error signature, polling every 60s.
+
+**Stage refresh strategy:** the existing dispatcher checks `redis.has_stage_config(stage_id)` before each cycle. When the queue manager advances a stage, the previous stage's `stage_config` key is removed from Redis, the dispatcher's check fails, the worker calls `clear_stage_cache()`, and the next cycle re-fetches the active stage from middleware. Max staleness = one tabu run ≈ 10 minutes. No in-loop polling required.
+
+### Open Questions Going Into the Multi-Day Run
+
+1. **Will tenure=30 unlock improvements?** The retune is the most defensible change to make based on the smoke evidence; if it still produces 0 improvements over a few days, the question shifts from "are we tuning it wrong?" to "does this algorithm shape work at our operating point?"
+2. **At what iteration count does tabu typically find its first improvement at our scale?** No literature reference cleanly answers this for a 282-vertex graph at 790K cliques. Several days of running will give us an empirical baseline.
+3. **Image durability.** The `:tabu-test` tag exists only on the local Docker daemon. If the stack is recreated and Portainer triggers a pull, those workers will fail to start. Either push the tag to Docker Hub or merge a `:develop` image with the new mode before any prolonged absence.
+
+### Decision Criteria for Multi-Day Run
+
+- **Tabu produces ≥ 1 improvement during the run, at any rate**: continue and consider scaling up. The algorithm works at our scale; tuning becomes the next question.
+- **Tabu produces 0 improvements over 48+ hours**: retire alongside VDS. Same evidence, same outcome — neither narrow-trajectory technique escapes basins at this graph density. Update docs and revert fleet to 14 exhaustive.
+- **Errors, panics, or container restarts loop**: stop and debug before judging the algorithm.
 
 ---
 
