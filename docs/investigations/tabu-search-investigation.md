@@ -1,8 +1,8 @@
 # Tabu Search + Clique-Guided Mutation — Implementation Plan
 
-**Date:** 2026-05-03 (updated 2026-05-04)
+**Date:** 2026-05-03 (updated 2026-05-06)
 **Author:** Ben Ferenchak + Claude
-**Status:** Implemented; smoke-tested locally; A/B against exhaustive pending. See "Implementation Notes" below.
+**Status:** Retired 2026-05-06 after a 48-hour multi-day run produced zero improvements. See "Multi-Day Run Result" below.
 
 **Related documents:**
 - `may-2026-next-steps.md` — Tier 1.1, the proven-technique build this plan implements
@@ -98,6 +98,56 @@ Total compute unchanged. Persistent monitor watching all 4 tabu workers for `imp
 - **Tabu produces ≥ 1 improvement during the run, at any rate**: continue and consider scaling up. The algorithm works at our scale; tuning becomes the next question.
 - **Tabu produces 0 improvements over 48+ hours**: retire alongside VDS. Same evidence, same outcome — neither narrow-trajectory technique escapes basins at this graph density. Update docs and revert fleet to 14 exhaustive.
 - **Errors, panics, or container restarts loop**: stop and debug before judging the algorithm.
+
+---
+
+## Multi-Day Run Result (2026-05-06) — Retired
+
+### Final Tally
+
+The 4-worker tabu fleet ran from 2026-05-04 01:06Z to 2026-05-06 01:43Z (~48.5 hours). Pulled from container logs at retirement time:
+
+| Metric | Per worker | Fleet (4 workers) |
+|--------|------------|-------------------|
+| Tabu runs started | ~339 | **1,355** |
+| Tabu runs finished | ~338 | **1,351** |
+| **Improvements** | 0 | **0** |
+| Runs with negative `delta_from_initial` | 0 | **0** |
+| Diversifications | ~1,690 | **6,755** |
+| Total tabu iterations | ~1.69M | **~6.75M** |
+| Errors / panics / container restarts | 0 | **0** |
+| Mean wall-clock per run | ~520 s (~8.7 min) | — |
+
+Every single completed trajectory finished with `delta_from_initial=0` and `improvements=0`. Every run hit exactly 5 diversifications (= `max_iter / restart_after` = 5000 / 1000), meaning the algorithm never found a single move good enough to reset its `iter_since_improvement` counter on any of the 1,351 trajectories. Across 6,755 diversification cycles — each a full random balanced perturbation followed by 1,000 fresh tabu iterations — none produced a state better than its starting point.
+
+Concurrent context: the 10-worker exhaustive fleet advanced campaign 2 from base count 789,974 → 788,544 (Δ −1,430 cliques across multiple stage transitions) over the same window. **All progress was attributable to exhaustive; tabu contributed nothing.**
+
+### Decision: Retire
+
+Outcome maps cleanly to the retirement branch of the decision matrix. The retune from `tenure=200` → `tenure=30` was the most defensible parameter change available based on smoke evidence; it didn't change the outcome. With 6.75M iterations and zero locally-negative deltas, the failure isn't tuning — it's that narrow-trajectory edge-flip search at our operating point (282 vertices, ~790K 8-cliques, balanced-pair move shape) does not escape the local basin. Same evidence shape and end-state as the retired VDS experiment.
+
+### Open Questions, Resolved
+
+1. **Will tenure=30 unlock improvements?** No. With 4 workers × 48 h × tenure=30 producing zero improvements, the question now closes: at this graph density and move shape, tabu does not work — at any rate, on either tenure setting tested.
+2. **At what iteration count does tabu typically find its first improvement at our scale?** Empirically, > 6.75M (we never observed one). No useful per-iteration probability of improvement was established because the numerator is zero.
+3. **Image durability.** Moot — the experiment is being shut down before any redeploy.
+
+### Actions Taken
+
+- `docker/main/ramsey-compose.yml`: `ramsey-worker-rust-tabu` scale 4 → 0; `ramsey-worker-rust` (exhaustive) scale 10 → 14. Total compute restored to the pre-experiment 14 exhaustive workers.
+- Tabu code (`src/tabu.rs`, `cycle_tabu_search`, env var parsing) is left in place — building the worker again is cheap, and re-running it under a different move shape (e.g. single-edge flips on an unbalanced relaxation, or pair flips with much wider candidate pools) is not ruled out as a future experiment. The compose service stays defined at `scale: 0` for the same reason.
+- Worker doc (`docs/workers/tabu-clique-guided-worker.md`) "Current Status" section is now stale — it documents the pre-retirement state. The retirement record lives here in the investigation doc; the worker doc remains the algorithmic reference for any future re-run.
+
+### What This Forecloses, and What It Doesn't
+
+- **Forecloses:** balanced-pair tabu search with clique-guided candidate generation, at the parameter ranges we can run on this graph (pool ≤ 10 for tractable wall-clock, max_iter ≤ ~10K per work unit, tenure 30–200), as a credible source of improvements at the current operating point.
+- **Does NOT foreclose:** other neighborhood shapes (3-flip, 4-flip), other candidate generation policies (e.g. removing the clique-seed bias entirely and using only top-participation), or fundamentally different algorithmic shapes (full-graph methods, MaxSAT, GNN-guided search). Those remain open per `simulated-annealing-investigation.md` and `sat-solver-investigation.md`.
+
+### Cross-Reference
+
+- `simulated-annealing-investigation.md` — SA was retired earlier with the same outcome shape (zero improvements, narrow-trajectory technique).
+- `vds-enhancements.md` — VDS retirement; same end-state, same diagnosis.
+- The Ramsey heuristic-search literature (Exoo et al.) reports tabu wins at smaller graph sizes; the empirical finding here is that those wins do not transfer to n=282 at ~790K cliques with our move shape.
 
 ---
 
