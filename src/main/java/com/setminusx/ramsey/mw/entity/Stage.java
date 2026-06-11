@@ -47,7 +47,8 @@ public class Stage {
     public enum WorkEnumerationStrategy {
         BASIC,
         SINGLE_EDGE_CARDINALITY,
-        DUAL_EDGE_CARDINALITY
+        DUAL_EDGE_CARDINALITY,
+        DUAL_EDGE_CARDINALITY_WITH_SINGLES
     }
 
 }
