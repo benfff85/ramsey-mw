@@ -188,7 +188,7 @@ services:
     scale: 0
 
   ramsey-worker-rust-tabu:
-    image: benferenchak/ramsey-worker-rust:tabu-test
+    image: benferenchak/ramsey-worker-rust:develop
     networks:
       - ramsey-net
     environment:
