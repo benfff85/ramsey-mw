@@ -95,6 +95,32 @@ This is referenced as a structural comparison: another self-complementary algebr
 
 ---
 
+## UPDATE 2026-06-14 — The optimized single-vertex extension is ~27K, not 100M (and 28× better than the campaign)
+
+The "100M+" figure above is a **counting error** (likely non-maximal overcount or a bug): every 8-clique in a one-vertex extension must contain the new vertex and corresponds to a distinct mono 7-clique of Paley(281) that the new vertex monochromatically completes, so the count is **bounded by 5,979,680** (the mono-7-clique total) and is far lower for any reasonable row. Measured directly (tool `single-flip-check/src/bin/paley_gen.rs` + `clique_census.rs`, generator validated: it reproduces Paley(281)'s exact 5,979,680 mono-7 / 0 mono-8 counts):
+
+- **A random extension has only ~44,000 mono 8-cliques** (seed 1: 44,062), matching the doc's own naive estimate (~23K per color), not 100M.
+- **Row-optimizing just the new vertex against fixed Paley(281)** (validated `rowopt_pilot vertex`, the MaxSAT local-search the original direct-SAT attempt lacked) drops it to **~27,401** (8 random starts: 27,401–28,815, all recount-verified). All cliques are through the new vertex; Paley(281) is left intact.
+
+**The headline comparison:** a few minutes of "extend Paley(281) optimally" yields a 282-vertex graph with **27,401** mono 8-cliques — versus **775,623** after two months and 2,431 stages of the full-mutation campaign (which started at 817,828 and descended only ~5%). The campaign's mutate-all-edges strategy destroyed Paley's structure and wandered ~28× higher than the construction it started from. **The search has been running in the wrong region.**
+
+Caveats: (1) ~27K is a robust local-min band for single-vertex row-opt, not zero — reaching zero (R(8,8) ≥ 283) is not achieved this way and remains open. (2) Reducing below ~27K requires mutating Paley(281)'s own edges, which risks the documented avalanche. (3) But as a **seed**, 27K dominates 775K by the objective.
+
+### Descent probe — the 27K seed is a deep LOCKED minimum (avalanche confirmed)
+
+To test whether 27K is exploitable (descends toward 0) or a narrow well (blows up), a row-opt sweep was run on a sample of the 27K graph's vertices (0, 40, 80, 120, 160, 200, 240, 280, 281):
+
+- **All 8 sampled Paley vertices (0–280) are row-locked** — re-optimizing any of their rows yields zero improvement (delta 0, distance 0), and **their best single edge flip *worsens* the count by +170 to +605** (avalanche signature: touching Paley's knife's-edge structure explodes cliques).
+- Only the **new vertex (281)** has any give, and it is near its floor — a fresh row-opt squeezed 27,401 → 27,085 (−316) once via SATLike but greedy reproduces no further gain. The descent is confined to the new vertex's row and is essentially exhausted at ~27K.
+
+**Conclusion: the Paley(281)+optimized-vertex graph (~27K) is a deep, strict local minimum — the same fundamental wall as the campaign's 775K graph, just 28× lower.** Local edge-flip search caps out at both. Re-seeding the campaign here would bank a 28× better best-known floor but would *not* descend toward zero (the engine's singles/pairs would lock immediately, as on graph 8348). Reaching zero (R(8,8) ≥ 283) is not accessible by local search from either basin; it would require a base construction with fewer mono-7-cliques than Paley(281) while keeping zero mono-8-cliques (open/hard), or exact methods (infeasible at 5.98M-clause scale).
+
+### Reseed outcome (2026-06-14) — the construction seed DESCENDS via balanced pairs
+
+Acting on the finding, campaign 2 (775,642) was retired and a **new campaign (id 10) was seeded from the 27,401 graph** (`single-flip-check/results/paley282_opt.txt`): all workers + QM stopped, graph 8389 / campaign 10 / stage 8389 inserted, campaign 2 set INACTIVE, `RAMSEY_CAMPAIGN_ID` 2→10 in compose, Portainer stack 7 redeployed. The QM seeded Redis from the graph (worker `total_pairs` guard passed); 14 workers + QM came up clean.
+
+**The engine descends from the 27K seed** — 27,401 → 27,390 → 27,339 → … → 27,214 in the first ~6 minutes, ~30 s/advance, genuine improvements. This refines the descent-probe conclusion: the probe only tested *row rewrites* and *single flips* (both locked, avalanche), but the production engine's **balanced-pair** moves (one red→blue + one blue→red, preserving balance) were never probed and they descend freely. So the construction reseed *worked*: it dropped the active search ~28× below campaign 2 and into a productive basin. Where it plateaus is the new open question (a deeper wall will presumably reform; the local-search ceiling characterization above still applies — reaching zero still needs a better base than Paley(281) or exact methods).
+
 ## Implications for Search Direction
 
 1. **Paley(281) is the natural seed**, not a competitor. Adding a vertex is the actual problem.
