@@ -1,12 +1,55 @@
 # Search Status & Findings — June 2026 (consolidated)
 
-**Date:** 2026-06-14
+**Date:** 2026-06-14 (updated 2026-06-19)
 **Author:** Ben Ferenchak + Claude
-**Purpose:** Single entry-point summary of the June 9–14 investigation campaign. Read this first; it points to the detailed docs and lists what is settled and what NOT to retry. Goal throughout: a 282-vertex 2-coloring with zero monochromatic 8-cliques (would prove **R(8,8) ≥ 283**).
+**Purpose:** Single entry-point summary of the June 9–19 investigation campaign. Read this first; it points to the detailed docs and lists what is settled and what NOT to retry. Goal throughout: a 282-vertex 2-coloring with zero monochromatic 8-cliques (would prove **R(8,8) ≥ 283**).
 
 ---
 
-## Current state (as of 2026-06-14)
+## UPDATE 2026-06-19 — current state, new findings, next steps
+
+**Best-known 282-graph: 25,840 mono-8-cliques** (graph 8644, found 2026-06-16; campaign 10). The construction-seed basin descended 27,401 → 27,058 → **25,840** via balanced-pair moves, then re-walled; it now cycles a plateau ~25,9xx (the 25,840 basin itself is explored-and-blocked by cycle-prevention, so the live grind wanders just above it).
+
+### What we did since 06-14
+
+1. **Shipped the best-novel best-results cache (Option B).** The per-stage `best_results` set now filters visited graphs at insert time (`SISMEMBER processed_graph_hashes` in the worker's insert Lua) and the early-exit threshold tracks the best *novel* result (slot 0, not the 50th). Effects: **~2.8–3× faster grind** (tighter early-exit → far more cheap skips; measured 6.48 → 18.4 stages/h on the same 14 workers), **dead-end-proof** (no more "all top-N visited" stalls), and **early-adopt** (progress on the best novel improvement instead of grinding each stage to full exhaustion). Worker-only; QM consumes the now-novel-only set unchanged. Rust↔Java SHA-256 hash parity locked by shared test vectors. Plan + shipped outcome: `best-novel-threshold-plan.md`. (Merged: worker #69, QM #73, UI #11/#12; compose synced #160.)
+
+2. **Re-ran the 2-vertex joint probe on the NEW best basin (graph 8644, 25,840)** — the open follow-up to caveat #6 below (the 27K probe tested only row-opt/single-flips, pre-descent). Result: **0/300 random pairs improved, every one at distance 0** (~30k SATLike moves/pair couldn't take a single improving step). The descended 25,840 basin is **locked to 2-vertex joint moves**, exactly like graph 8348. Since a joint solve subsumes single-vertex, **local search of every practical size is now confirmed exhausted on this basin too.**
+
+3. **Built + ran the circulant construction analysis** (new tool `construction_search.rs`):
+   - **Paley(281) is circulant-locally-optimal** — toggling each of its 140 distance-classes: **0/140 keep mono-8 = 0**. No better 281-base is one structured circulant move away (Paley is extremal in its own family).
+   - **Direct n=282 circulant search** (a mono-8-free 282-circulant would be R(8,8) ≥ 283 outright): hill-climb from 60 random restarts floored at **~996k mono-8** — **~40× worse than the asymmetric 25,840**. The cyclic symmetry (141 DOF vs 39,621 free edges) forces structures dense with 8-cliques. No mono-8-free circulant found.
+   - Confirmed the Paley+optimized-vertex construction (campaign 10's origin): vertex-row floor **~27,085–27,401** (the row optimizer is validated to reach the *exhaustive* optimum on the Paley(17) anchor), full descent **25,840** — **nothing crosses 25k**.
+
+### Updated verdict — every tested door is closed
+
+| Avenue | Result |
+|---|---|
+| Asymmetric local search, all sizes (single / pair / row / 2-vertex joint) | **locked at 25,840** (graph 8644, joint 0/300) |
+| Better 281-base via single circulant move from Paley | **locked** (0/140) |
+| Direct mono-8-free 282-circulant | **floor ~1M** (~40× worse than 25,840) |
+
+**Honest framing:** the gap from 25,840 to 0 is enormous; *incremental* search of any move size cannot close it. Reaching 0 needs a *structurally new* mono-8-free 282-vertex graph — the open problem itself. And we don't know one exists: if R(8,8) = 282, no 282-coloring is mono-8-free, and the minimum mono-8 over all 282-graphs (what the search actually finds) is simply > 0.
+
+### Suggested next steps (prioritized; none guaranteed)
+
+*Could shave below 25,840 — reuse tools, run niced alongside the grind:*
+1. **k ≥ 3 windowed MaxSAT** — the one untested local rung. "2-vertex subsumes single" does **not** extend to 3-vertex; a 3-coordinated move can escape where 2 cannot. The ruggedness (all 300 joint pairs at distance 0) makes it a long shot, but it's the clean next thing. Generalize `joint_pilot`.
+2. **Multi-seed construction basins** — we descended exactly ONE seed (27,401 → 25,840). Generate several *diverse* mono-8-free-base + optimized-vertex seeds and descend each; a different basin may floor lower. (Deprioritized in May; worth revisiting now that everything else is closed.)
+3. **Complete MaxSAT/SAT solver on a window** — everything run so far is *incomplete* local search (SATLike/WalkSAT). A complete solver (CaDiCaL/MaxHS) on a moderate window can find — or *prove absent* — improvements local search misses.
+
+*The only real path to 0 (open problem, long-shot):*
+4. **Other structured base families** — cyclotomic / generalized-Paley circulants (kth-power-residue connection sets, targeted vs the random search), Cayley graphs on non-cyclic symmetry groups, design/algebraic/geometric constructions.
+5. **Literature scan** — confirm Paley(281) is genuinely the best-known mono-8-free base (Radziszowski's *Small Ramsey Numbers* survey); a better near-282 construction or search technique may already exist. Highest expected-value-per-minute.
+
+### New tooling / docs since 06-14
+- `construction_search.rs` — circulant (Cayley on Z_n) search; modes `validate` / `probe` / `search`; fast vertex-transitive counting (total k-cliques = n·(through-0)/k); validated on Paley(281) (mono-8=0, mono-7=5,979,680).
+- Skill **`ramsey-pilot-tools`** (`.claude/skills/`) — documents every `single-flip-check` tool (build/run, `nice`+shard pattern, graph export, standing findings).
+- `best-novel-threshold-plan.md` — Option B design + shipped outcome.
+
+---
+
+## Current state (as of 2026-06-14 — historical; superseded by the 2026-06-19 update above)
 
 - **Active campaign: 10** (created 2026-06-14), seeded from **Paley(281) + one row-optimized vertex = 27,401 mono-8-cliques**. Fast descent via balanced-pair moves to **27,058 (−343 in ~10 min), then re-walled** there (confirmed plateau ~22:30Z; exhaustion-advancing to slightly-worse graphs). Best-known 282-graph is now **27,058**, ~28.6× below campaign 2. Campaign left running (may grind slowly lower via exhaustion-fallback over hours, as campaign 2's tail did).
 - **Campaign 2 (best 775,642) is RETIRED / INACTIVE.** It had wandered into a generic local-minimum basin ~28× worse than the construction it started from. Preserved in the DB (reversible) but no longer the search.
