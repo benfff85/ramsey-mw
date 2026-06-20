@@ -13,7 +13,7 @@ services:
       - dragonfly-data:/data
     mem_limit: 8g
     scale: 1
-    restart: on-failure
+    restart: unless-stopped
     logging:
       driver: loki
       options:
@@ -49,7 +49,7 @@ services:
         loki-retries: 5
         loki-batch-size: 1000
         loki-external-labels: "machine=MacBook-Pro-M4Max-1,service_name={{.Name}}"
-    restart: on-failure
+    restart: unless-stopped
     mem_limit: 8g
     scale: 1
 
@@ -59,14 +59,15 @@ services:
       - ramsey-net
     environment:
       SPRING_PROFILES_ACTIVE: dev
-      RAMSEY_CAMPAIGN_ID: 2
+      RAMSEY_CAMPAIGN_ID: 10
       REDIS_HOST: redis
       REDIS_PORT: 6379
       WORK_UNIT_ANALYSIS_TYPE: TARGETED
       WORK_ENUMERATION_STRATEGY: "DUAL_EDGE_CARDINALITY_WITH_SINGLES"  # singles census (majority color) + counter-based pair sweep
       TOP_RESULTS_COUNT: 50
       EXHAUSTION_DELAY_MS: 60000
-      CYCLE_PREVENTION_GRAPH_LOOKBACK_COUNT: 50
+      CYCLE_PREVENTION_GRAPH_LOOKBACK_COUNT: 250
+      STAGE_PROGRESSION_FREQUENCY_MS: 10000
       LOGGING_LEVEL_ROOT: INFO
     depends_on:
       - ramsey-mw
@@ -80,7 +81,7 @@ services:
         loki-retries: 5
         loki-batch-size: 1000
         loki-external-labels: "machine=MacBook-Pro-M4Max-1,service_name={{.Name}}"
-    restart: on-failure
+    restart: unless-stopped
     mem_limit: 2g
     scale: 1
 
@@ -90,7 +91,7 @@ services:
       - ramsey-net
     environment:
       RAMSEY_API_URL: http://ramsey-mw:8080/api/ramsey
-      RAMSEY_CAMPAIGN_ID: 2
+      RAMSEY_CAMPAIGN_ID: 10
       REDIS_HOST: redis
       REDIS_PORT: 6379
       WORK_UNIT_FETCH_COUNT: 250000
@@ -113,7 +114,7 @@ services:
         loki-retries: 5
         loki-batch-size: 1000
         loki-external-labels: "machine=MacBook-Pro-M4Max-1,service_name={{.Name}}"
-    restart: on-failure
+    restart: unless-stopped
     mem_limit: 2g
     scale: 14
 
@@ -123,7 +124,7 @@ services:
       - ramsey-net
     environment:
       RAMSEY_API_URL: http://ramsey-mw:8080/api/ramsey
-      RAMSEY_CAMPAIGN_ID: 2
+      RAMSEY_CAMPAIGN_ID: 10
       REDIS_HOST: redis
       REDIS_PORT: 6379
       WORKER_MODE: SIMULATED_ANNEALING
@@ -148,7 +149,7 @@ services:
         loki-retries: 5
         loki-batch-size: 1000
         loki-external-labels: "machine=MacBook-Pro-M4Max-1,service_name={{.Name}}"
-    restart: on-failure
+    restart: unless-stopped
     mem_limit: 2g
     scale: 0
 
@@ -158,7 +159,7 @@ services:
       - ramsey-net
     environment:
       RAMSEY_API_URL: http://ramsey-mw:8080/api/ramsey
-      RAMSEY_CAMPAIGN_ID: 2
+      RAMSEY_CAMPAIGN_ID: 10
       REDIS_HOST: redis
       REDIS_PORT: 6379
       WORKER_MODE: VARIABLE_DEPTH_SEARCH
@@ -183,7 +184,7 @@ services:
         loki-retries: 5
         loki-batch-size: 1000
         loki-external-labels: "machine=MacBook-Pro-M4Max-1,service_name={{.Name}}"
-    restart: on-failure
+    restart: unless-stopped
     mem_limit: 2g
     scale: 0
 
@@ -193,7 +194,7 @@ services:
       - ramsey-net
     environment:
       RAMSEY_API_URL: http://ramsey-mw:8080/api/ramsey
-      RAMSEY_CAMPAIGN_ID: 2
+      RAMSEY_CAMPAIGN_ID: 10
       REDIS_HOST: redis
       REDIS_PORT: 6379
       WORKER_MODE: TABU_CLIQUE_GUIDED
@@ -219,7 +220,7 @@ services:
         loki-retries: 5
         loki-batch-size: 1000
         loki-external-labels: "machine=MacBook-Pro-M4Max-1,service_name={{.Name}}"
-    restart: on-failure
+    restart: unless-stopped
     mem_limit: 2g
     scale: 0
 
@@ -245,7 +246,7 @@ services:
         loki-retries: 5
         loki-batch-size: 1000
         loki-external-labels: "machine=MacBook-Pro-M4Max-1,service_name={{.Name}}"
-    restart: on-failure
+    restart: unless-stopped
     mem_limit: 2g
     scale: 1
 
