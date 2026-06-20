@@ -55,7 +55,11 @@ Cardinality and participation correlate, and the June 10 census warned that impr
 
 ### 7. Strategic layer (unchanged, for when this vein thins)
 
-Recent stage gaps are lengthening (~1.5h sweeps reappearing within the first day) — the wall will reform at some deeper count. The documented next move spaces remain: **vertex-row re-optimization** (per-vertex 2^281 neighborhoods on existing primitives; subsumes all single flips), **windowed MaxSAT** (optimal multi-edge moves; `sat-solver-investigation.md` Tier 2), and **same-color pairs** (requires handling the seeded-BK double-count documented by `same_color_seed_pairs_count_shared_cliques_twice` in the worker regression suite).
+Recent stage gaps are lengthening (~1.5h sweeps reappearing within the first day) — the wall will reform at some deeper count. The documented next move spaces:
+
+- **Vertex-row re-optimization** — ⛔ INVESTIGATED & RESOLVED 2026-06-13 (`row-optimization-investigation.md`): a full 282-vertex sweep of the best graph (8348, 775,642) found **zero** improving rows. The entire single-vertex-star move class (all single flips, all within-star pairs, all-depth single-row rewrites) is exhausted on this lineage. The graph is **row-locked**; this is not the way forward at 775,642.
+- **Windowed MaxSAT** (optimal multi-edge moves; `sat-solver-investigation.md` Tier 2) — now the leading candidate, since the row-lock result says improving moves must be genuinely multi-vertex. Direct next rung: **2-vertex joint re-optimization** (the 2-vertex window, generalizing the validated row-opt tooling).
+- **Same-color pairs** (requires handling the seeded-BK double-count documented by `same_color_seed_pairs_count_shared_cliques_twice` in the worker regression suite) — note that *within-star* same-color pairs are already covered (and found empty) by the row sweep; only *cross-star* same-color pairs remain unexplored here.
 
 ---
 
