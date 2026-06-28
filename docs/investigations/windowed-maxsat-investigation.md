@@ -54,7 +54,9 @@ Modes `base-anchor | base-window | base-sweep`: minimize mono-7 (soft) subject t
 | 48 | ~48,107 | 0 |
 | 64 | ~51,704 | 0 |
 
-**Paley(281) is exact-locked to non-circular mono-7-reducing moves across ~325k proven-optimal windows up to |F|=64.** Combined with its circulant-local-optimality (06-19), Paley(281) is robustly locked to local moves of every tested shape and size. (A high-volume fast |F|=32 run is continuing; the |F| ladder remains the cheap "leave-no-stone-unturned" grind.)
+**Paley(281) is exact-locked to non-circular mono-7-reducing moves across ~325k proven-optimal windows up to |F|=64.** Combined with its circulant-local-optimality (06-19), Paley(281) is robustly locked to local moves of every tested shape and size.
+
+**High-volume fast runs (Phase-3 ~27× speedup):** once the through-F speedup landed, the ladder was re-run at far higher window counts on the fast binary — |F|=32 → 0/392,457, |F|=64 → 0/191,186, plus |F|=48 (locked), all zero escapes. Total across graph 8644 and Paley(281): **~1.0 million+ exact, proven-optimal windows, zero escapes.** A fast **|F|=128** base-sweep (the untested top of the window-size ladder) is in progress as the "bigger local window" long shot. The |F| ladder remains the cheap "leave-no-stone-unturned" grind; a saved hit (a mono-8-free 281-base with fewer mono-7s) would be flagged and recount-confirmed immediately.
 
 ---
 
