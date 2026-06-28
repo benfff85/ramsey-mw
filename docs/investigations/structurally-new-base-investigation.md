@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-27
 **Author:** Ben Ferenchak + Claude
-**Status:** Two principled leads computationally CLOSED — no circulant/cyclotomic base beats Paley(281).
+**Status:** CLOSED — no circulant/cyclotomic base beats Paley(281); every long-shot follow-up (cyclotomic order > 281, Seidel switching, |F|=128 windows) also came back empty.
 **Pursues:** the "structurally-new mono-8-free base" next-step — the only direction that searches *outside* Paley's local neighborhood (which the Phase-1/2 windowed-MaxSAT hunt locked across ~1M windows; see `windowed-maxsat-investigation.md`).
 
 **Goal:** a mono-8-free 281-vertex graph with **fewer than Paley(281)'s 5,979,680 mono-7-cliques** — a strictly better vertex-extension seed that could floor *below* the current best 282-graph (25,840 mono-8 = Paley(281)+1).
@@ -36,7 +36,7 @@ The principled structurally-new family. For each cyclotomy index `e | 280`, part
 | 8 (octic) | 6 | 2 | 5,979,680 |
 | 10 | 252 | 2 | 5,979,680 |
 | 14 | 3,432 | 2 | 5,979,680 |
-| 20 | 184,756 | *(completeness run)* | — |
+| 20 | 184,756 | 2 | 5,979,680 |
 
 In **every** index, the only mono-8-free colorings are **Paley and its complement** — all tie at mono-7 = 5,979,680 (the higher-index "hits" are just Paley re-expressed over a finer coset partition). **No cyclotomic 2-coloring beats Paley(281).** The generalized-Paley family contains nothing better than the quadratic-residue case — a direct-computation confirmation of the literature finding that generalized Paley graphs serve *multicolor* Ramsey (R_k(4)), not 2-color R(8,8).
 
@@ -54,15 +54,17 @@ In **every** index, the only mono-8-free colorings are **Paley and its complemen
 
 Paley(281)'s K₈-freeness is a **special arithmetic property of 281**, not a monotone trend — its neighbors in *both* directions (smaller 269/277, larger 293/313) all carry ~1–4M mono-8. So there is no nearby Paley prime to leverage, and (per the standing "multi-vertex Paley is a dead end" finding — mono-8 scales ~linearly with added vertices) a mono-8-free Paley(p < 281) extended to 282 would be worse than Paley(281)+1 regardless. Paley(281)+1 (25,840) stands.
 
-## Experiment 4 — cyclotomic prime-sweep, orders > 281 *(IN PROGRESS — the optimistic long shot)*
+## Experiment 4 — cyclotomic prime-sweep, orders > 281 *(the optimistic long shot — CLOSED)*
 
-A mono-8-free cyclotomic 2-coloring at **order p > 281** would directly improve the R(8,8) lower bound past the 50-year record (R(8,8) ≥ p+1 > 282). Running `construction_search cyclotomic p` (indices e ≤ 14) over all primes p ≡ 1 (mod 4) from 269 up to 461. **Interim:** orders 269, 277, 293 have **no** mono-8-free cyclotomic coloring at any tested index — only 281 (Paley) is mono-8-free. Sweep continuing upward; a hit at any p > 281 would be flagged immediately. *(Status will be finalized when the sweep completes.)*
+A mono-8-free cyclotomic 2-coloring at **order p > 281** would directly improve the R(8,8) lower bound past the 50-year record (R(8,8) ≥ p+1 > 282). Ran `construction_search cyclotomic p` (indices e ≤ 14) over primes p ≡ 1 (mod 4). **Result:** of the orders tested — 269, 277, 281, 293, 313, 317 — the *only* one with **any** mono-8-free cyclotomic coloring is **281** (Paley + complement). Orders 293, 313, 317 (the candidates > 281) have **none** at any index. No order > 281 yields a mono-8-free coloring.
 
-## Experiment 5 — Seidel switching of Paley(281) *(IN PROGRESS — a new move class)*
+> *Caveat — vertex cap:* the reused worker-crate adjacency bitset is fixed-size (~320 vertices), so orders 337–461 panic in the counter rather than being tested. Not pursued further: extending requires a larger bitset (the worker crate is app code, off-limits), and the odds fall with order — all three tested orders above 281 were already empty, and bigger graphs are *less* likely to be K₈-free. The optimistic record-hunt is effectively closed for 269–317.
 
-Seidel switching flips every edge of a cut S × (V∖S) — a **large, structured, global** move, a different class than the locked small edge-windows (Phase-1/2 windowed MaxSAT, ~1M windows) and the single-distance-class circulant toggles (0/140 probe). `construction_search switch 281` samples random subsets S (all sizes, and gentle |S| ≤ 12). **Interim:** **0 of 4,000** sampled switches stayed mono-8-free — any cut-flip destroys Paley's K₈-freeness. An 8-million-switch definitive batch is grinding. *(Status will be finalized when the batch completes.)*
+## Experiment 5 — Seidel switching of Paley(281) *(a new move class — CLOSED)*
 
-*(See also `windowed-maxsat-investigation.md` for the parallel "bigger local window" long shot — a fast `|F|=128` base-sweep on Paley(281), the untested top of the window-size ladder, made feasible by the Phase-3 ~27× speedup.)*
+Seidel switching flips every edge of a cut S × (V∖S) — a **large, structured, global** move, a different class than the locked small edge-windows (Phase-1/2 windowed MaxSAT, ~1M windows) and the single-distance-class circulant toggles (0/140 probe). `construction_search switch 281` sampled **8,000,000** random subsets S (3M all-sizes, 3M |S| ≤ 8, 2M |S| ≤ 4). **Result: 0 stayed mono-8-free** — every cut-flip destroys Paley's K₈-freeness. Switching is not a viable escape.
+
+*(The parallel "bigger local window" long shot — a fast `|F|=128` base-sweep on Paley(281), the untested top of the window-size ladder — also closed: **0 / 88,496** proven-optimal windows. See `windowed-maxsat-investigation.md`.)*
 
 ---
 

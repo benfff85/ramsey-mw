@@ -56,7 +56,7 @@ Modes `base-anchor | base-window | base-sweep`: minimize mono-7 (soft) subject t
 
 **Paley(281) is exact-locked to non-circular mono-7-reducing moves across ~325k proven-optimal windows up to |F|=64.** Combined with its circulant-local-optimality (06-19), Paley(281) is robustly locked to local moves of every tested shape and size.
 
-**High-volume fast runs (Phase-3 ~27× speedup):** once the through-F speedup landed, the ladder was re-run at far higher window counts on the fast binary — |F|=32 → 0/392,457, |F|=64 → 0/191,186, plus |F|=48 (locked), all zero escapes. Total across graph 8644 and Paley(281): **~1.0 million+ exact, proven-optimal windows, zero escapes.** A fast **|F|=128** base-sweep (the untested top of the window-size ladder) is in progress as the "bigger local window" long shot. The |F| ladder remains the cheap "leave-no-stone-unturned" grind; a saved hit (a mono-8-free 281-base with fewer mono-7s) would be flagged and recount-confirmed immediately.
+**High-volume fast runs (Phase-3 ~27× speedup):** once the through-F speedup landed, the ladder was re-run at far higher window counts on the fast binary — |F|=32 → 0/392,457, |F|=64 → 0/191,186, **|F|=128 → 0/88,496**, plus |F|=48 (locked), all zero escapes. The **|F|=128** rung is the top of the window-size ladder — the "bigger local window" long shot — and it too is empty. Total across graph 8644 and Paley(281): **~1.1 million+ exact, proven-optimal windows, zero escapes.** The |F| ladder remains the cheap "leave-no-stone-unturned" grind; a saved hit (a mono-8-free 281-base with fewer mono-7s) would be flagged and recount-confirmed immediately.
 
 ---
 
@@ -72,7 +72,7 @@ The per-window cost was dominated by enumerating **all** ~5.98M mono-7-cliques a
 
 ## Verdict
 
-Exact (complete-solver) windowed local search — the one genuinely new tool relative to all prior incomplete probes — **confirms, and does not escape, the locks**: ~427k+ proven-optimal windows across graph 8644 (mono-8 minimization) and Paley(281) (mono-7 minimization under mono-8=0), **zero improving moves**, at window sizes up to |F|=64–96. This is a rigorous certification within the sampled window space, not merely heuristic failure.
+Exact (complete-solver) windowed local search — the one genuinely new tool relative to all prior incomplete probes — **confirms, and does not escape, the locks**: ~1.1M+ proven-optimal windows across graph 8644 (mono-8 minimization) and Paley(281) (mono-7 minimization under mono-8=0), **zero improving moves**, at window sizes up to |F|=128. This is a rigorous certification within the sampled window space, not merely heuristic failure.
 
 The implication is the same as the 06-19 "honest framing," now hardened: **bigger local windows will not break these locks.** Reaching 0 (R(8,8) ≥ 283) or a base below the 25,840 floor needs a **structurally-new mono-8-free construction** (generalized Paley / Cayley on non-cyclic groups / algebraic-geometric families — see `search-status` next-steps), not more local search. The validated `wmaxsat_pilot` engine + the `single-flip-check` construction tools are ready to evaluate any candidate base.
 
