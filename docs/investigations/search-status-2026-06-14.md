@@ -1,8 +1,45 @@
 # Search Status & Findings — June 2026 (consolidated)
 
-**Date:** 2026-06-14 (updated 2026-06-19)
+**Date:** 2026-06-14 (updated 2026-06-19, then 2026-06-27)
 **Author:** Ben Ferenchak + Claude
-**Purpose:** Single entry-point summary of the June 9–19 investigation campaign. Read this first; it points to the detailed docs and lists what is settled and what NOT to retry. Goal throughout: a 282-vertex 2-coloring with zero monochromatic 8-cliques (would prove **R(8,8) ≥ 283**).
+**Purpose:** Single entry-point summary of the June 9–27 investigation campaign. Read this first; it points to the detailed docs and lists what is settled and what NOT to retry. Goal throughout: a 282-vertex 2-coloring with zero monochromatic 8-cliques (would prove **R(8,8) ≥ 283**).
+
+---
+
+## UPDATE 2026-06-27 — literature scan, vreduce bust, EXACT windowed MaxSAT (Phases 1–3)
+
+**The 06-19 "suggested next steps" below were executed — every one is now closed.** Both the best 282-graph (8644) and Paley(281) are **EXACT-locked across ~427k+ proven-optimal windows**, the literature confirms **Paley(281) is the ~50-year world-record base**, and the vertex-reduction construction idea busted. Detailed writeup of the windowed solver: **`windowed-maxsat-investigation.md`**.
+
+### 1. Literature scan (next-step #5 — DONE)
+- **R(8,8): 282 ≤ R(8,8) ≤ 1518.** The lower bound **282 = Paley(281) being K8-free** (Radziszowski *Small Ramsey Numbers* DS1.16, item 2.3.j: if the order-p Paley graph, p = 4t+1 prime, is K_k-free then R(k,k) ≥ p+1; here p = 281). Credited to **Burling & Reyner (1972)** — **unbeaten ~50 years**. Campaign 10's base graph *is* the world-record construction, not an approximation of it.
+- **282 is not prime**, so the Paley route structurally cannot reach a 282-vertex witness (the next prime ≡ 1 mod 4 is 293, whose Paley graph contains a K8). The community already swept circulant colorings of order 282–286 and found nothing (Exoo–Tatarevic) — matching our own `construction_search.rs` (282-circulant floor ~1M).
+- **The natural generalizations don't apply to 2-color R(8,8):** generalized / k-th-power-residue Paley graphs (Dawsey–McCarthy, arXiv 2006.14716) target **multicolor** R_k(4)=R(4,…,4); the 2024 Mathon-type and k-th-power Paley-**digraph** papers (arXiv 2408.04067, 2311.02135) improve directed/multicolor numbers; analog/complete MaxSAT for Ramsey *construction* (arXiv 1801.06620) caps at ~K43 (R(5,5) region). Wolfram/MathWorld gives no R(8,8) bound (defers to Radziszowski). Reddit is bot-walled (unscrapeable by the automated tools).
+- **Upshot:** reaching R(8,8) ≥ 283 is a genuine ~50-year-open problem; there is **no known better-than-Paley 2-color base near 282**. (Full record: memory `reference_r88_literature`.)
+
+### 2. vreduce — vertex-reduction construction experiment (BUST)
+Take a 288-vertex campaign-1 graph (source graph 5032, 980,066 mono-8), **remove the 6 highest-8-clique-participation vertices** to induce a 282-vertex graph, then perturb/rebalance to balanced colorings (5 strategies). Tools: bins `vreduce_analysis.rs`, `vreduce_perturb.rs`; results in MySQL table `graph_vreduce` (2,200 rows). **Result: best 817,827 mono-8, all in 817K–827K** — ~32× worse than 25,840, and worse than retired campaign 2 (775,642). Evolved 288/282 graphs live in a far worse region than Paley(281)+1; vertex-reduction does not escape it. **Do not re-run.**
+
+### 3. EXACT windowed complete-MaxSAT (next-steps #1 & #3 — DONE)
+New tool `single-flip-check/src/bin/wmaxsat_pilot.rs` — a **complete**-solver (z3) windowed move-finder, the qualitative upgrade over all prior *incomplete* probes (SA/tabu/VDS/row-opt/joint): per window it returns a **proven optimum** — it finds an escape, or **certifies none exists**. Recount-as-truth (z3 only proposes; every reported delta is the difference of two full clique recounts) makes any reported improvement impossible to fake. Built subagent-driven TDD, opus-reviewed. Detail + spec/plan: **`windowed-maxsat-investigation.md`**.
+- **Phase 1 (minimize mono-8 on graph 8644):** |F|=32 → 0/600; |F|=48 → **0/~101,682 exact windows**. **Exact-locked up to |F|=48** (each window subsumes all single/pair/row/2-vertex moves inside it).
+- **Phase 2 (281-base hunt: minimize mono-7 subject to hard mono-8 = 0, on Paley(281)):** explores the **non-circular** mono-8-free space the circulant probe never tested. Ladder all LOCKED: |F| = 8/16/24/32/48/64 → **0/~325k exact windows**. **Paley(281) exact-locked to non-circular mono-7-reducing moves up to |F|=64.** (A high-volume fast |F|=32 run continues.)
+- **Phase 3 (through-F speedup, ~27×):** enumerate cliques *through* the window directly + screen the delta from clauses + full recount only to confirm candidate hits; opus-validated verdict-equivalent, saved hits still recount-confirmed. New bottleneck: z3 subprocess-launch.
+
+### Updated verdict — now EXACT (proven-optimal), not just heuristic
+| Avenue | Result |
+|---|---|
+| Local search on 8644, all sizes incl. **exact windowed MaxSAT to |F|=48** | **locked** (0/~102k exact windows) |
+| Better 281-base via single circulant move from Paley | locked (0/140) |
+| Better 281-base via **non-circular exact windowed MaxSAT to |F|=64** | **locked** (0/~325k exact windows) |
+| Direct mono-8-free 282-circulant | floor ~1M |
+| Vertex-reduction from a 288v campaign-1 graph (vreduce) | floor ~817K (bust) |
+| Any **known** better-than-Paley 2-color base near 282 (literature) | none — R(8,8) ≥ 282 unbeaten ~50 yr |
+
+### Next steps — only the structurally-new path remains open
+The exact certification removes any remaining hope that *bigger local windows* help. The single highest-upside direction is **structurally-new mono-8-free base families** — generalized Paley / k-th-power-residue graphs, Cayley graphs on non-cyclic symmetry groups, algebraic/geometric designs — each evaluated with the now-validated `wmaxsat_pilot` + construction tooling. Compute-efficiency lever if more local search is wanted: a batched / in-process MaxSAT solver (z3 subprocess-launch is now the per-window floor).
+
+### Ops
+Long local sweeps must be launched via `( nohup … & )` (reparent to init/PID 1) to survive IDE/Claude restarts; macOS has no `setsid`; foreground `sleep` is blocked in the Claude Code env. Fully detached ⇒ no harness completion notification ⇒ detect completion via `done:` lines in the per-shard logs.
 
 ---
 

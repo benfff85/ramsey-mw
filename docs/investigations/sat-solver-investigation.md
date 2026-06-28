@@ -4,6 +4,8 @@
 **Author:** Ben Ferenchak + Claude
 **Status:** Analysis complete — direct SAT infeasible; local MaxSAT and clique-guided heuristics viable
 
+> **UPDATE 2026-06-27 — the windowed (complete) MaxSAT proposal here was BUILT.** `single-flip-check/src/bin/wmaxsat_pilot.rs` realizes the "complete solver on a window" idea (z3 weighted-partial-MaxSAT, exact per window). It **exact-locked** both graph 8644 (minimize mono-8) and Paley(281) (minimize mono-7 under hard mono-8=0) across **~427k+ proven-optimal windows, zero escapes** (up to |F|=64–96). The "direct SAT infeasible at ~10¹⁴ clauses" conclusion stands; the *windowed* approach is the tractable realization, ~27× sped up via through-F enumeration. See **`windowed-maxsat-investigation.md`** and `search-status-2026-06-14.md` (06-27 update).
+
 ---
 
 ## Background

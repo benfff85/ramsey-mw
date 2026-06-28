@@ -4,6 +4,8 @@
 **Author:** Ben Ferenchak + Claude
 **Status:** Reference — documents the seed-graph rationale for the R(8,8) ≥ 283 search
 
+> **UPDATE 2026-06-27 — literature confirms Paley(281) is the WORLD-RECORD base, and a non-circular base-hunt locked it.** R(8,8) ≥ 282 is exactly Paley(281) being K8-free (Radziszowski survey item 2.3.j; credited Burling–Reyner 1972; **unbeaten ~50 years**). 282 isn't prime, so the Paley route can't reach a 282-vertex witness. A non-circular base-improvement hunt (minimize mono-7 on Paley(281) under hard mono-8 = 0, `wmaxsat_pilot base-sweep`) found **0 improvements across ~325k exact windows up to |F|=64** — Paley(281) is locally locked even off the circulant family. See **`windowed-maxsat-investigation.md`** and `search-status-2026-06-14.md` (06-27 update). Full literature record: memory `reference_r88_literature`.
+
 ---
 
 ## Background
