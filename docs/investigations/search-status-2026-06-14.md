@@ -1,5 +1,7 @@
 # Search Status & Findings — June 2026 (consolidated)
 
+> **2026-07-02:** the live roadmap is now **`july-2026-next-steps.md`** (multi-seed basin program running as campaign 11+, first cross-basin finding: independent floors 25,840 vs 25,881). This doc remains the June record + do-not-retry list.
+
 **Date:** 2026-06-14 (updated 2026-06-19, then 2026-06-27)
 **Author:** Ben Ferenchak + Claude
 **Purpose:** Single entry-point summary of the June 9–27 investigation campaign. Read this first; it points to the detailed docs and lists what is settled and what NOT to retry. Goal throughout: a 282-vertex 2-coloring with zero monochromatic 8-cliques (would prove **R(8,8) ≥ 283**).
