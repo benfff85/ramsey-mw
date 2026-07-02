@@ -1,8 +1,10 @@
 # Strategic Analysis: Path Forward for R(8,8) ≥ 283
 
+> **ARCHIVED 2026-07-02 — superseded by `../search-status-2026-06-14.md` (strategy) and `../july-2026-next-steps.md` (roadmap).** Two content corrections for anyone reading this for the record: (1) the upper bound quoted below ("R(8,8) ≤ 6,090") was stale even in May — the literature value is **R(8,8) ≤ 1518** (Angeltveit–McKay 2019; see memory/lit-scan notes in `../structurally-new-base-investigation.md`); (2) the "population search (8 active campaigns)" described below was retired 2026-05-03. Of the recommended sequencing, VDS and tabu were built and retired with zero improvements (`../retired-trajectory-methods.md`), local MaxSAT became the exact windowed solver (`../windowed-maxsat-investigation.md`), and the GA/ML items never gated in.
+
 **Date:** 2026-05-02
 **Author:** Ben Ferenchak + Claude
-**Status:** Active — primary search progressing, additional search modes under evaluation
+**Status:** ~~Active~~ ARCHIVED — historical strategy snapshot (May 2026)
 
 **Prior investigations referenced:**
 - `paley-graph-investigation.md` — Paley(281) seed construction

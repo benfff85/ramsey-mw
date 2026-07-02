@@ -1,5 +1,7 @@
 # Variable-Depth Search (VDS) Worker
 
+> **Retired 2026-05-03.** Full Phase-3 settings (8 workers, ~3 h) produced **51,994 attempts, 0 improvements, 0 top-50 contributions** while 6 exhaustive workers drove all 8 concurrent stage advances. Do not reactivate without new structural evidence. Consolidated record: [`docs/investigations/retired-trajectory-methods.md`](../investigations/retired-trajectory-methods.md). This doc is preserved as the algorithmic reference; compose service remains at `scale: 0`.
+
 ## Overview
 
 The VDS worker performs structured, guided tree search through sequences of edge flips, inspired by the Lin-Kernighan heuristic for TSP. Unlike the exhaustive worker (which evaluates all 2-edge flips) or SA (which makes random jumps), VDS chains together multi-flip sequences where each subsequent flip targets the local neighborhood disrupted by prior flips.
@@ -158,4 +160,4 @@ VDS occupies the middle ground: more structured than SA (each flip builds on the
 | `ramsey-worker-rust/src/vds.rs` | `rank_edges_by_participation()` -- global edge ranking for first-edge pool |
 | `ramsey-worker-rust/src/vds.rs` | `compute_delta()` -- incremental clique count change for a single flip |
 | `ramsey-worker-rust/src/worker.rs` | `cycle_variable_depth_search()` -- worker loop integration |
-| `docs/vds-enhancements.md` | Earlier VDS design notes and enhancement ideas |
+| `docs/investigations/retired-trajectory-methods.md` | Consolidated retirement record (original `vds-enhancements.md` in git history) |

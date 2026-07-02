@@ -7,7 +7,7 @@
 **Related documents:**
 - `sat-solver-investigation.md` — windowed/local MaxSAT (Tier 2); row-opt is its degenerate 1-vertex window, and this result motivates widening it
 - `engine-optimization-review.md` — strategic layer §7 listed row-opt as the next move space; this note resolves it
-- `deep-analysis-path-forward.md` / `may-2026-next-steps.md` — strategic roadmap
+- `archive/deep-analysis-path-forward.md` / `archive/may-2026-next-steps.md` — strategic roadmap of the era (both archived; live roadmap: `july-2026-next-steps.md`)
 - One-off tool & data: `single-flip-check/src/bin/rowopt_pilot.rs`, inputs/logs in `single-flip-check/results/`
 
 ---

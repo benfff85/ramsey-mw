@@ -43,6 +43,8 @@ Nearly 3 million monochromatic red 7-cliques exist. The graph sits exactly at th
 
 Stored as graph_id=3 in `graph_paley` (Paley(281) + 1 random vertex, ~140 red / ~141 blue edges).
 
+> ⚠️ **This section's headline number is WRONG — see "UPDATE 2026-06-14" below.** The true count for a random extension is **~44,000** (structurally bounded by Paley's 5,979,680 mono-7-cliques, since every 8-clique must pass through the new vertex), and a row-optimized extension is ~27K. The "100M+" came from a buggy/misread count. The section is preserved because its *qualitative* point (the extension, not Paley, is the whole problem) is right; the cascade arithmetic below is not.
+
 **Eight-clique count: 100,000,000+ (counting did not complete)**
 
 After one hour of computation on Apple M4 Max, the Bron-Kerbosch counter found over 100 million red 8-cliques rooted at vertex 0 alone — and the sweep had not yet moved past the first vertex. Full count was projected to be in the hundreds of millions to low billions. Counting was abandoned.

@@ -45,7 +45,9 @@ When `PUBLISH_RESULTS=false` (the default for local deployments), the worker use
 
 ### Top-N Result Tracking
 
-Results are tracked in a Redis sorted set `best_results:{stageId}` of size `TOP_RESULTS_COUNT` (default 50). Only results that beat the worst entry in this set are submitted. The queue manager reads this set when deciding the best result for stage advancement.
+Results are tracked in a Redis sorted set `best_results:{stageId}` of size `TOP_RESULTS_COUNT` (default 50). The queue manager reads this set when deciding the best result for stage advancement.
+
+> **Semantics since 2026-06-19 (best-novel cache):** the insert Lua rejects graphs already in the global `processed_graph_hashes` set (`SISMEMBER` at insert time), so `best_results` holds only *novel* graphs; and the early-termination threshold reads **slot 0** (the best novel result) rather than the worst entry — only record-breakers insert. This tightened threshold produced a ~2.8–3× stage-throughput gain and removed "all top-N visited" dead ends. Design + shipped outcome: `docs/investigations/best-novel-threshold-plan.md` (worker PR #69, QM PR #73).
 
 ## Environment Variables
 

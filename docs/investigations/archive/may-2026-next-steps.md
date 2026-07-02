@@ -1,8 +1,10 @@
 # Next Steps — May 2026
 
+> **ARCHIVED 2026-07-02 — superseded by `../july-2026-next-steps.md`.** How the tiers resolved: Tier 0 shipped; Tier 1.1 tabu and 1.2 VDS built/evaluated and **retired with zero improvements** (`../retired-trajectory-methods.md`); 1.3 nauty never run (evolved graphs assumed near-trivial automorphisms; construction pivot mooted it); Tier 2.1 local MaxSAT was built far beyond this plan's ambition as *exact* windowed MaxSAT (`../windowed-maxsat-investigation.md`, ~1.1M proven-optimal windows, zero escapes); 2.2 SA never re-enabled (tabu's failure covered it); Tier 3 ML remains gated on result logging (still off — a learned ordering only speeds descent to a floor that multi-seed evidence now suggests is characteristic ~25.85K, see july doc); Tier 4.1 Vast.ai tooling exists (`ramsey-vast-ai` skill); 4.2/4.3 open. The strategic frame changed entirely on 2026-06-14: construction-seeded campaigns replaced campaign 2 (`../search-status-2026-06-14.md`).
+
 **Date:** 2026-05-02
 **Author:** Ben Ferenchak + Claude
-**Status:** Forward-looking — prioritized backlog of algorithmic, infrastructural, and ML upgrades for the R(8,8) ≥ 283 search
+**Status:** ~~Forward-looking~~ ARCHIVED — historical backlog snapshot (May 2026)
 
 **Related documents:**
 - `deep-analysis-path-forward.md` — strategic context

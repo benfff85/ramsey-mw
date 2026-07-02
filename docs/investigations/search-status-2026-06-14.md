@@ -111,7 +111,7 @@ Everything below was established with validated, cross-checked tooling (every cl
    - all within-star pairs and all-depth single-row rewrites — **exhaustive 282-vertex row sweep, 0/282** — `row-optimization-investigation.md`
    - 2-vertex joint moves — **0/214 pairs** (marginal + highest-coupling + 200 random; rule-of-three < 1.5%) — `joint-reoptimization-investigation.md`
 2. **Participation-ordered enumeration: REJECTED** (campaign-1 backtest, winners uniform in participation rank). Keep `DUAL_EDGE_CARDINALITY`. A *learned* ranker is the only credible ordering upgrade (needs result logging, still off). — `engine-optimization-review.md`
-3. **Simulated annealing, tabu+clique-guided, VDS: all RETIRED** (each: tens of thousands to millions of iterations, zero improvements). — `simulated-annealing-investigation.md`, `tabu-search-investigation.md`, `vds-enhancements.md`
+3. **Simulated annealing, tabu+clique-guided, VDS: all RETIRED** (each: tens of thousands to millions of iterations, zero improvements). — `retired-trajectory-methods.md` (consolidated 2026-07-02; original per-method docs in git history)
 4. **Do not restart/continue campaign 2.** It is a wandered dead basin dominated 28× by the campaign-10 construction.
 5. **Do not trust the legacy "Paley(281)+1 = 100M+ cliques" claim** — that was a counting error; a random extension is ~44K, an optimized one ~27K.
 6. **Do not conclude the 27K seed is "locked" from the row-opt/single-flip probe.** Those moves avalanche (+170 to +605), but the engine's *balanced-pair* moves descend — proven live by campaign 10.
@@ -139,4 +139,4 @@ Reuse pattern: when a new wall forms on the active best graph, export its `edge_
 
 ---
 
-*Generated for the Ramsey project — 2026-06-14. Supersedes the strategic framing in `engine-optimization-review.md` §7 and `deep-analysis-path-forward.md` where they differ.*
+*Generated for the Ramsey project — 2026-06-14. Supersedes the strategic framing in `engine-optimization-review.md` §7 and `archive/deep-analysis-path-forward.md` where they differ.*

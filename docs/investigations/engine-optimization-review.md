@@ -2,10 +2,10 @@
 
 **Date:** 2026-06-12
 **Author:** Ben Ferenchak + Claude
-**Status:** Recommendations — written the day after single-edge-flip support (both colors) shipped and revived the campaign 2 descent
+**Status:** PARTIALLY RESOLVED (status pass 2026-07-02). Where each recommendation landed: **#1** mid-batch stage-death/threshold refresh — never shipped; economics changed again with the best-novel cache (stages now exhaust in ~2–5 min), still a valid small win if worker code is ever touched. **#2** participation ordering — REJECTED by the backtest below (the backtest itself remains this doc's lasting value). **#3** result logging — still OFF; still gates any learned ordering (see `july-2026-next-steps.md` for why it's deprioritized). **#4** incremental CliqueCollection across stages — never shipped. **#6** dials: `CYCLE_PREVENTION_GRAPH_LOOKBACK_COUNT` is now 5000 (far past the suggested 200); `EXHAUSTION_DELAY_MS` still 60000; Dragonfly still on `:latest`. **§7** strategic layer — fully superseded by `search-status-2026-06-14.md` and successors.
 
 **Related documents:**
-- `may-2026-next-steps.md` — strategic roadmap (Tier structure referenced below)
+- `archive/may-2026-next-steps.md` — strategic roadmap of the era (archived; Tier structure referenced below)
 - `single-flip-assessment.md` context: the 2026-06-10 census that motivated the singles strategy
 - `../workers/exhaustive-worker.md` — engine reference
 

@@ -1,10 +1,10 @@
 # Simulated Annealing (SA) Worker
 
+> **Retired.** SA found zero improvements (45K+ iterations) and was never re-enabled: the "corrected design" (incremental evaluation, basin-scale temperature, larger perturbations) was overtaken by tabu — the stronger technique of the same family — failing decisively with those lessons applied (0 improvements in 6.75M iterations). All three trajectory methods are retired; consolidated record + do-not-reactivate rationale: [`docs/investigations/retired-trajectory-methods.md`](../investigations/retired-trajectory-methods.md). This doc is preserved as the algorithmic reference. Compose service remains at `scale: 0`.
+
 ## Overview
 
 The SA worker uses a metaheuristic approach to escape local minima that the exhaustive search cannot reach. Unlike the exhaustive worker which evaluates all 2-edge flips deterministically, SA performs random multi-edge mutations and probabilistically accepts worsening moves early in the schedule, allowing it to traverse through higher-energy states to potentially find better basins.
-
-SA was investigated extensively (see `docs/simulated-annealing-investigation.md`). The initial implementation found zero improvements due to three correctable design issues — full Bron-Kerbosch recount per iteration, mismatched temperature schedule, and undersized perturbations. SA workers are currently scaled to 0 in production but the infrastructure remains available pending the design fixes documented in the investigation.
 
 ## High-Level Strategy
 
@@ -97,7 +97,7 @@ Note: SA logs every iteration, which produces high log volume. Each run takes se
 
 ## Current Status
 
-SA is **disabled in production** (scale: 0). The investigation (`docs/simulated-annealing-investigation.md`) documents the three required design changes — incremental evaluation via `CliqueCollection`, basin-scale temperature schedule, and 5–20-edge perturbations — that must be applied before re-enabling. The infrastructure is otherwise intact.
+SA is **retired** (scale: 0, do not reactivate without new structural evidence — see the banner at the top). The consolidated record (`docs/investigations/retired-trajectory-methods.md`) preserves the corrected-design spec (incremental evaluation via `CliqueCollection`, basin-scale temperature schedule, 5–20-edge perturbations) for any future re-run under a genuinely different regime. The infrastructure is otherwise intact.
 
 ## Key Source Files
 
@@ -108,4 +108,4 @@ SA is **disabled in production** (scale: 0). The investigation (`docs/simulated-
 | `ramsey-worker-rust/src/sa.rs` | `weighted_sample()` -- weighted sampling without replacement |
 | `ramsey-worker-rust/src/worker.rs` | `cycle_simulated_annealing()` -- worker loop integration |
 | `ramsey-worker-rust/src/algorithm.rs` | `get_cliques_comprehensive()` -- full clique recount used each iteration |
-| `docs/simulated-annealing-investigation.md` | Detailed investigation results and parameter tuning history |
+| `docs/investigations/retired-trajectory-methods.md` | Consolidated retirement record (original investigation doc in git history) |
