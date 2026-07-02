@@ -86,13 +86,49 @@ services:
     mem_limit: 2g
     scale: 1
 
+  # Second QM: drives the multi-seed campaign (11) while the original QM keeps
+  # campaign 10 progressing for the remote-machine workers. Safe to run two:
+  # all QM state is campaign-scoped; processed_graph_hashes is a shared add-only set.
+  ramsey-queue-manager-11:
+    image: benferenchak/ramsey-queue-manager:develop
+    networks:
+      - ramsey-net
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      RAMSEY_CAMPAIGN_ID: 11
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      WORK_UNIT_ANALYSIS_TYPE: TARGETED
+      WORK_ENUMERATION_STRATEGY: "DUAL_EDGE_CARDINALITY_WITH_SINGLES"  # singles census (majority color) + counter-based pair sweep
+      TOP_RESULTS_COUNT: 50
+      EXHAUSTION_DELAY_MS: 60000
+      CYCLE_PREVENTION_GRAPH_LOOKBACK_COUNT: 5000
+      STAGE_PROGRESSION_FREQUENCY_MS: 1000
+      IMMEDIATELY_PROGRESS_STAGE_ON_IMPROVEMENT: "true"
+      LOGGING_LEVEL_ROOT: INFO
+    depends_on:
+      - ramsey-mw
+      - redis
+    logging:
+      driver: loki
+      options:
+        loki-url: "https://loki.setminusx.cloud/loki/api/v1/push"
+        mode: non-blocking
+        max-buffer-size: 4m
+        loki-retries: 5
+        loki-batch-size: 1000
+        loki-external-labels: "machine=MacBook-Pro-M4Max-1,service_name={{.Name}}"
+    restart: unless-stopped
+    mem_limit: 2g
+    scale: 1
+
   ramsey-worker-rust:
     image: benferenchak/ramsey-worker-rust:develop
     networks:
       - ramsey-net
     environment:
       RAMSEY_API_URL: http://ramsey-mw:8080/api/ramsey
-      RAMSEY_CAMPAIGN_ID: 10
+      RAMSEY_CAMPAIGN_ID: 11  # multi-seed basin program (campaign 10 stays live for remote workers)
       REDIS_HOST: redis
       REDIS_PORT: 6379
       WORK_UNIT_FETCH_COUNT: 250000
