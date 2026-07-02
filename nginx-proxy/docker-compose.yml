@@ -27,3 +27,6 @@ services:
       - /Users/benferenchak/IdeaProjects/ramsey/ramsey-mw/nginx-proxy/ssl:/etc/letsencrypt
       - /Users/benferenchak/IdeaProjects/ramsey/ramsey-mw/nginx-proxy/certbot/www:/var/www/certbot
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    # Without a restart policy this sidecar dies on any docker/host restart and
+    # renewals silently stop (that's how the June 2026 expiry happened).
+    restart: unless-stopped
