@@ -22,9 +22,10 @@
 
 ## The queue (ranked)
 
-### 1. Multi-seed rotation (running; timer set)
-- **Let campaign 11 tail-grind to the 24 h mark** — campaign 10's final −1,218 all came from the post-wall exhaustion grind, and campaign 11's tail probes *below* 25,840 territory. **A rotation timer fires ~19:17 on 2026-07-03** with a guard: hold if a new all-time best (< 25,840) is actively unfolding, otherwise bank the floor and rotate.
-- **Rotation kit is pre-staged:** `single-flip-check/results/mseed/ROTATION-c12.md` + `rotate_c12.sql` (campaign 12 = seed opt_4, 27,668). Queue after that: opt_2 (27,677) → c13, opt_7 (27,741) → c14, opt_8 (27,798) → c15. ~1–2 days per basin at current cadence.
+### 1. Multi-seed rotation (running)
+- **Rotation 1 EXECUTED 2026-07-03 ~23:17Z.** Campaign 11 (opt_9) banked at **25,881** — its ~28 h tail-grind never re-approached the floor (cycled 25,99x–26,03x all day), unlike campaign 10's long productive tail; the best-novel cache appears to burn a basin's novel improvements in the first hours, making long tails unproductive. Campaign 12 (opt_4, 27,668, graph/stage 16004) live on the local 14 workers; QM service renamed campaign-agnostic `ramsey-queue-manager-mseed` (future rotations = env flips only).
+- **Basin-floor table so far:** original seed → 25,840; opt_9 → 25,881 (0.16% apart). Each new floor tests the "characteristic ~25.85K floor" hypothesis.
+- **Next rotation pre-staged:** `single-flip-check/results/mseed/ROTATION-c13.md` + `rotate_c13.sql` (campaign 13 = opt_2, 27,677); timer ~24 h out with the same hold-on-breakthrough guard. Then opt_7 (27,741) → c14, opt_8 (27,798) → c15.
 - Seed inventory + provenance: `single-flip-check/results/mseed/MANIFEST.md` (5 diverse recount-verified seeds, pairwise Hamming 122–157).
 
 ### 2. Phase 4 — in-process / batched MaxSAT solver

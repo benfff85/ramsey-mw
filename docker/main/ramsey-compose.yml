@@ -86,16 +86,17 @@ services:
     mem_limit: 2g
     scale: 1
 
-  # Second QM: drives the multi-seed campaign (11) while the original QM keeps
-  # campaign 10 progressing for the remote-machine workers. Safe to run two:
-  # all QM state is campaign-scoped; processed_graph_hashes is a shared add-only set.
-  ramsey-queue-manager-11:
+  # Second QM: drives the current multi-seed campaign (rotations flip only its
+  # RAMSEY_CAMPAIGN_ID) while the original QM keeps campaign 10 progressing for
+  # the remote-machine workers. Safe to run two: all QM state is campaign-scoped;
+  # processed_graph_hashes is a shared add-only set.
+  ramsey-queue-manager-mseed:
     image: benferenchak/ramsey-queue-manager:develop
     networks:
       - ramsey-net
     environment:
       SPRING_PROFILES_ACTIVE: dev
-      RAMSEY_CAMPAIGN_ID: 11
+      RAMSEY_CAMPAIGN_ID: 12
       REDIS_HOST: redis
       REDIS_PORT: 6379
       WORK_UNIT_ANALYSIS_TYPE: TARGETED
@@ -128,7 +129,7 @@ services:
       - ramsey-net
     environment:
       RAMSEY_API_URL: http://ramsey-mw:8080/api/ramsey
-      RAMSEY_CAMPAIGN_ID: 11  # multi-seed basin program (campaign 10 stays live for remote workers)
+      RAMSEY_CAMPAIGN_ID: 12  # multi-seed basin program, rotation 2 (campaign 10 stays live for remote workers)
       REDIS_HOST: redis
       REDIS_PORT: 6379
       WORK_UNIT_FETCH_COUNT: 250000
