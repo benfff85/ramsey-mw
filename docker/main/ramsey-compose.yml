@@ -96,7 +96,7 @@ services:
       - ramsey-net
     environment:
       SPRING_PROFILES_ACTIVE: dev
-      RAMSEY_CAMPAIGN_ID: 14
+      RAMSEY_CAMPAIGN_ID: 15
       REDIS_HOST: redis
       REDIS_PORT: 6379
       WORK_UNIT_ANALYSIS_TYPE: TARGETED
@@ -129,7 +129,7 @@ services:
       - ramsey-net
     environment:
       RAMSEY_API_URL: http://ramsey-mw:8080/api/ramsey
-      RAMSEY_CAMPAIGN_ID: 14  # multi-seed basin program, rotation 4 (campaign 10 stays live for remote workers)
+      RAMSEY_CAMPAIGN_ID: 15  # multi-seed basin program, rotation 5 — final queued seed (campaign 10 stays live for remote workers)
       REDIS_HOST: redis
       REDIS_PORT: 6379
       WORK_UNIT_FETCH_COUNT: 250000
