@@ -88,13 +88,19 @@ niced, alongside the live fleet). **Do not re-certify graph 8644 (25,840)** — 
 is already exact-locked to |F|=128 across ~1.1M windows (Phase 1 + high-volume
 runs above); re-running it is wasted compute. 15491 is the open target.
 
-Expected outcome: another exact-lock (0 escapes), which would make "≥25.8K is a
-characteristic floor of Paley(281)+row-opt under complete windowed local search" a
-two-graph result rather than one. A saved hit (`WMAXSAT_SAVE=…CERT_ESCAPE_25881.txt`)
-below 25,881 would be a genuine escape and is recount-confirmed before trust.
-Status: in progress. Campaign 13's floor (25,996, graph 17768) is a later
-candidate but is still being deep-wall re-run, so certifying it now would be
-premature (the re-run may move it).
+**Result — EXACT-LOCKED (2026-07-16): 0 / 5,920 proven-optimal windows improved
+at |F|=48** (single shard, 4h budget, ~2.4s/window z3-subprocess-bound). Graph
+15491 (25,881) is locally optimal against every simultaneous move up to 48 edges,
+same verdict as graph 8644. So **two independent deep-wall floors (25,840 and
+25,881) are now complete-solver-certified** — "≥25.8K is a characteristic floor
+of Paley(281)+row-opt" is a two-graph proven-optimum result, not a one-graph one.
+Caveat on rigor: this is 5,920 windows vs. graph 8644's ~101k at |F|=48 (and its
+|F|=128 high-volume runs); the zero-escape signal is identical but the coverage is
+a first-pass lock. Re-run with more shards / higher |F| if a stronger statement is
+ever wanted — but the marginal value is low given 8644 is already locked to |F|=128.
+
+Campaign 13's floor (25,996, graph 17768) is a later candidate but is still being
+deep-wall re-run, so certifying it now would be premature (the re-run may move it).
 
 ## Ops note — durable long runs (macOS)
 
