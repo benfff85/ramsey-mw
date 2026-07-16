@@ -65,3 +65,40 @@ with the best-novel cache).
    program throughput at no cost to the all-time best (already banked).
 4. **Parallel basins on burst compute** — the roadmap §3 Vast option, if serial
    patience becomes the bottleneck.
+
+## Deep-wall re-run results (2026-07-13 → ongoing)
+
+Decision-point #1 was executed: re-run the near-best censored basins to the
+≥500-stage criterion, resuming each campaign from its banked floor graph (the
+global processed-hash set prevents base revisits, so a resumed campaign explores
+only genuinely new derived graphs).
+
+| Campaign (basin) | Floor | Re-run wall reached | Result |
+|---|---|---|---|
+| c11 (25,881) | 25,881 | **500 stages** (≈840 across both runs) | **CONFIRMED terminal — no wave** |
+| c13 (25,996) | 25,996 | in progress (resumed 2026-07-15) | pending |
+
+**Key negative result:** c11 was censored at 340 stages, but re-running it to a
+full 500-stage wall found **nothing** — the floor held. So the censoring concern
+is real but re-running a censored basin does **not** reliably surface a hidden
+wave; c11 now looks genuinely terminal, matching c10. This tempers the "all
+banked floors are censored" worry: censored ≠ improvable.
+
+**Strategic read after c11 (updated if c13 also confirms):** six basin floors +
+two deep-wall re-runs, nothing below 25,840. The accumulating evidence is that
+this construction family (Paley(281)+row-opt) under this move class (single/dual
+edge flips) floors at ~25.8–25.9K. More starting points — fresh seeds *or* more
+re-runs — increasingly re-sample the same answer. The highest-value next move is
+a **different move class** (Phase 4 in-process/batched MaxSAT, the one lever with
+proven-unexplored territory), not more basins. Complementary cheap step: exact
+window-certify the confirmed floor graphs (see `windowed-maxsat-investigation.md`
+— 25,840 already locked to |F|=128; 25,881 certification launched 2026-07-15).
+
+## Fleet performance context (why re-runs finished faster than the program)
+
+The worker kernel was optimized mid-program (2026-07-15): the deep-wall re-runs
+run at **~1.4× the pre-2026-07-15 stage rate** (see
+`engine-optimization-review.md`, "Kernel optimization round 2026-07-15"), so a
+500-stage wall verdict now lands in ~9h instead of ~13h. All stage-effort figures
+in this doc are stage counts, not wall-clock, precisely because throughput changed
+during the program.

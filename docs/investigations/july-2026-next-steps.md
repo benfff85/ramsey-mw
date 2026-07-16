@@ -4,11 +4,22 @@
 **Author:** Ben Ferenchak + Claude
 **Supersedes:** `archive/may-2026-next-steps.md` as the live roadmap. Strategic background: `search-status-2026-06-14.md` (read first), `structurally-new-base-investigation.md` (all construction long shots closed through order 461 + all four order-282 Cayley groups), `windowed-maxsat-investigation.md` (~1.1M exact windows, zero escapes).
 
-**Goal unchanged:** a 282-vertex 2-coloring with zero monochromatic K₈ → **R(8,8) ≥ 283**. Best-known 282-graph: **25,840 mono-8 (graph 8644, 2026-06-16)**.
+**Goal unchanged:** a 282-vertex 2-coloring with zero monochromatic K₈ → **R(8,8) ≥ 283**. Best-known 282-graph: **25,840 mono-8 (graph 8644, 2026-06-16)** — still the all-time best; unbeaten by any of the six basins or two deep-wall re-runs since.
 
 ---
 
-## Where things stand (2026-07-02)
+## CURRENT STATE (2026-07-15) — read this before the dated snapshot below
+
+- **Multi-seed basin program: COMPLETE.** Six basin floors (25,840 / 25,881 / 25,996 / 26,185 / 26,385 / 26,677), none below the original 25,840. Full result: `multiseed-basin-program-results.md`.
+- **Deep-wall re-runs (decision #1) in progress.** c11 (25,881) **confirmed terminal** — re-ran a censored basin to a full 500-stage wall, found nothing. c13 (25,996) re-run running now on the M4-Max fleet. M1 stays on campaign 10.
+- **Worker kernel optimized ~1.40×** (`engine-optimization-review.md`, kernel round 2026-07-15); deployed to the M4-Max fleet, ~1.45× live. PGO evaluated and rejected. M1 not yet redeployed.
+- **Floor certification launched** on graph 15491 (25,881); graph 8644 (25,840) already exact-locked to |F|=128 — don't re-do it.
+- **Conventions:** compare campaign effort in **stages, not wall-clock** (throughput changes with compute allocation); refer to campaigns by **id, not opt_N** labels.
+- **Lead strategic item is now §2 (Phase 4 in-process MaxSAT)** — flip-search basins have largely answered their question; the next result needs a bigger move class.
+
+---
+
+## Where things stand (2026-07-02, historical snapshot)
 
 **Fleet topology (since this morning):** local 14 workers + `ramsey-queue-manager-11` run **campaign 11** (multi-seed basin program); the original QM + the remote machine's workers keep **campaign 10** grinding its ~26,0xx plateau (left ACTIVE deliberately — those workers can't be repointed right now). Two campaign-scoped QMs sharing one mw/Redis/MySQL is verified safe.
 
@@ -32,14 +43,16 @@
 - Seed inventory + provenance: `single-flip-check/results/mseed/MANIFEST.md` (5 diverse recount-verified seeds, pairwise Hamming 122–157).
 - **UI multi-campaign support — FIXED & MERGED** (bug diagnosed 2026-07-03: live boxes followed the *first* ACTIVE campaign while charts followed the *highest*, producing a mixed view under >1 ACTIVE campaign). Proper fix shipped as **ramsey-ui PR #16 (merged 2026-07-05)**: per-campaign live sampling — every ACTIVE campaign gets its own campaignId-tagged tick stream, per-campaign baselines, and the whole dashboard (boxes, throughput, best-results) follows the sidebar selection. Sampling is time-sliced (1 sample/campaign/sec into a shared 21,600-slot ring), so slow campaigns get equal datapoints; a slow campaign's chart merely *looks* sparse because most of its samples are 0 u/s between remote batch publishes. Follow-up **PR #17: "Campaign Min" stat card** — the selected campaign's own clique-count floor with an at-best / "+N above min" drift indicator (the basin-wall signal used at every rotation).
 
-### 2. Phase 4 — in-process / batched MaxSAT solver
+### 2. Phase 4 — in-process / batched MaxSAT solver  ← NOW THE LEAD STRATEGIC ITEM (2026-07-15)
 The z3 *subprocess launch* (~0.1–0.15 s/call) is the window ladder's bottleneck (`windowed-maxsat-investigation.md`, Phase 3). Replacing it with an in-process or batched complete solver makes exact windows 5–10× cheaper — enabling |F| = 192/256 rungs and instant exact evaluation of any future candidate base. The cleanest "scalable tooling for the long game" build. (Research crate only, as always.)
+
+**Why this is now the lead item:** the multi-seed basin program is complete (`multiseed-basin-program-results.md`) and the deep-wall re-runs are confirming that single/dual edge-flip search from Paley(281)+row-opt seeds floors at ~25.8–25.9K (c11 re-run: censored basin re-run to a full 500-stage wall found *nothing*). Six basins + two re-runs, none below 25,840. The flip-search move class has largely answered its question; **the remaining leverage is a bigger move class**, and complete windowed MaxSAT is the only tool with proven-unexplored territory. Prerequisite economics just improved from the other direction too: the worker kernel is now ~1.40× faster (`engine-optimization-review.md`, kernel round 2026-07-15), so the flip fleet frees up sooner for whatever's next.
 
 ### 3. Cyclotomic closure through order ~1021
 `cyclotomic_wide`'s row is 512-bit; one constant (`WORDS = 16`) extends it to 1024. Sweep primes 463–1021 (e ≤ 24). Odds ≈ 0 (mono-8 mass grows steeply: Paley 293 → 2.3M, 317 → 8.4M), but the cost is small and it closes the entire classical cyclotomic family "through 1000" permanently. A hit at order p would prove R(8,8) ≥ p+1 — upper bound is 1518, so nothing here is *logically* excluded.
 
-### 4. Exact-certify campaign 11's wall graph
-When c11 is banked, run `wmaxsat_pilot sweep` (|F| = 48, few thousand windows) on its floor graph, as was done for 8644. If the second basin's floor is also exact-locked, the "characteristic floor" claim gets proven-optimum teeth instead of heuristic ones.
+### 4. Exact-certify the confirmed floor graphs — LAUNCHED 2026-07-15
+Campaign 11 is banked (floor 25,881, graph 15491, confirmed terminal at a 500-stage wall). `wmaxsat_pilot sweep` (|F|=48, single core, niced) is **running on 15491** — the never-certified second floor. **Graph 8644 (25,840) is already exact-locked to |F|=128 across ~1.1M windows — do NOT re-certify it** (a redundant re-run was caught and stopped 2026-07-15). If 15491 also locks, the characteristic-floor claim becomes a two-graph proven-optimum result. Details + status: `windowed-maxsat-investigation.md` ("Second-floor certification").
 
 ### 5. Optional — Vast.ai burst to parallelize the basin program
 Instead of serial rotation, rent an EPYC bid instance (per `ramsey-vast-ai` tooling; workers point at this mw/Redis exactly like the remote machine already does) and run basins 12–15 as concurrent campaigns (one QM each — the two-QM pattern generalizes). Compresses ~2 weeks of rotation into ~3 days for a few tens of dollars. Ben's call (costs money). Note: uncommitted local edits to `docker/vast-ai/{vast-manager.py,on-start.sh}` exist — possibly WIP toward this.

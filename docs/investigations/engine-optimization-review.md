@@ -2,7 +2,78 @@
 
 **Date:** 2026-06-12
 **Author:** Ben Ferenchak + Claude
-**Status:** PARTIALLY RESOLVED (status pass 2026-07-02). Where each recommendation landed: **#1** mid-batch stage-death/threshold refresh — never shipped; economics changed again with the best-novel cache (stages now exhaust in ~2–5 min), still a valid small win if worker code is ever touched. **#2** participation ordering — REJECTED by the backtest below (the backtest itself remains this doc's lasting value). **#3** result logging — still OFF; still gates any learned ordering (see `july-2026-next-steps.md` for why it's deprioritized). **#4** incremental CliqueCollection across stages — never shipped. **#6** dials: `CYCLE_PREVENTION_GRAPH_LOOKBACK_COUNT` is now 5000 (far past the suggested 200); `EXHAUSTION_DELAY_MS` still 60000; Dragonfly still on `:latest`. **§7** strategic layer — fully superseded by `search-status-2026-06-14.md` and successors.
+
+---
+
+## Kernel optimization round 2026-07-15 (READ THIS BEFORE ATTEMPTING WORKER PERF WORK)
+
+A profile-driven optimization pass that supersedes several guesses in the June
+review below. **Net result: the worker is ~1.40× faster** (validated), deployed
+to the M4-Max fleet 2026-07-15 (~1.45× measured live on identical deep-wall
+stages; M1 not yet redeployed). What was learned, so it isn't re-litigated:
+
+**Profiling verdict (macOS `sample` on the replay harness, production-tight
+threshold regime): ~99.4% of worker CPU is inside `bron_kerbosch_count_no_x_with_limit`.**
+Per-unit `vec![]` allocation was 0.2%, enumeration mapping ~0.05%, `flip_edges`
+0.1%. So the June-review intuition that per-unit **fixed costs** (the two
+`graph.invert()` calls, Vec allocation) were the lever was **half right**: dual
+adjacency (below) helped because it removed a fixed cost, but past that, the
+kernel *is* the workload — early-abort units still count tens of cliques before
+bailing. A planned "kill the per-unit Vec allocation" change was **measured and
+rejected** (it optimizes 0.2%).
+
+**What shipped (all validated IDENTICAL by full-stage replay — see the harness
+note at the end of this section):**
+1. **Leaf popcount shortcut** (PR #75): at `|R| == k−1`, P is the common
+   neighborhood of R, so each candidate completes exactly one k-clique — one
+   popcount replaces |P| recursions. Alone: **1.08×**.
+2. **Dual adjacency** (PR #77): `Graph` maintains `complement_adjacency` in
+   lockstep; `invert()` becomes an O(1) `mem::swap` instead of an O(n·words)
+   rebuild that ran **twice per work unit**. Cumulative: **1.15×** (this is the
+   fixed-cost win, biggest in the tight-threshold regime).
+3. **Micro-opts** (PR #78 commit 1): `depth` parameter replaces recomputed
+   `r.cardinality()`; **R and X sets dropped entirely** from the counting kernels
+   (R was write-only; X is maximality bookkeeping that all-k-clique counting never
+   reads — duplicate prevention comes from the shrinking candidate set); one
+   popcount per node serves all prunes; destructive `iter_set_bits` replaces
+   `next_set_bit(v+1)` rescans. Cumulative: **1.35×**.
+4. **k−2 level inline** (PR #78 commit 2): at `depth == k−2` every child takes the
+   leaf shortcut, so fold it into an AND+popcount loop — removes the recursion
+   tree's most numerous call layer. Cumulative: **1.40×**.
+
+**PGO: evaluated and REJECTED.** Trained on both regimes, `-Cprofile-use`
+rebuild, full-stage A/B: 543.0s vs 537.4s — a wash (−1%, noise). One small,
+already-inlined, branch-predictable hot function is exactly the case PGO cannot
+improve. **Do not retry PGO** unless the hot code changes shape substantially.
+
+**Config dials shipped same day** (compose): `EXHAUSTION_DELAY_MS` 60000→15000
+(both QMs), `WORK_UNIT_POLL_FREQ` 5000→1000 (workers) — per-stage-tail overhead,
+now a larger fraction of the faster ~3.6-min sweeps.
+
+**Only remaining kernel candidate:** red-edge sharing (consecutive units share the
+red edge, so its blue-side contribution could be computed once per red edge —
+potentially ~2× on kernel work) — but it carries real monochromatic-interaction
+complexity and needs a design pass; not attempted yet.
+
+**Validation harness (reusable — use it for ANY future kernel/graph change):**
+`single-flip-check/src/bin/kernel_equiv_replay.rs` replays every work unit of a
+real already-processed stage (graph 15491, 392,495,519 units) through the new
+code and a frozen byte-for-byte copy of the **entire old stack** (old Graph + old
+kernel), asserting identical `(exceeded, count)` on every unit. Six rounds of
+changes, all byte-identical, hashes stable. `cargo bin` = the reference for
+"did I break counting."
+
+Deploy playbook (M4-Max fleet, established pattern): local `docker build` →
+`docker compose -p ramsey up -d --no-deps --force-recreate ramsey-worker-rust` at
+a stage boundary; then merge to develop so CI republishes Hub `:develop`. **The M1
+runs a separate pull and lags** — recreate its workers to pick up kernel gains.
+Repo hygiene: **never `git add -A` in `ramsey-worker-rust`** — it sweeps in the
+untracked `vreduce_analysis.rs` experiment (happened 2026-07-15, fixed in 339ed83);
+stage files explicitly.
+
+---
+
+**Status:** PARTIALLY RESOLVED (status pass 2026-07-02). Where each recommendation landed: **#1** mid-batch stage-death/threshold refresh — never shipped; economics changed again with the best-novel cache (stages now exhaust in ~2–5 min), still a valid small win if worker code is ever touched. **#2** participation ordering — REJECTED by the backtest below (the backtest itself remains this doc's lasting value). **#3** result logging — still OFF; still gates any learned ordering (see `july-2026-next-steps.md` for why it's deprioritized). **#4** incremental CliqueCollection across stages — never shipped. **#6** dials: `CYCLE_PREVENTION_GRAPH_LOOKBACK_COUNT` is now 5000 (far past the suggested 200); `EXHAUSTION_DELAY_MS` now 15000 and `WORK_UNIT_POLL_FREQ` now 1000 (both shipped 2026-07-15, see the kernel round section above); Dragonfly still on `:latest`. **§7** strategic layer — fully superseded by `search-status-2026-06-14.md` and successors.
 
 **Related documents:**
 - `archive/may-2026-next-steps.md` — strategic roadmap of the era (archived; Tier structure referenced below)

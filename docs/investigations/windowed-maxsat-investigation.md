@@ -78,6 +78,24 @@ The implication is the same as the 06-19 "honest framing," now hardened: **bigge
 
 ---
 
+## Second-floor certification — graph 15491 (25,881), launched 2026-07-15
+
+The multi-seed basin program (`multiseed-basin-program-results.md`) produced a
+second confirmed deep-wall floor: **campaign 11, graph 15491 = 25,881 mono-8**,
+which did **not** exist when Phase 1 certified graph 8644. It is being window-
+certified the same way (`sweep`, |F|=48, minimize mono-8, single shard ≈ 1 core,
+niced, alongside the live fleet). **Do not re-certify graph 8644 (25,840)** — it
+is already exact-locked to |F|=128 across ~1.1M windows (Phase 1 + high-volume
+runs above); re-running it is wasted compute. 15491 is the open target.
+
+Expected outcome: another exact-lock (0 escapes), which would make "≥25.8K is a
+characteristic floor of Paley(281)+row-opt under complete windowed local search" a
+two-graph result rather than one. A saved hit (`WMAXSAT_SAVE=…CERT_ESCAPE_25881.txt`)
+below 25,881 would be a genuine escape and is recount-confirmed before trust.
+Status: in progress. Campaign 13's floor (25,996, graph 17768) is a later
+candidate but is still being deep-wall re-run, so certifying it now would be
+premature (the re-run may move it).
+
 ## Ops note — durable long runs (macOS)
 
 Long local sweeps **must** be launched via `( WMAXSAT_SAVE=… nohup nice -n 5 ./target/release/wmaxsat_pilot base-sweep … > log 2>&1 & )` — the `( … & )` subshell reparents the process to **init/PID 1**, out of the IDE/Claude process tree, so it survives IDE/terminal/Claude restarts (the same reason the Docker workers survive). Plain background launch or `nohup` inside a waiting wrapper does **not** survive — the restart tree-kills the subtree and `nohup` only blocks SIGHUP. macOS has no `setsid`; foreground `sleep` is blocked in the Claude Code environment (use plain `ps`/log checks). Detection of completion (fully detached → no harness notification): count `done:` lines across the per-shard logs (== shard count).
