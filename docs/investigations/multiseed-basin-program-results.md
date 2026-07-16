@@ -73,16 +73,28 @@ Decision-point #1 was executed: re-run the near-best censored basins to the
 global processed-hash set prevents base revisits, so a resumed campaign explores
 only genuinely new derived graphs).
 
-| Campaign (basin) | Floor | Re-run wall reached | Result |
+| Campaign (basin) | Banked floor | Re-run result | Wall since new floor |
 |---|---|---|---|
-| c11 (25,881) | 25,881 | **500 stages** (≈840 across both runs) | **CONFIRMED terminal — no wave** |
-| c13 (25,996) | 25,996 | in progress (resumed 2026-07-15) | pending |
+| c11 (25,881) | 25,881 | **no improvement — terminal** | 500 stages (≈840 across both runs) |
+| c13 (25,996) | 25,996 | **improved to 25,932** (−64, at re-run stage 113; graph 21856) | 508 stages — **CONFIRMED** |
 
-**Key negative result:** c11 was censored at 340 stages, but re-running it to a
-full 500-stage wall found **nothing** — the floor held. So the censoring concern
-is real but re-running a censored basin does **not** reliably surface a hidden
-wave; c11 now looks genuinely terminal, matching c10. This tempers the "all
-banked floors are censored" worry: censored ≠ improvable.
+**The two re-runs landed opposite — and that's the finding.** c11 was censored at
+340 stages; re-running to a full 500-stage wall found **nothing** (terminal, like
+c10). c13 was censored at 283 stages; re-running **cashed in the censoring** —
+it dropped 25,996 → 25,932 early (stage 113), then walled for 508 stages. So
+censoring is real and *sometimes* pays (c13) and *sometimes* doesn't (c11):
+**censored ≠ reliably improvable, but ≠ certainly locked either.**
+
+**The load-bearing result, though:** even after cashing in the most-censored
+near-best basin, **25,932 is still above 25,840.** Three near-best basins are now
+deep-walled — 25,840 (c10), 25,881 (c11), 25,932 (c13) — and **none reaches the
+all-time best.** This *strengthens* the conclusion that 25,840 is a genuine deep
+floor of Paley(281)+row-opt under single/dual edge flips: re-running censored
+basins to deep walls moves the near-best floors around within ~0.4% but never
+below the original. The remaining censored basins (c14 26,185, c12 26,677) are
+far enough above 25,840 that even a c13-sized (−64) or c13-original-sized (−699)
+wave wouldn't reach it — so further re-runs have low expected value. Move-class
+change (Phase 4) remains the lead.
 
 **Strategic read after c11 (updated if c13 also confirms):** six basin floors +
 two deep-wall re-runs, nothing below 25,840. The accumulating evidence is that
