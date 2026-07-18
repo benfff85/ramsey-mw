@@ -9,6 +9,7 @@ Goal throughout: a 282-vertex 2-coloring with zero monochromatic K₈ ⇒ **R(8,
 | Doc | What it is |
 |---|---|
 | `july-2026-next-steps.md` | **Live roadmap** — multi-seed basin program (campaigns 11+), ranked queue |
+| `fleet-abstraction-plan.md` | **PLANNED (Phase 1)** — replace `RAMSEY_CAMPAIGN_ID` env-pinning with a DB `fleet` table (platform→campaign); single campaign-agnostic QM; remove `campaign.status`. Repointing becomes a DB update, not a redeploy. Phase 2 (perturbation/ILS) builds on it. |
 | `search-status-2026-06-14.md` | Consolidated June findings hub; do-not-retry list; supersedes older strategy docs |
 | `structurally-new-base-investigation.md` | All construction families certified empty: cyclotomic (every prime order ≤ **1021**; p ≡ 3 mod 4 closed by parity theorem), Seidel switching, all four order-282 Cayley groups |
 | `windowed-maxsat-investigation.md` | Exact (complete-solver) windowed MaxSAT: ~1.1M proven-optimal windows, zero escapes, |F| up to 128 |
