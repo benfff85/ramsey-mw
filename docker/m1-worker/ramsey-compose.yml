@@ -6,7 +6,7 @@ services:
     image: benferenchak/ramsey-worker-rust:develop
     environment:
       RAMSEY_API_URL: http://ramsey-mw.setminusx.cloud/api/ramsey
-      RAMSEY_CAMPAIGN_ID: 10   # the ACTIVE 282v remote line (NOT campaign 1, which is inactive)
+      RAMSEY_FLEET: m1   # fleet abstraction: target set in the DB `fleet` table (repoint via PUT /fleets/m1 from anywhere — no SSH needed)
       REDIS_HOST: www.setminusx.cloud
       REDIS_PORT: 36002
       WORK_UNIT_FETCH_COUNT: 250000
