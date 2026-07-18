@@ -63,13 +63,21 @@ Repoint = `UPDATE fleet SET campaign_id=? WHERE platform=?` (or the PUT endpoint
 ```sql
 CREATE TABLE fleet (
   platform      VARCHAR(32)  NOT NULL PRIMARY KEY,   -- 'm4-max' | 'm1' | 'vast-ai' (extensible)
-  campaign_id   INT          NULL,                   -- NULL = idle (workers poll & wait)
+  campaign_id   INT          NULL,                   -- NULL = unmapped (idle, no target)
+  status        VARCHAR(16)  NOT NULL DEFAULT 'RUNNING',  -- 'RUNNING' | 'PAUSED'
   updated_date  DATETIME(6)  NULL,
   note          VARCHAR(255) NULL,                   -- free text, e.g. 'benchmark' / 'ILS run 3'
   CONSTRAINT fk_fleet_campaign FOREIGN KEY (campaign_id) REFERENCES campaign(campaign_id)
 );
 ```
 Seed with current reality at migration time (see §7 / §13 for the values live on the day of rollout).
+
+### Fleet `status` — the pause switch (distinct from unmapping)
+Two ways to stop a fleet, for different intents:
+- **PAUSE** (`status='PAUSED'`) — stop the workers but **keep** `campaign_id`. Use for "stop burning compute for now / maintenance / hold this fleet" without forgetting what it was on. Resume returns it to exactly where it was.
+- **UNMAP** (`campaign_id=NULL`) — no target at all (retire the assignment).
+
+The resolve endpoint (§4.1) returns **204 whenever `status='PAUSED'`**, regardless of `campaign_id`, so paused workers idle-poll and resume instantly on un-pause. `RUNNING` + a mapped campaign with an ACTIVE stage is the only case that returns a stage. This gives a clean fleet-wide stop/start that the Phase-2 ILS controller also uses (e.g., pause a fleet between a wall and the next kick).
 
 ### `campaign.status` removal
 - `campaign` currently has a `status ENUM('ACTIVE','INACTIVE')`. **Drop it** — but only in the *last* migration step (§7 Phase 1d), after all code references are gone.
@@ -92,18 +100,20 @@ All under the existing `/api/ramsey` base.
 ```
 GET /api/ramsey/fleets/{platform}/active-stage
  200 → StageDto  { stageId, campaignId, baseGraphId, workEnumerationStrategy, ... }   (same shape workers get today)
- 204 → (no body)  fleet unmapped (campaign_id NULL) OR mapped campaign has no ACTIVE stage → worker idles/polls
+ 204 → (no body)  status=PAUSED, OR campaign_id NULL, OR mapped campaign has no ACTIVE stage → worker idles/polls
  404 → unknown platform
 ```
-Resolution: `fleet.platform → campaign_id → SELECT stage WHERE campaign_id=? AND status='ACTIVE' LIMIT 1`. Return the same StageDto the worker already consumes so nothing downstream changes.
+Resolution: if `status='PAUSED'` → 204. Else `fleet.platform → campaign_id → SELECT stage WHERE campaign_id=? AND status='ACTIVE' LIMIT 1`. Return the same StageDto the worker already consumes so nothing downstream changes.
 
-### 4.2 Repoint / read the mapping (ops + Phase-2 controller)
+### 4.2 Repoint / pause / read the mapping (ops + Phase-2 controller)
 ```
-GET  /api/ramsey/fleets                       → [ {platform, campaignId, updatedDate, note}, ... ]
-GET  /api/ramsey/fleets/{platform}            → {platform, campaignId, updatedDate, note}
-PUT  /api/ramsey/fleets/{platform}            body {campaignId: <int|null>, note?: <str>}  → 200 updated row
+GET  /api/ramsey/fleets                       → [ {platform, campaignId, status, updatedDate, note}, ... ]
+GET  /api/ramsey/fleets/{platform}            → {platform, campaignId, status, updatedDate, note}
+PUT  /api/ramsey/fleets/{platform}            body {campaignId?: <int|null>, status?: 'RUNNING'|'PAUSED', note?: <str>}  → 200 updated row
+POST /api/ramsey/fleets/{platform}/pause      → 200  (convenience: sets status=PAUSED, keeps campaign_id)
+POST /api/ramsey/fleets/{platform}/resume     → 200  (convenience: sets status=RUNNING)
 ```
-`PUT` upserts the mapping and sets `updated_date=now`. `campaignId=null` idles the fleet. This is the single "move a fleet" primitive used by both a human (curl) and the Phase-2 ILS controller.
+`PUT` upserts and sets `updated_date=now`; only the supplied fields change (partial update). `campaignId=null` unmaps; `status=PAUSED` holds the target but idles workers. These are the "move / pause / resume a fleet" primitives used by both a human (curl) and the Phase-2 ILS controller.
 
 ### 4.3 Bank / retire a campaign (replaces "set campaign INACTIVE")
 Banking is now two independent actions, both stage/fleet-level (no campaign.status):
@@ -209,6 +219,7 @@ The system is live and must not drop work. Each phase is independently deployabl
 1. **Fleet repointed mid-batch** — worker finishes old claimed range (valid), moves next cycle. Safe.
 2. **Two fleets on one campaign** (e.g., M4 + M1 both on campaign X) — both resolve to the same ACTIVE stage, claim from the same Redis counter → additive throughput. Explicitly supported (it's what we do manually today).
 3. **Fleet points at a campaign with no ACTIVE stage** (just deactivated) → 204 → worker idles. Resumes when repointed or a stage appears.
+3b. **Paused fleet** (`status=PAUSED`) → 204 for all its workers → they idle-poll; on resume they pick the mapped campaign's active stage back up within one cycle. Pause preserves `campaign_id` (unlike unmap).
 4. **QM manages a fleet-less campaign** — sits (claim-based exhaustion never fires without workers). Harmless; deactivate the stage to fully retire.
 5. **`processed_graph_hashes` global set** — unchanged; SHA-256 exact-graph identity, safe across concurrently-managed campaigns.
 6. **Dropping `campaign.status` breaks the UI** — mitigated by §6d; gate the column drop on the UI change.
@@ -247,8 +258,8 @@ INSERT INTO fleet (platform, campaign_id, updated_date, note) VALUES
 
 ## 14. Definition of done (Phase 1)
 
-- [ ] `fleet` table live; `GET/PUT /fleets` + `GET /fleets/{p}/active-stage` working.
-- [ ] All workers (M4, M1, Vast template) run on `RAMSEY_FLEET`; **a fleet repoint via DB/API moves them with no redeploy** (proven live, incl. the M1 without SSH).
+- [ ] `fleet` table live; `GET/PUT /fleets` + `GET /fleets/{p}/active-stage` + pause/resume working.
+- [ ] All workers (M4, M1, Vast template) run on `RAMSEY_FLEET`; **a fleet repoint via DB/API moves them with no redeploy** (proven live, incl. the M1 without SSH); **pause/resume stops and restarts a fleet with no redeploy.**
 - [ ] One campaign-agnostic QM manages all live campaigns; `ramsey-queue-manager-mseed` retired.
 - [ ] `campaign.status` gone from code and schema; UI's "active campaign" derives from active-stage/fleet.
 - [ ] Docs updated (this file → status IMPLEMENTED; README index; memory `project` note). Rotations/repoints henceforth are DB updates.
