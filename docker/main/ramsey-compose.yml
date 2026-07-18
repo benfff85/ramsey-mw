@@ -96,7 +96,7 @@ services:
       - ramsey-net
     environment:
       SPRING_PROFILES_ACTIVE: dev
-      RAMSEY_CAMPAIGN_ID: 13
+      RAMSEY_CAMPAIGN_ID: 16
       REDIS_HOST: redis
       REDIS_PORT: 6379
       WORK_UNIT_ANALYSIS_TYPE: TARGETED
@@ -129,7 +129,7 @@ services:
       - ramsey-net
     environment:
       RAMSEY_API_URL: http://ramsey-mw:8080/api/ramsey
-      RAMSEY_CAMPAIGN_ID: 13  # deep-wall re-run: campaign 13 resumed from floor 25,996 (campaign 10 stays live for remote workers)
+      RAMSEY_CAMPAIGN_ID: 16  # extra fresh seed opt_3 (28,153); campaign 10 stays live for remote workers
       REDIS_HOST: redis
       REDIS_PORT: 6379
       WORK_UNIT_FETCH_COUNT: 250000
