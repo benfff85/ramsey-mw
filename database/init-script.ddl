@@ -53,6 +53,16 @@ CREATE TABLE `ramsey-dev`.`campaign` (
     PRIMARY KEY (`campaign_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+CREATE TABLE `ramsey-dev`.`fleet` (
+    `platform` varchar(32) NOT NULL,
+    `campaign_id` int DEFAULT NULL,
+    `status` enum ('RUNNING', 'PAUSED') NOT NULL DEFAULT 'RUNNING',
+    `note` varchar(255) DEFAULT NULL,
+    `updated_date` datetime(6) DEFAULT NULL,
+    PRIMARY KEY (`platform`),
+    CONSTRAINT `fk_fleet_campaign` FOREIGN KEY (`campaign_id`) REFERENCES `ramsey-dev`.`campaign` (`campaign_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 CREATE TABLE `ramsey-dev`.work_result (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     base_graph_id INT,
@@ -118,6 +128,16 @@ CREATE TABLE `ramsey-test`.`campaign` (
                                          `total_pairs` bigint DEFAULT NULL,
                                          PRIMARY KEY (`campaign_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `ramsey-test`.`fleet` (
+    `platform` varchar(32) NOT NULL,
+    `campaign_id` int DEFAULT NULL,
+    `status` enum ('RUNNING', 'PAUSED') NOT NULL DEFAULT 'RUNNING',
+    `note` varchar(255) DEFAULT NULL,
+    `updated_date` datetime(6) DEFAULT NULL,
+    PRIMARY KEY (`platform`),
+    CONSTRAINT `fk_fleet_campaign_test` FOREIGN KEY (`campaign_id`) REFERENCES `ramsey-test`.`campaign` (`campaign_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE DATABASE `ramsey` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
