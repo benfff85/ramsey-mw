@@ -6,14 +6,14 @@ services:
     image: benferenchak/ramsey-worker-rust:develop
     environment:
       RAMSEY_API_URL: http://ramsey-mw.setminusx.cloud/api/ramsey
-      RAMSEY_CAMPAIGN_ID: 1
+      RAMSEY_CAMPAIGN_ID: 10   # the ACTIVE 282v remote line (NOT campaign 1, which is inactive)
       REDIS_HOST: www.setminusx.cloud
       REDIS_PORT: 36002
       WORK_UNIT_FETCH_COUNT: 250000
       WORK_UNIT_PUBLISH_COUNT: 10000
-      WORK_UNIT_POLL_FREQ: 5000
+      WORK_UNIT_POLL_FREQ: 1000
       PUBLISH_RESULTS: "false"
-      TOP_RESULTS_COUNT: 10
+      TOP_RESULTS_COUNT: 50    # must match the campaign-10 QM (main compose)
       WORKER_COUNT: 1
     logging:
       driver: loki
