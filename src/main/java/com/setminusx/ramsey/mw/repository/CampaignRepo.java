@@ -11,15 +11,15 @@ import java.util.List;
 @Repository
 public interface CampaignRepo extends JpaRepository<Campaign, Integer> {
 
+    // status is no longer a stored column (derived in CampaignService); filtering by
+    // status happens after derivation there.
     @Query("SELECT c FROM Campaign c WHERE " +
             "(:subgraphSize IS NULL OR c.subgraphSize = :subgraphSize) AND " +
             "(:vertexCount IS NULL OR c.vertexCount = :vertexCount) AND " +
-            "(:status IS NULL OR c.status = :status) AND " +
             "(:strategy IS NULL OR c.strategy = :strategy)")
-    List<Campaign> findBySubgraphSizeAndVertexCountAndStatusAndStrategy(
+    List<Campaign> findBySubgraphSizeAndVertexCountAndStrategy(
             @Param("subgraphSize") Integer subgraphSize,
             @Param("vertexCount") Integer vertexCount,
-            @Param("status") Campaign.Status status,
             @Param("strategy") Campaign.Strategy strategy);
 
 }

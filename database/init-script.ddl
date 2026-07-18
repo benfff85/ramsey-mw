@@ -1,3 +1,11 @@
+-- Fleet abstraction (2026-07-18): the campaign.status column was removed. Campaign
+-- liveness is now DERIVED (ACTIVE iff the campaign has an ACTIVE stage; computed in
+-- CampaignService), and worker targeting comes from the fleet table, not campaign
+-- status. Migration for an EXISTING database (run once, after deploying the code
+-- that no longer maps the column):
+--     ALTER TABLE `ramsey-dev`.`campaign` DROP COLUMN `status`;
+-- See docs/investigations/fleet-abstraction-plan.md.
+
 CREATE DATABASE `ramsey-dev` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 
 CREATE USER 'ramsey-user-dev'@'%' IDENTIFIED BY '<password>';
@@ -44,7 +52,6 @@ CREATE TABLE `ramsey-dev`.`stage` (
 CREATE TABLE `ramsey-dev`.`campaign` (
     `campaign_id` int NOT NULL AUTO_INCREMENT,
     `created_date` datetime(6) DEFAULT NULL,
-    `status` enum ('ACTIVE', 'INACTIVE') DEFAULT NULL,
     `strategy` enum ('COMPREHENSIVE_EDGE_PAIR_MUTATION') DEFAULT NULL,
     `subgraph_size` int DEFAULT NULL,
     `updated_date` datetime(6) DEFAULT NULL,
@@ -110,7 +117,6 @@ CREATE TABLE `ramsey-test`.`stage` (
 CREATE TABLE `ramsey-test`.`campaign` (
                                          `campaign_id` int NOT NULL AUTO_INCREMENT,
                                          `created_date` datetime(6) DEFAULT NULL,
-                                         `status` enum ('ACTIVE', 'INACTIVE') DEFAULT NULL,
                                          `strategy` enum ('COMPREHENSIVE_EDGE_PAIR_MUTATION') DEFAULT NULL,
                                          `subgraph_size` int DEFAULT NULL,
                                          `updated_date` datetime(6) DEFAULT NULL,
@@ -166,7 +172,6 @@ CREATE TABLE `ramsey`.`stage` (
 CREATE TABLE `ramsey`.`campaign` (
                                          `campaign_id` int NOT NULL AUTO_INCREMENT,
                                          `created_date` datetime(6) DEFAULT NULL,
-                                         `status` enum ('ACTIVE', 'INACTIVE') DEFAULT NULL,
                                          `strategy` enum ('COMPREHENSIVE_EDGE_PAIR_MUTATION') DEFAULT NULL,
                                          `subgraph_size` int DEFAULT NULL,
                                          `updated_date` datetime(6) DEFAULT NULL,

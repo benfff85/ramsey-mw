@@ -19,7 +19,12 @@ public class Campaign {
     @Enumerated(EnumType.STRING)
     private Campaign.Strategy strategy;
 
-    @Enumerated(EnumType.STRING)
+    // DERIVED (not stored): ACTIVE iff the campaign has an ACTIVE stage. Populated
+    // by CampaignService. The stored campaign.status column was removed with the
+    // fleet abstraction — liveness now derives from stage state (targeting from the
+    // fleet mapping). Kept as a read-only reporting flag so the API/UI contract is
+    // unchanged. See docs/investigations/fleet-abstraction-plan.md.
+    @Transient
     private Campaign.Status status;
 
     private LocalDateTime createdDate;
