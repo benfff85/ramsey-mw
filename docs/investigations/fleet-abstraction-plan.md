@@ -2,7 +2,13 @@
 
 **Date:** 2026-07-18
 **Author:** Ben Ferenchak + Claude
-**Status:** PLANNED — not yet implemented. This is the spec of record; a future session should be able to implement Phase 1 from this doc alone.
+**Status:** IMPLEMENTED (2026-07-18) across four PRs, **not yet merged/deployed** — this remains the spec of record. Code is on feature branches off develop:
+- **1a** (schema + fleet API): ramsey-mw **#165** — `fleet` table, resolve/repoint/pause endpoints, 8 tests.
+- **1b** (worker `RAMSEY_FLEET`): ramsey-worker-rust **#82** — resolve-per-cycle + campaign fallback, 89 tests.
+- **1c** (single QM): ramsey-queue-manager **#76** — campaign-agnostic loops, retire mseed QM, 13 tests.
+- **1d** (drop stored `campaign.status`): ramsey-mw **#166** — status becomes DERIVED (`@Transient`, ACTIVE iff has an active stage). **This avoided the UI change §6d anticipated** — keeping the API's `status` field (now computed) means the BFF resolver and the whole ramsey-ui dashboard are untouched. 3 tests.
+
+Deploy order per §9 (1a → 1b → 1c → 1d); each PR's body has the per-phase deploy step. Below is the original spec.
 **Two-phase context:** Phase 1 = the **fleet abstraction** (this doc). Phase 2 = **perturbation / Iterated Local Search** (a separate doc), which builds on the fleet targeting this delivers. Phase 2 is out of scope here except the forward-pointer in §11.
 
 **Decisions locked by Ben (do not re-litigate):**
