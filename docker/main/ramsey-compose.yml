@@ -71,6 +71,12 @@ services:
       CYCLE_PREVENTION_GRAPH_LOOKBACK_COUNT: 5000
       STAGE_PROGRESSION_FREQUENCY_MS: 1000
       IMMEDIATELY_PROGRESS_STAGE_ON_IMPROVEMENT: "true"
+      # Phase 2 perturbation (ILS kick): when a campaign is 500 stages past its
+      # min, restart from a 30-red/30-blue kick of its incumbent-best graph.
+      PERTURBATION_ENABLED: "true"
+      PERTURBATION_WALL_STAGES: 500
+      PERTURBATION_EDGE_PAIRS: 30
+      PERTURBATION_CHECK_FREQUENCY_MS: 60000
       LOGGING_LEVEL_ROOT: INFO
     depends_on:
       - ramsey-mw
