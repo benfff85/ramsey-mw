@@ -17,4 +17,5 @@ public class ProgressionDTO {
     private Integer cliqueCount;
     private LocalDateTime createdDate;
     private Stage.Status status;
+    private String details; // e.g. "PERTURBATION kick from graph ..." — lets consumers identify kick stages
 }
