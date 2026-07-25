@@ -7,11 +7,13 @@ spring:
     init:
       mode: ${SQL_INIT_MODE:never} # Runs data.sql for inserts [never, always]
   datasource:
-    url: jdbc:mysql://ramsey-db-mysql:3306/ramsey-dev?autoReconnect=true&useSSL=false&rewriteBatchedStatements=true&allowPublicKeyRetrieval=true&cachePrepStmts=true&prepStmtCacheSize=250&prepStmtCacheSqlLimit=2048&useServerPrepStmts=true
+    url: jdbc:mysql://ramsey-db-mysql:3306/ramsey-dev?autoReconnect=true&useSSL=false&rewriteBatchedStatements=true&allowPublicKeyRetrieval=true&cachePrepStmts=true&prepStmtCacheSize=250&prepStmtCacheSqlLimit=2048&useServerPrepStmts=true&useLocalSessionState=true&cacheServerConfiguration=true&maintainTimeStats=false
     username: ${DB_USER}
     password: ${DB_PASS}
     hikari:
-      maximum-pool-size: 20
+      # Max_used_connections reached 21 against a ceiling of 20, i.e. the pool has saturated and
+      # queued at least once. Server max_connections is 151, so there is ample room.
+      maximum-pool-size: 30
       minimum-idle: 5
       idle-timeout: 300000
       connection-timeout: 30000
