@@ -67,6 +67,7 @@ services:
       WORK_UNIT_ANALYSIS_TYPE: TARGETED
       WORK_ENUMERATION_STRATEGY: "DUAL_EDGE_CARDINALITY_WITH_SINGLES"  # singles census (majority color) + counter-based pair sweep
       TOP_RESULTS_COUNT: 50
+      STAGE_ADOPT_SETTLE_MS: 500      # pub/sub-armed settle window; 0 = pure polling
       EXHAUSTION_DELAY_MS: 15000
       CYCLE_PREVENTION_GRAPH_LOOKBACK_COUNT: 5000
       STAGE_PROGRESSION_FREQUENCY_MS: 1000
