@@ -108,7 +108,11 @@ services:
       RAMSEY_FLEET: m4-max  # fleet abstraction: target set in the DB `fleet` table (repoint via PUT /fleets/m4-max, no redeploy)
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      WORK_UNIT_FETCH_COUNT: 2500
+      # Raised from 2500 with the hoisted kernel: a unit now costs ~0.26us, so 2500 units was
+      # ~0.6ms of work behind a ~20ms fixed cycle cost (the per-cycle fleet active-stage HTTP
+      # call), leaving the fleet 97% idle on overhead. 50k units is ~13ms of work per cycle,
+      # and still bounds how long a worker can go without noticing a stage change.
+      WORK_UNIT_FETCH_COUNT: 50000
       WORK_UNIT_PUBLISH_COUNT: 10000
       WORK_UNIT_POLL_FREQ: 1000
       PUBLISH_RESULTS: "false"
