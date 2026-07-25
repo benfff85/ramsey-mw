@@ -117,4 +117,83 @@ class FleetServiceTest {
         assertEquals("vast-ai", created.getPlatform());
         assertEquals(10, created.getCampaignId());
     }
+
+    // ---------- active-stage caching (the fleet hot path) ----------
+
+    @Test
+    void resolveActiveStage_isCachedWithinTheTtl() {
+        when(fleetRepo.findById("m4-max")).thenReturn(Optional.of(fleet(10, Fleet.Status.RUNNING)));
+        when(stageRepo.findByCampaignIdAndStatus(10, Stage.Status.ACTIVE))
+                .thenReturn(List.of(activeStage(10)));
+
+        for (int i = 0; i < 25; i++) {
+            assertEquals(999, service.resolveActiveStage("m4-max").orElseThrow().getStageId());
+        }
+        // Every worker calls this once per cycle; it must not be one DB round trip per call.
+        verify(stageRepo, times(1)).findByCampaignIdAndStatus(10, Stage.Status.ACTIVE);
+        verify(fleetRepo, times(1)).findById("m4-max");
+    }
+
+    /** An idle fleet must be cached too, or a paused fleet still hammers the DB every cycle. */
+    @Test
+    void resolveActiveStage_cachesTheEmptyResult() {
+        when(fleetRepo.findById("m1")).thenReturn(Optional.of(fleet(10, Fleet.Status.PAUSED)));
+
+        for (int i = 0; i < 10; i++) {
+            assertTrue(service.resolveActiveStage("m1").isEmpty());
+        }
+        verify(fleetRepo, times(1)).findById("m1");
+        verifyNoInteractions(stageRepo);
+    }
+
+    /** Pausing must take effect on the next poll, not after the TTL. */
+    @Test
+    void pause_evictsImmediately() {
+        when(fleetRepo.findById("m4-max"))
+                .thenReturn(Optional.of(fleet(10, Fleet.Status.RUNNING)));
+        when(stageRepo.findByCampaignIdAndStatus(10, Stage.Status.ACTIVE))
+                .thenReturn(List.of(activeStage(10)));
+        assertTrue(service.resolveActiveStage("m4-max").isPresent());
+
+        Fleet paused = fleet(10, Fleet.Status.PAUSED);
+        when(fleetRepo.findById("m4-max")).thenReturn(Optional.of(paused));
+        when(fleetRepo.save(any(Fleet.class))).thenReturn(paused);
+        service.setStatus("m4-max", Fleet.Status.PAUSED);
+
+        assertTrue(service.resolveActiveStage("m4-max").isEmpty(),
+                "pause must be visible on the very next resolve");
+    }
+
+    /** Repointing a fleet to another campaign must take effect immediately too. */
+    @Test
+    void update_evictsImmediately() {
+        when(fleetRepo.findById("m4-max"))
+                .thenReturn(Optional.of(fleet(10, Fleet.Status.RUNNING)));
+        when(stageRepo.findByCampaignIdAndStatus(10, Stage.Status.ACTIVE))
+                .thenReturn(List.of(activeStage(10)));
+        assertEquals(10, service.resolveActiveStage("m4-max").orElseThrow().getCampaignId());
+
+        Fleet repointed = fleet(11, Fleet.Status.RUNNING);
+        when(fleetRepo.findById("m4-max")).thenReturn(Optional.of(repointed));
+        when(fleetRepo.save(any(Fleet.class))).thenReturn(repointed);
+        when(stageRepo.findByCampaignIdAndStatus(11, Stage.Status.ACTIVE))
+                .thenReturn(List.of(activeStage(11)));
+        FleetUpdateRequest req = new FleetUpdateRequest();
+        req.setCampaignId(11);
+        service.update("m4-max", req);
+
+        assertEquals(11, service.resolveActiveStage("m4-max").orElseThrow().getCampaignId());
+    }
+
+    /** The cache must not leak across fleets. */
+    @Test
+    void cacheIsPerPlatform() {
+        when(fleetRepo.findById("m4-max")).thenReturn(Optional.of(fleet(10, Fleet.Status.RUNNING)));
+        when(stageRepo.findByCampaignIdAndStatus(10, Stage.Status.ACTIVE))
+                .thenReturn(List.of(activeStage(10)));
+        when(fleetRepo.findById("m1")).thenReturn(Optional.of(fleet(10, Fleet.Status.PAUSED)));
+
+        assertTrue(service.resolveActiveStage("m4-max").isPresent());
+        assertTrue(service.resolveActiveStage("m1").isEmpty());
+    }
 }

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
@@ -44,12 +45,18 @@ public class FleetController {
      */
     @GetMapping("/{platform}/active-stage")
     public ResponseEntity<Stage> activeStage(@PathVariable String platform) {
+        // Resolve FIRST: it is cached, so the hot path (a running fleet, hit once per work cycle
+        // by every worker) costs no database round trip at all. The existence check is only
+        // needed to tell an unknown platform (404) from an idle one (204), which is exactly the
+        // case where the resolution came back empty — so it stays off the hot path.
+        Optional<Stage> stage = fleetService.resolveActiveStage(platform);
+        if (stage.isPresent()) {
+            return ResponseEntity.ok(stage.get());
+        }
         if (fleetService.get(platform).isEmpty()) {
             throw new ResponseStatusException(NOT_FOUND, "Fleet not found: " + platform);
         }
-        return fleetService.resolveActiveStage(platform)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.noContent().build());
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{platform}")
