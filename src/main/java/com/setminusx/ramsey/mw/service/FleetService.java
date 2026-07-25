@@ -20,11 +20,17 @@ public class FleetService {
      * How long a resolved active stage may be served from memory.
      *
      * {@link #resolveActiveStage} is the fleet's hot path — every worker calls it once per work
-     * cycle, so it runs tens of times a second and each call is two DB round trips. The answer
-     * only changes when a stage advances (seconds apart) or an operator repoints a fleet, and the
-     * latter evicts explicitly, so a very short TTL removes almost all of that load while bounding
-     * how long a worker can be handed a stage that has just been superseded. Kept well under a
-     * worker's batch duration so it is never the dominant source of staleness.
+     * cycle, so it runs tens of times a second. The answer only changes when a stage advances or
+     * an operator repoints a fleet, and the latter evicts explicitly, so a very short TTL removes
+     * almost all of that load while bounding how long a worker can be handed a stage that has just
+     * been superseded.
+     *
+     * Only a RESOLVED stage is cached. An empty answer is deliberately never cached: a stage
+     * advance briefly leaves a campaign with no ACTIVE stage, and a worker that sees that gap
+     * treats the fleet as paused and drops its cached graph and hoist tables — which costs a full
+     * rebuild. During a post-kick descent stages turn over faster than this TTL, so caching the
+     * gap would stretch a millisecond-wide race into a quarter-second outage. Re-reading is cheap
+     * now that the stage table is indexed (0.135ms).
      */
     private static final long ACTIVE_STAGE_CACHE_MILLIS = 250;
 
@@ -62,8 +68,12 @@ public class FleetService {
             return cached.stage();
         }
         Optional<Stage> resolved = resolveActiveStageUncached(platform);
-        activeStageCache.put(platform, new CachedStage(
-                resolved, System.nanoTime() + ACTIVE_STAGE_CACHE_MILLIS * 1_000_000L));
+        if (resolved.isPresent()) {
+            activeStageCache.put(platform, new CachedStage(
+                    resolved, System.nanoTime() + ACTIVE_STAGE_CACHE_MILLIS * 1_000_000L));
+        } else {
+            activeStageCache.remove(platform);
+        }
         return resolved;
     }
 

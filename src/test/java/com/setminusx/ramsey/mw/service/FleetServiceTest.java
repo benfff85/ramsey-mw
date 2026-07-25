@@ -134,16 +134,33 @@ class FleetServiceTest {
         verify(fleetRepo, times(1)).findById("m4-max");
     }
 
-    /** An idle fleet must be cached too, or a paused fleet still hammers the DB every cycle. */
+    /**
+     * An empty answer must NOT be cached. A stage advance briefly leaves a campaign with no ACTIVE
+     * stage, and a worker seeing that gap treats the fleet as paused and drops its cached graph and
+     * hoist tables. Caching the gap would stretch a millisecond race into the full TTL — which,
+     * during a descent, is longer than a whole stage.
+     */
     @Test
-    void resolveActiveStage_cachesTheEmptyResult() {
+    void resolveActiveStage_doesNotCacheTheEmptyResult() {
         when(fleetRepo.findById("m1")).thenReturn(Optional.of(fleet(10, Fleet.Status.PAUSED)));
 
         for (int i = 0; i < 10; i++) {
             assertTrue(service.resolveActiveStage("m1").isEmpty());
         }
-        verify(fleetRepo, times(1)).findById("m1");
-        verifyNoInteractions(stageRepo);
+        verify(fleetRepo, times(10)).findById("m1");
+    }
+
+    /** A stage appearing after a gap must be visible immediately, not after the TTL. */
+    @Test
+    void stageAppearingAfterAGapIsVisibleImmediately() {
+        when(fleetRepo.findById("m4-max")).thenReturn(Optional.of(fleet(10, Fleet.Status.RUNNING)));
+        when(stageRepo.findByCampaignIdAndStatus(10, Stage.Status.ACTIVE)).thenReturn(List.of());
+        assertTrue(service.resolveActiveStage("m4-max").isEmpty()); // mid-advance gap
+
+        when(stageRepo.findByCampaignIdAndStatus(10, Stage.Status.ACTIVE))
+                .thenReturn(List.of(activeStage(10)));
+        assertTrue(service.resolveActiveStage("m4-max").isPresent(),
+                "a new stage must not be hidden by a cached gap");
     }
 
     /** Pausing must take effect on the next poll, not after the TTL. */
