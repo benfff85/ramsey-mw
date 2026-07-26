@@ -33,14 +33,23 @@ services:
     image: benferenchak/ramsey-worker-rust:develop-neoverse-v2
     environment:
       RAMSEY_API_URL: http://www.setminusx.cloud:36000/api/ramsey
+      # LEGACY targeting. Campaign 1 has had no active stage since 2026-04-19, so this box will
+      # find no work as configured. The current mechanism is RAMSEY_FLEET; switching needs a
+      # fleet row for this platform to exist first.
       RAMSEY_CAMPAIGN_ID: 1
       REDIS_HOST: www.setminusx.cloud
       REDIS_PORT: 36002
-      WORK_UNIT_FETCH_COUNT: 50000
+      # FLOOR for the work range claimed per cycle, not a fixed size — the worker resizes each
+      # cycle from measured throughput. It must stay small enough that a batch fits INSIDE a
+      # stage; too large and every batch is abandoned partway when the stage advances.
+      WORK_UNIT_FETCH_COUNT: 2000
       WORK_UNIT_PUBLISH_COUNT: 10000
       WORK_UNIT_POLL_FREQ: 5000
       PUBLISH_RESULTS: "false"
-      TOP_RESULTS_COUNT: 10
+      TOP_RESULTS_COUNT: 50    # must match the QM of whatever campaign this targets
+      # Kill switch for the hoisted pair-move evaluation. The hoisted and seeded paths compute
+      # identical values, so this only ever trades cost.
+      HOIST_ENABLED: "true"
       WORKER_COUNT: 1
     logging:
       driver: loki

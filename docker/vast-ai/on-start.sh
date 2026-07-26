@@ -26,14 +26,22 @@ services:
     image: benferenchak/ramsey-worker-rust:develop-amd64
     environment:
       RAMSEY_API_URL: http://www.setminusx.cloud:36000/api/ramsey
-      RAMSEY_CAMPAIGN_ID: 1
+      # Fleet abstraction: the target is set in the DB `fleet` table and repointed with
+      # PUT /fleets/vast-ai — no redeploy, which matters for burst instances.
+      RAMSEY_FLEET: vast-ai
       REDIS_HOST: www.setminusx.cloud
       REDIS_PORT: 36002
-      WORK_UNIT_FETCH_COUNT: 50000
+      # FLOOR for the work range claimed per cycle, not a fixed size — the worker resizes each
+      # cycle from measured throughput. It must stay small enough that a batch fits INSIDE a
+      # stage; too large and every batch is abandoned partway when the stage advances.
+      WORK_UNIT_FETCH_COUNT: 2000
       WORK_UNIT_PUBLISH_COUNT: 10000
       WORK_UNIT_POLL_FREQ: 5000
       PUBLISH_RESULTS: "false"
-      TOP_RESULTS_COUNT: 10
+      TOP_RESULTS_COUNT: 50    # must match the QM of the campaign this fleet is mapped to
+      # Kill switch for the hoisted pair-move evaluation. The hoisted and seeded paths compute
+      # identical values, so this only ever trades cost.
+      HOIST_ENABLED: "true"
       WORKER_COUNT: 1
     logging:
       driver: loki
