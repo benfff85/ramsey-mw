@@ -32,16 +32,44 @@ Edge pairs can be enumerated in different orders, controlled by `WORK_ENUMERATIO
 For each edge pair, the worker computes the resulting clique count using an incremental approach:
 
 1. Look up how many existing cliques contain the edges being flipped (the "broken" count) from the pre-built `CliqueCollection`.
-2. Temporarily flip the edges on the working graph.
-3. Run seeded Bron-Kerbosch to count new cliques formed by the flip.
-4. Compute: `new_total = base_total - broken + new_cliques`.
-5. Unflip the edges to restore the graph.
+2. Compute `created` — the cliques the flip forms. **Since 2026-07-26 this is normally derived
+   algebraically rather than traversed** (see below).
+3. Compute: `new_total = base_total - broken + created`.
+
+### Deriving `created` without traversing (`hoist.rs`)
+
+A pair move flips red edge `r` and blue edge `b`, so `R' = (R ∪ {b}) \ {r}` and
+`B' = (B ∪ {r}) \ {b}`. Only a newly-coloured edge can be in a new clique, giving
+
+```
+created = (C_b − X) + (D_r − Y)
+```
+
+where `C_b` / `D_r` depend on ONE edge and the base graph — exactly what flipping that edge alone
+would create — and `X` / `Y` count cliques containing BOTH edges. A clique containing both must
+contain every vertex of both, so all its internal pairs share a colour: `X > 0` needs the cross
+pairs all red, `Y > 0` needs them all blue, and when they are mixed BOTH vanish. **That fast path
+is ~86% of the pair space and needs no traversal at all.** The correction, when needed, seeds on
+the 3–4 forced vertices and needs no graph mutation either.
+
+`C_b` / `D_r` are memoised per base graph and filled co-operatively: each worker computes one
+slice of the edge space and publishes it to Redis, keyed by GRAPH id, so a fleet pools the work.
+The table is a memo, so a missing slice costs time and never correctness.
+
+The seeded Bron-Kerbosch path (`get_new_cliques_with_limit`) remains as the fallback and as the
+reference the hoisted path is validated against — bit-identical over a full 392M-unit stage. Set
+`HOIST_ENABLED=false` to run on it exclusively.
 
 The `CliqueCollection` is built once per stage by enumerating all cliques of the target size (8-cliques for 282 vertices) using a comprehensive Bron-Kerbosch pass. It provides O(1) lookup of which cliques contain a given edge, enabling the incremental formula above.
 
 ### Early Termination
 
 When `PUBLISH_RESULTS=false` (the default for local deployments), the worker uses early termination during Bron-Kerbosch. If the new clique count exceeds the current top-N threshold, enumeration stops immediately. This dramatically reduces computation for clearly-bad mutations -- the worker only does full counting for mutations that have a chance of being competitive.
+
+On the hoisted path there is nothing to terminate early: `created` is computed exactly from table
+lookups, so the abort the kernel would have taken becomes a single comparison. The bound-skip that
+precedes both paths (reject from the per-edge counts alone, before any evaluation) still applies
+and does most of the work mid-descent.
 
 ### Top-N Result Tracking
 

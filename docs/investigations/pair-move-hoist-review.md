@@ -7,7 +7,35 @@
 (`get_new_cliques_with_limit`) and the shipped `CliqueCollection` / enumerators, so "production"
 in every table below is the real thing, not a re-implementation.
 
-## Verdict
+## Outcome (2026-07-26) — built, deployed, and measured
+
+Shipped as `ramsey-worker-rust/src/hoist.rs`. What the review got right, and what it missed:
+
+| Review said | Actually happened |
+|---|---|
+| identity is exact | confirmed — full-stage replay over all 392,495,529 units, zero mismatches |
+| §2 pseudocode mishandles shared-vertex pairs | confirmed — fixed before shipping |
+| fast path 86.32% | confirmed live |
+| ~29× on a sweep | the kernel win was real but **invisible until the plumbing was fixed** |
+| don't cap the precompute | held |
+| shard the fill | built; 31–81% of the table now comes from peers |
+
+**The reviewer's biggest miss:** it treated ~29× as the deliverable. In production the kernel gain
+was hidden behind fixed per-cycle costs that had never mattered before, and each one had to be
+found and removed in turn — a full-table-scan on `stage` (11.8ms → 0.135ms with an index), a
+per-cycle fleet HTTP call, a batch size that could not adapt, and finally a 1-second sleep on
+transient stage races that left the fleet at 19% CPU. That last one was a pre-existing bug that
+only became reachable once stages advanced quickly.
+
+Lesson worth carrying: **making one stage of a pipeline 30× faster does not make the pipeline
+faster; it relocates the bottleneck, usually somewhere nobody was measuring.**
+
+Also of note: two of the review's own conclusions were later overturned by better measurement —
+`MAX_INCREMENTAL_FLIPS` ("not worth changing", measured only in the wall, actually 51% fallback in
+descents) and the sharded fill ("3% peer coverage", which turned out to be a broken metric reading
+the pre-publish sweep). Both were caught by checking ground truth rather than the instrument.
+
+## Verdict (as written at review time)
 
 **Build it — the approach is sound and worth substantially more than proposed.** Measured
 **~29× on a full stage sweep** (single core), versus the proposal's 6.5×–15× estimate.
