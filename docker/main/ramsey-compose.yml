@@ -68,7 +68,11 @@ services:
       WORK_ENUMERATION_STRATEGY: "DUAL_EDGE_CARDINALITY_WITH_SINGLES"  # singles census (majority color) + counter-based pair sweep
       TOP_RESULTS_COUNT: 50
       STAGE_ADOPT_SETTLE_MS: 100      # pub/sub-armed settle window; 0 = pure polling
-      EXHAUSTION_DELAY_MS: 15000
+      # Grace period for in-flight workers once a stage's work is fully CLAIMED but not yet fully
+      # reported. A full sweep now takes seconds rather than minutes, so 15s was comparable to a
+      # whole stage; 3s still comfortably covers a worker finishing its current batch (~0.2s
+      # hoisted, ~1s unhoisted).
+      EXHAUSTION_DELAY_MS: 3000
       CYCLE_PREVENTION_GRAPH_LOOKBACK_COUNT: 5000
       STAGE_PROGRESSION_FREQUENCY_MS: 1000
       IMMEDIATELY_PROGRESS_STAGE_ON_IMPROVEMENT: "true"
@@ -78,7 +82,11 @@ services:
       # so a descent still finding new minima is never cut off (the old fixed
       # stages-since-kick wall killed kicks 18/19/20 mid-free-fall).
       PERTURBATION_ENABLED: "true"
-      PERTURBATION_BASIN_STALE_STAGES: 100
+      # Replaying campaign 10's basins, the gap between successive NEW basin minima reaches 249
+      # stages near the floor — a basin goes quiet and then improves again. At 100 roughly half of
+      # them would be kicked before reaching the floor they actually had; 500 clears every gap
+      # observed, trading kick frequency for basin depth.
+      PERTURBATION_BASIN_STALE_STAGES: 500
       PERTURBATION_EDGE_PAIRS: 60          # base kick; geometric escalation doubles: 60,120,240,480,960,1920
       PERTURBATION_ESCALATION_CAP: 32      # max multiplier (x32) -> 6 steps
       PERTURBATION_CHECK_FREQUENCY_MS: 60000
