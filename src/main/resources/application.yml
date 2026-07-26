@@ -10,6 +10,11 @@ ramsey:
     page-size:
       default: 5
       max: 500
+  request-log:
+    # Per-request timing logs at INFO only when a request is at least this slow (or non-2xx).
+    # Every worker polls the fleet active-stage endpoint each cycle, so logging every request
+    # scaled with fleet speed rather than with anything worth reading.
+    slow-threshold-ms: ${REQUEST_LOG_SLOW_MS:250}
 
 spring:
   jpa:
