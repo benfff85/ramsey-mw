@@ -108,13 +108,19 @@ services:
       RAMSEY_FLEET: m4-max  # fleet abstraction: target set in the DB `fleet` table (repoint via PUT /fleets/m4-max, no redeploy)
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      # STARTING/MINIMUM batch. The worker retunes it each cycle from measured throughput,
+      # STARTING/MINIMUM batch — a FLOOR, not a size. It must be low enough that the worker can
+      # size a batch to fit INSIDE a stage: during a descent stages last ~370ms and units cost
+      # ~40us, so the controller wants ~5,000 units, and a floor of 25,000 pinned batches at ~1s
+      # spanning 2.7 stages — every one abandoned partway once workers started reacting to stage
+      # advances. In the wall the controller grows to ~740k regardless, so a low floor costs
+      # nothing there.
+      # The worker retunes it each cycle from measured throughput,
       # targeting ~200ms of work per cycle (see next_fetch_size): it grows toward ~800k once the
       # hoisted path engages (~0.26us/unit, amortising the ~22ms fixed per-cycle cost of the fleet
       # active-stage call plus three Redis round trips) and falls back here while unhoisted
       # (~4us/unit — every stage's warmup, and all of a fast post-kick descent), where a small
       # batch is what keeps a worker responsive to stage changes.
-      WORK_UNIT_FETCH_COUNT: 25000
+      WORK_UNIT_FETCH_COUNT: 2000
       WORK_UNIT_PUBLISH_COUNT: 10000
       WORK_UNIT_POLL_FREQ: 1000
       PUBLISH_RESULTS: "false"
