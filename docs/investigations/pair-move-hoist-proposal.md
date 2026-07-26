@@ -1,6 +1,9 @@
 # Proposal: hoist per-edge clique counts out of the pair-move inner loop
 
-**Status:** proposal, not implemented. Seeking review before building.
+**Status: SHIPPED 2026-07-26.** Reviewed, corrected, built and deployed — see
+`pair-move-hoist-review.md` for the measured review (which found a bug in §2's pseudocode) and the
+outcome. This document is kept as the original proposal; where it disagrees with the review, the
+review is right.
 **Date:** 2026-07-25
 **Expected gain:** ~5–15× worker throughput in the regime the search currently lives in.
 **Risk profile:** the change is *exact* (bit-identical results), so the risk is implementation bugs, not lost search quality.

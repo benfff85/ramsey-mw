@@ -8,7 +8,26 @@
 
 ---
 
-## CURRENT STATE (2026-07-15) — read this before the dated snapshot below
+## CURRENT STATE (2026-07-26) — read this first; everything below is an older snapshot
+
+- **All-time best is now 25,758** (graph 26994), set by a perturbation kick on campaign 10 —
+  the first time anything has beaten the long-standing 25,840. Still not a witness (≠ 0).
+- **Perturbation kicks now fire on BASIN STALENESS, not a fixed wall.** The clock runs from the
+  basin's own floor, so a descent still finding new minima is never cut off. The old fixed
+  `PERTURBATION_WALL_STAGES` truncated seven campaign-10 descents mid-free-fall.
+  `PERTURBATION_BASIN_STALE_STAGES` is 500 (the gap between successive new basin minima reaches
+  249 stages near the floor, so a smaller window kicks basins before they reach their floor).
+- **The exhaustive worker no longer traverses for most work units.** `created` is derived
+  algebraically from memoised per-edge counts (`hoist.rs`); ~86% of pairs need no traversal at
+  all. See `pair-move-hoist-review.md` for the measured outcome.
+- **Fleet throughput is now measured in the tens of millions of units/sec**, up from ~1M. A full
+  392M-unit sweep takes seconds rather than minutes, which changed what "a stage" costs and
+  invalidated several constants sized for the old regime (batch size, exhaustion delay, the
+  hoist gate). Expect that to keep happening: every speedup relocates the bottleneck.
+- **Storage is now the growth constraint** — the `graph` table adds ~6 GB/day at current stage
+  rates. No retention policy yet.
+
+## EARLIER SNAPSHOT (2026-07-15)
 
 - **Multi-seed basin program: COMPLETE.** Six basin floors (25,840 / 25,881 / 25,996 / 26,185 / 26,385 / 26,677), none below the original 25,840. Full result: `multiseed-basin-program-results.md`.
 - **Deep-wall re-runs (decision #1) in progress.** c11 (25,881) **confirmed terminal** — re-ran a censored basin to a full 500-stage wall, found nothing. c13 (25,996) re-run running now on the M4-Max fleet. M1 stays on campaign 10.
