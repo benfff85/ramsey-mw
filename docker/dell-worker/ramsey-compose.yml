@@ -25,6 +25,9 @@ services:
       # identical values, so this only ever trades cost.
       HOIST_ENABLED: "true"
       WORKER_COUNT: 1
+      # Per-stage/per-batch tracing. Off by default — each worker narrating every stage transition
+      # is ~4 lines per stage, which buried the events worth reading once stages sped up.
+      RAMSEY_LOG_DEBUG: "false"
     logging:
       driver: loki
       options:

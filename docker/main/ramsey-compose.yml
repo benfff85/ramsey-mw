@@ -33,11 +33,17 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: dev
       DB_USER: ramsey-user-dev
-      DB_PASS: ${MYSQL_PASSWORD}
+      # Fail the deploy rather than start a middleware that cannot authenticate to MySQL. Unset,
+      # this silently resolved to "" and recreated the container into a crash loop — which stops
+      # the whole search, since workers get their stage from here.
+      DB_PASS: ${MYSQL_PASSWORD:?set MYSQL_PASSWORD before deploying (see database/README.md)}
       JDBC_BATCH_SIZE: 5000
       REDIS_HOST: redis
       REDIS_PORT: 6379
       LOGGING_LEVEL_ROOT: INFO
+      # Per-request timing logs at INFO only at/above this many ms (or on non-2xx). Workers poll
+      # the fleet active-stage endpoint every cycle; logging each one was ~73 lines/sec.
+      REQUEST_LOG_SLOW_MS: 250
     depends_on:
       - redis
     logging:
@@ -142,6 +148,10 @@ services:
       HOIST_ENABLED: "true"
       TOP_RESULTS_COUNT: 50
       WORKER_COUNT: 1
+      # Per-stage and per-batch tracing. Off by default: 14 workers each narrating every stage
+      # transition is ~56 lines per stage, which at the post-hoist stage rate buried the events
+      # worth reading. Set true on a single worker to get that detail back for debugging.
+      RAMSEY_LOG_DEBUG: "false"
     depends_on:
       ramsey-mw:
         condition: service_healthy
