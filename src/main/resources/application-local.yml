@@ -7,7 +7,7 @@ spring:
     init:
       mode: ${SQL_INIT_MODE:never} # Runs data.sql for inserts [never, always]
   datasource:
-    url: jdbc:mysql://127.0.0.1:36001/ramsey-dev?autoReconnect=true&useSSL=false&rewriteBatchedStatements=true&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://127.0.0.1:36001/ramsey-dev?autoReconnect=true&useSSL=false&rewriteBatchedStatements=true&allowPublicKeyRetrieval=true&useLocalSessionState=true&cacheServerConfiguration=true&maintainTimeStats=false&cachePrepStmts=true&prepStmtCacheSize=250&prepStmtCacheSqlLimit=2048&useServerPrepStmts=true
     username: ${DB_USER}
     password: ${DB_PASS}
   data:

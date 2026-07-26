@@ -67,15 +67,20 @@ services:
       WORK_UNIT_ANALYSIS_TYPE: TARGETED
       WORK_ENUMERATION_STRATEGY: "DUAL_EDGE_CARDINALITY_WITH_SINGLES"  # singles census (majority color) + counter-based pair sweep
       TOP_RESULTS_COUNT: 50
+      STAGE_ADOPT_SETTLE_MS: 100      # pub/sub-armed settle window; 0 = pure polling
       EXHAUSTION_DELAY_MS: 15000
       CYCLE_PREVENTION_GRAPH_LOOKBACK_COUNT: 5000
       STAGE_PROGRESSION_FREQUENCY_MS: 1000
       IMMEDIATELY_PROGRESS_STAGE_ON_IMPROVEMENT: "true"
-      # Phase 2 perturbation (ILS kick): when a campaign is 500 stages past its
-      # min, restart from a 30-red/30-blue kick of its incumbent-best graph.
+      # Phase 2 perturbation (ILS kick): when the current basin has gone this many
+      # stages without beating its OWN floor, restart from a kick of the campaign's
+      # incumbent-best graph. The clock runs from the basin floor, not from the kick,
+      # so a descent still finding new minima is never cut off (the old fixed
+      # stages-since-kick wall killed kicks 18/19/20 mid-free-fall).
       PERTURBATION_ENABLED: "true"
-      PERTURBATION_WALL_STAGES: 500
-      PERTURBATION_EDGE_PAIRS: 30
+      PERTURBATION_BASIN_STALE_STAGES: 100
+      PERTURBATION_EDGE_PAIRS: 60          # base kick; geometric escalation doubles: 60,120,240,480,960,1920
+      PERTURBATION_ESCALATION_CAP: 32      # max multiplier (x32) -> 6 steps
       PERTURBATION_CHECK_FREQUENCY_MS: 60000
       LOGGING_LEVEL_ROOT: INFO
     depends_on:
@@ -103,10 +108,25 @@ services:
       RAMSEY_FLEET: m4-max  # fleet abstraction: target set in the DB `fleet` table (repoint via PUT /fleets/m4-max, no redeploy)
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      WORK_UNIT_FETCH_COUNT: 250000
+      # STARTING/MINIMUM batch — a FLOOR, not a size. It must be low enough that the worker can
+      # size a batch to fit INSIDE a stage: during a descent stages last ~370ms and units cost
+      # ~40us, so the controller wants ~5,000 units, and a floor of 25,000 pinned batches at ~1s
+      # spanning 2.7 stages — every one abandoned partway once workers started reacting to stage
+      # advances. In the wall the controller grows to ~740k regardless, so a low floor costs
+      # nothing there.
+      # The worker retunes it each cycle from measured throughput,
+      # targeting ~200ms of work per cycle (see next_fetch_size): it grows toward ~800k once the
+      # hoisted path engages (~0.26us/unit, amortising the ~22ms fixed per-cycle cost of the fleet
+      # active-stage call plus three Redis round trips) and falls back here while unhoisted
+      # (~4us/unit — every stage's warmup, and all of a fast post-kick descent), where a small
+      # batch is what keeps a worker responsive to stage changes.
+      WORK_UNIT_FETCH_COUNT: 2000
       WORK_UNIT_PUBLISH_COUNT: 10000
       WORK_UNIT_POLL_FREQ: 1000
       PUBLISH_RESULTS: "false"
+      # Kill switch for the hoisted pair-move evaluation. The hoisted and seeded paths compute
+      # identical values, so this only ever trades cost — set false to fall back to the kernel.
+      HOIST_ENABLED: "true"
       TOP_RESULTS_COUNT: 50
       WORKER_COUNT: 1
     depends_on:

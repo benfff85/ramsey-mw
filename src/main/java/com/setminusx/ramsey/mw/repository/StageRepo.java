@@ -29,7 +29,7 @@ public interface StageRepo extends JpaRepository<Stage, Integer> {
                         @Param("status") Stage.Status status,
                         Pageable pageable);
 
-        @Query("SELECT new com.setminusx.ramsey.mw.dto.ProgressionDTO(s.stageId, s.baseGraphId, g.cliqueCount, s.createdDate, s.status) "
+        @Query("SELECT new com.setminusx.ramsey.mw.dto.ProgressionDTO(s.stageId, s.baseGraphId, g.cliqueCount, s.createdDate, s.status, s.details) "
                         +
                         "FROM Stage s, Graph g " +
                         "WHERE s.baseGraphId = g.graphId " +
