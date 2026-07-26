@@ -65,7 +65,12 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       WORK_UNIT_ANALYSIS_TYPE: TARGETED
-      WORK_ENUMERATION_STRATEGY: "DUAL_EDGE_CARDINALITY_WITH_SINGLES"  # singles census (majority color) + counter-based pair sweep
+      # Singles census + counter-based pair sweep, in plain edge order. The cardinality ordering
+      # this replaces cost 13.5ms per stage per worker to build and existed to sweep likely
+      # improvements first — which mattered when a sweep took ~233s and a stage only ever saw part
+      # of its space. A sweep is now ~6s, stages routinely reach most of it, and the QM adopts the
+      # best of the top-50 rather than the first found, so the order no longer changes the outcome.
+      WORK_ENUMERATION_STRATEGY: "SEQUENTIAL_WITH_SINGLES"
       TOP_RESULTS_COUNT: 50
       STAGE_ADOPT_SETTLE_MS: 100      # pub/sub-armed settle window; 0 = pure polling
       # Grace period for in-flight workers once a stage's work is fully CLAIMED but not yet fully
