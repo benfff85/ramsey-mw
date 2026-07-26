@@ -124,6 +124,9 @@ services:
       WORK_UNIT_PUBLISH_COUNT: 10000
       WORK_UNIT_POLL_FREQ: 1000
       PUBLISH_RESULTS: "false"
+      # Kill switch for the hoisted pair-move evaluation. The hoisted and seeded paths compute
+      # identical values, so this only ever trades cost — set false to fall back to the kernel.
+      HOIST_ENABLED: "true"
       TOP_RESULTS_COUNT: 50
       WORKER_COUNT: 1
     depends_on:
