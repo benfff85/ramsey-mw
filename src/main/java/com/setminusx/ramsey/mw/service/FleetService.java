@@ -25,6 +25,15 @@ public class FleetService {
      * almost all of that load while bounding how long a worker can be handed a stage that has just
      * been superseded.
      *
+     * Sized against the stage cadence, not against database cost. At 250ms this TTL was ~98% of a
+     * stage's lifetime during a post-kick descent (stages advance ~3.9/sec, so a stage lives
+     * ~256ms), which meant a worker could be handed a pointer to an already-dead stage for
+     * essentially the whole of the next one, then pay a wasted cycle and a retry sleep when the
+     * config it asked Redis for had already been deleted. The original 250ms was chosen when this
+     * lookup was an 11.8ms full table scan; the index made that 0.135ms and removed the reason for
+     * a long TTL, but it was never retuned as the stage rate climbed. Keep this well under the
+     * shortest stage we expect to see.
+     *
      * Only a RESOLVED stage is cached. An empty answer is deliberately never cached: a stage
      * advance briefly leaves a campaign with no ACTIVE stage, and a worker that sees that gap
      * treats the fleet as paused and drops its cached graph and hoist tables — which costs a full
@@ -32,7 +41,7 @@ public class FleetService {
      * gap would stretch a millisecond-wide race into a quarter-second outage. Re-reading is cheap
      * now that the stage table is indexed (0.135ms).
      */
-    private static final long ACTIVE_STAGE_CACHE_MILLIS = 250;
+    private static final long ACTIVE_STAGE_CACHE_MILLIS = 25;
 
     private final FleetRepo fleetRepo;
     private final StageRepo stageRepo;
