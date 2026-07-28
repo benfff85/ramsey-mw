@@ -138,15 +138,19 @@ amortise a fill. This is not an argument for lowering the constant; it is an arg
 
 `worker.rs:666` uses a single boolean for two things that have completely different costs:
 
-1. **Use the hoisted path.** Nearly free in both regimes. Mid-descent the bound-skip (`max_new < 0 → continue`,
-   `worker.rs:828`) rejects units from the per-edge counts alone, *before* any table value is read, so an empty
-   table costs nothing. Near the floor the threshold sits at/above `base_total`, the skip never fires, and the
-   table is exactly what is wanted.
-2. **Proactively fill a slice.** 2,476 **uncapped** traversals ≈ 0.41 s. This is the only expensive part, and the
-   only part that needs a gate.
+1. **Use the hoisted path.** Mid-descent the bound-skip (`max_new < 0 → continue`, `worker.rs:828`) rejects units
+   from the per-edge counts alone, *before* any table value is read. Near the floor the threshold sits at/above
+   `base_total`, the skip never fires, and the table is exactly what is wanted.
+2. **Proactively fill a slice.** 2,476 **uncapped** traversals ≈ 0.41 s.
 
-The gate exists for (2) and is charging us for (1). **Splitting them is correct independent of which predictor
-is chosen**, and is the part of this fix with no judgement call in it.
+> **CORRECTION (2026-07-28, before implementing).** The first draft of this section claimed splitting the two was
+> "correct independent of which predictor is chosen" and that engaging unconditionally was free. **That is wrong,
+> and the split was dropped from the shipped fix.** `single_created` is uncapped *by necessity* — one entry is
+> reused across ~19,810 partners with different abort limits, so it can never early-abort the way the kernel does.
+> Engaging with an empty table therefore **is** the fill, just lazily and unsharded (39,621 × ~147 µs ≈ 5.8
+> core-seconds against 0.41 s for the sharded version). The bound-skip only protects the *pair* block *after* a
+> threshold exists; the singles block at stage start has none and pays uncapped either way. Fix 2 as shipped
+> changes only the predictor and leaves `engage`/`fill` coupled.
 
 ### Choosing the predictor
 
@@ -260,6 +264,60 @@ the same code giving 6.8×, 17.0× and 362.9×. **Measure integrated over a whol
 - `single-flip-check/src/bin/hoist_equiv_replay.rs` — full 392M-unit byte-identical replay.
 - `single-flip-check/src/bin/kernel_equiv_replay.rs` if the kernel or `Graph` is touched at all.
 
+### MEASURED 2026-07-28 — the hypothesis above is WRONG. 1.08×, not a large multiple.
+
+Built as `pair_hoist_check loop` (new mode): the full restructure — red-outer/blue-inner walk, no
+per-unit `Vec`, no trait dispatch, no div/mod, `D_r` + destroyed-count + both adjacency rows hoisted
+out of the inner loop, linear `C_b` walk, unguarded 4-bit-test disjoint path. Integrated over 24
+geometrically-spaced points across a whole sweep, graph 222120 (25,618), `nice -n 15`:
+
+```
+sweep-wide per-unit: hoisted 0.2616 us   restructured 0.2414 us
+decision equivalence: IDENTICAL at every sample point
+FULL SWEEP: hoisted 103 s  vs  restructured 95 s  =>  1.08x
+```
+
+**Then the cost split, which is the actual finding:**
+
+```
+fast path            0.0044 us/unit  (  2%)
+X/Y correction       0.2370 us/unit  ( 98%)
+slow-path share of evaluated units: 13.69%   =>  ~1.73 us per correction
+```
+
+**The hoisted inner loop is 98% correction and 2% everything else.** Every item in the hypothesis
+above — the `Vec`, the dispatch, the div/mod, the branchy `cross_pairs` — lives in the 2%. The fast
+path costs 0.0044 µs/unit, about 18 cycles; there is nothing left to win there. Fix 4 as specified is
+**dead** — 1.08× is not worth shipping, and the restructure is not being merged.
+
+This is the **fourth** confident estimate in this area to collapse on measurement (after the "2×
+kernel win", the "20× pruning win", and this doc's own ~20% hoist-gate estimate, which went the other
+way). The lesson is sharpening: in this codebase, *reason about which fraction of the cost a change
+touches before reasoning about how much faster it makes that fraction.*
+
+### Where fix 4 actually points: bound the correction instead of computing it
+
+`count_through_both` builds `P = ⋂ adj[w]` over the 3–4 forced vertices and enumerates
+(k−|S|)-cliques in it — ~1.73 µs, 13.69% of units, 98% of the loop.
+
+The slow-path *fraction* is structural (~50% colour density; 6.13% all-red + 6.13% all-blue + 1.42%
+shared-vertex) and cannot be reduced. So the lever is not computing the correction **exactly** when a
+bound suffices:
+
+- `created = base_val − correction`, `correction ≥ 0`.
+- A unit is rejected when `created > early_limit`, i.e. when `correction < base_val − early_limit`.
+- So an **upper bound** on the correction is enough to reject.
+- Near the floor `early_limit ≈ broken ≈ 36` while `base_val = C_b + D_r ≈ 1,637`, so accepting needs
+  a correction above ~1,600 — enormous for cliques through 4 specific vertices.
+- `|P|` (a few row ANDs + a popcount, ~0.01 µs) already bounds it: `correction ≤ C(|P|, k−|S|)`,
+  and `count_in_p` already early-returns when `|P| < k−|S|`.
+
+**Hypothesis (UNMEASURED — do not act on it before testing):** a cheap `|P|`-derived bound rejects
+most slow-path units without enumerating, collapsing the 98%. Cheap next test: instrument the
+distribution of actual correction values and of `|P|` against `base_val − early_limit` on a real
+sweep, and count what fraction the bound would reject. That is a measurement, not a build — and given
+the record above it must come first.
+
 ---
 
 ## Smaller items
@@ -280,9 +338,10 @@ the same code giving 6.8×, 17.0× and 362.9×. **Measure integrated over a whol
 | # | Fix | Expected | Status |
 |---|---|---|---|
 | 1 | `idx_stage_status` on `stage(status)` (+ DDL) | ~1.3× descent rate; kills a cost that grows 11%/day | **DONE 2026-07-28 — ~1.45× descent rate, confirmed on n≈1,780 in a post-kick descent** |
-| 2 | Regime-aware hoist gate | **12.4% (prev-stage signal) → 17.3% (skip-rate probe)**; see below | queued |
+| 2 | Regime-aware hoist gate | 12.4% predicted | **DONE 2026-07-28 — 1.34× on full sweeps, better than predicted** |
 | 3 | Self-healing hoist slice fill | ~3% fleet CPU | queued |
-| 4 | Hoisted inner-loop restructure | unknown — prototype + measure first | queued |
+| 4 | Hoisted inner-loop restructure | unknown — prototype + measure first | **REJECTED 2026-07-28 — measured 1.08×; the loop is 98% X/Y correction, 2% everything else** |
+| 4b | **Bound the X/Y correction instead of computing it** | unmeasured; targets the 98% | **new — supersedes 4** |
 | 5 | `TARGET_BATCH_LOOP_MILLIS` 200 → 500 | ~3% fleet CPU | queued |
 | 6 | Drop the redundant `isStillActive` fetch | small; folds into #1 | queued |
 | 7 | **Re-sweep `STAGE_ADOPT_SETTLE_MS`** | now ~80% of the descent-stage floor; its 100 ms sweep predates fix 1 | **new — surfaced by fix 1** |
@@ -382,3 +441,39 @@ at 500 ms — see the compose comment), but **that sweep was run when QM progres
 quality-vs-rate tradeoff it balanced has moved. Re-sweeping it is now a first-class candidate, added to the queue
 as fix 7. This is the third instance in this codebase of the same pattern: *every speedup relocates the
 bottleneck.*
+
+### Fix 2 outcome (2026-07-28) — shipped and validated
+
+`HoistGate` (worker PR #94), image built and all 14 workers recreated. Measured over a 775 s window,
+104 advances, 77 of them full sweeps:
+
+| metric | baseline | after |
+|---|---|---|
+| ramp to `Hoist ENGAGED` (mean / median) | 2.60 / 2.92 s | **0.61 / 0.00 s** |
+| engage index (median) | 5.37 M | **0.017 M** |
+| worker throughput | 2.1 M u/s | **2.72 M u/s (1.29×)** |
+| **full-sweep stage** | 13.01 s | **9.71 s (1.34×)** |
+| busy | 95% | 95% |
+
+Eager on **81%** of engagements; a median ramp of 0.00 s means it engages on the very first batch.
+
+**It beat its own estimate (12.4% predicted, ~30% delivered)** because the policy model scored savings
+only on correctly-predicted stages at the 72.7% base autocorrelation, whereas a sustained wall runs a
+denser ~81–87% hit rate. Expect the win to be regime-dependent: near the full ramp saving in a wall,
+closer to 12% in a mixed regime. Recorded as a case where the *modelling* was conservative rather than
+optimistic — the opposite failure to fix 4.
+
+Unchanged and still open: hoist table coverage at engage is median 53%, max 34,669 = **87.5% = 14/16
+slices**, exactly as finding 3 predicts. Fix 3 is untouched by this change.
+
+## Running scoreboard
+
+| stage cost | at review start | now |
+|---|---|---|
+| full-sweep stage | 13.01 s | **9.71 s** |
+| descent-stage floor | ~181 ms | **~125 ms** |
+| worker throughput | 2.1 M u/s | **2.72 M u/s** |
+
+Remaining budget of a 9.71 s full sweep: ~0.4 s fill, ~0.6 s residual ramp, ~8.7 s hoisted sweep — of
+which **98% is the X/Y correction**. Everything else in the queue (fixes 3, 5, 7) is ~3% each. The only
+item left with order-of-magnitude potential is **4b**, and it is a measurement before it is a build.
