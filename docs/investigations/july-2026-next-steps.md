@@ -4,14 +4,16 @@
 **Author:** Ben Ferenchak + Claude
 **Supersedes:** `archive/may-2026-next-steps.md` as the live roadmap. Strategic background: `search-status-2026-06-14.md` (read first), `structurally-new-base-investigation.md` (all construction long shots closed through order 461 + all four order-282 Cayley groups), `windowed-maxsat-investigation.md` (~1.1M exact windows, zero escapes).
 
-**Goal unchanged:** a 282-vertex 2-coloring with zero monochromatic K₈ → **R(8,8) ≥ 283**. Best-known 282-graph: **25,840 mono-8 (graph 8644, 2026-06-16)** — still the all-time best; unbeaten by any of the six basins or two deep-wall re-runs since.
+**Goal unchanged:** a 282-vertex 2-coloring with zero monochromatic K₈ → **R(8,8) ≥ 283**. Best-known 282-graph: **25,604 mono-8 (graph 276750, campaign 10, 2026-07-28)**. The 25,840 figure below is the state as of 2026-07-02 and has since been beaten three times (25,758 → 25,618 → 25,604), all by ILS perturbation kicks on campaign 10.
 
 ---
 
 ## CURRENT STATE (2026-07-26) — read this first; everything below is an older snapshot
 
-- **All-time best is now 25,758** (graph 26994), set by a perturbation kick on campaign 10 —
-  the first time anything has beaten the long-standing 25,840. Still not a witness (≠ 0).
+- **All-time best is now 25,604** (graph 276750, 2026-07-28 11:01), set by a perturbation kick on
+  campaign 10. Still not a witness (≠ 0). Progression of record-holders: 25,840 (graph 8644,
+  06-16) → 25,758 (graph 26994) → 25,618 (graph 222120, 07-27) → **25,604** (graph 276750, 07-28).
+  The last two arrived within a day of each other, both from x32 kicks off the then-incumbent.
 - **Perturbation kicks now fire on BASIN STALENESS, not a fixed wall.** The clock runs from the
   basin's own floor, so a descent still finding new minima is never cut off. The old fixed
   `PERTURBATION_WALL_STAGES` truncated seven campaign-10 descents mid-free-fall.

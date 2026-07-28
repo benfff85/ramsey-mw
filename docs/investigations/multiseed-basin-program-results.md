@@ -1,5 +1,13 @@
 # Multi-seed basin program — results
 
+> **SUPERSEDED IN PART (2026-07-28).** The basin-floor table below is unchanged and still correct:
+> those six seeds, under single/dual edge flips, did floor at 25,840–26,677. But its framing —
+> "25,840 is a genuine deep floor for this move class" — has since been beaten **three times** by
+> ILS perturbation kicks on campaign 10: 25,758 (graph 26994) → 25,618 (graph 222120, 07-27) →
+> **25,604** (graph 276750, 07-28). What the program actually established is that *plain descent
+> from a fresh Paley+row-opt seed* floors at ~25.8–26.7K; adding escalating kicks to an incumbent
+> goes lower. Read the conclusions below as scoped to the no-kick regime they were measured in.
+
 **Ran:** 2026-07-02 → 2026-07-13 (campaigns 11–15 serial on the local 14-worker fleet;
 campaign 10 concurrent on the second machine). **All effort figures are stage counts**
 (1 stage = one full ~392M-unit sweep of a base graph); wall-clock is not comparable
