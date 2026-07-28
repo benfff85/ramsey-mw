@@ -586,3 +586,108 @@ claiming coverage.
 The two replays are complementary by construction: the tight-threshold run bound-rejects **100%** of the
 slow path and accepts nothing, the loose-threshold run bound-rejects **0.08%** and accepts 99.9%. Between
 them every branch of `pair_created_bounded` is exercised against the shipped kernel at production scale.
+
+---
+
+# Part 2 — what a worker's time is actually made of (2026-07-28, post-4b)
+
+Everything above optimised things that turned out to be small, twice. This section is the instrumented
+answer to "where does the time go", so the next change does not have to guess.
+
+## The one rule this document keeps violating
+
+**Reason about which FRACTION of the cost a change touches before reasoning about how much faster it
+makes that fraction.** Five estimates in this area have now collapsed, every one for the same reason:
+
+| estimate | predicted | actual | why it failed |
+|---|---|---|---|
+| "2× kernel win" (pre-session) | 2× | wash | benchmark never aborted |
+| "20× dirty-edge pruning" (pre-session) | 20× | unsound | precondition false in production |
+| hoist-gate (fix 2) | 12.4% | ~30% | model credited only correctly-predicted stages |
+| inner-loop restructure (fix 4) | "large multiple" | **1.08×** | optimised 2% of the loop |
+| batch ceiling (fix 5) | busy 82→92% | busy 82→80% | right saving, wrong mechanism |
+
+The failure is never the arithmetic — it is applying it to the wrong denominator.
+
+## Instrumented cost breakdown
+
+`HoistTables` now counts on-demand fills and their wall-clock, reported in the worker's throughput
+line. Measured over 300 s, 14 workers (M1 paused for a clean baseline), ~118 stage setups:
+
+```
+busy               260.1 s  (87% of wall)
+  FILLS            121.9 s  (47% of busy, 41% of wall)
+  EVALUATE         138.2 s  (53% of busy, 46% of wall)
+non-busy            39.9 s  (13% of wall)
+
+787,910 fills @ 155 us, 6,677 per stage
+  37% sharded slice fill (2,476 edges)
+  63% ON-DEMAND misses inside the loop  (495,742)
+coverage at engage: median 22,289 / 39,621 (56%)
+```
+
+**Building the table costs nearly as much as using it.** This was completely invisible before: an
+on-demand fill happens *inside* the unit loop, so it counts as "busy" and is indistinguishable from
+evaluation in the throughput line.
+
+### Why on-demand misses are front-loaded (and why more polling will not fix it)
+
+Under `SEQUENTIAL_WITH_SINGLES`, `pair_index = red_idx × blue_count + blue_idx` — blue is the **inner**
+loop. A 1.6M-unit batch spans ~81 red edges × **all 19,810 blue edges**, so a worker needs essentially
+the *entire* blue table inside its **first batch**. Coverage at that moment is 56%, so the misses are
+all paid up front, before any `refresh_budget` re-check can help.
+
+That kills the obvious fix. Raising `refresh_budget` (12 → N) polls *later*, and later is too late.
+Anything that helps has to raise coverage **before the first batch** — i.e. wait briefly after
+publishing, not poll more often afterwards.
+
+## Fix 4 re-evaluated: same code, same harness, opposite verdict
+
+Fix 4 was rejected at 1.08× because the scaffolding it removes was 2% of a loop that was 98%
+correction. **4b deleted the correction, so its denominator changed.** Re-measured against current
+production (scaffolding **+** bound), across both regimes, 24 sample points each:
+
+| regime | graph | production | restructured | ratio |
+|---|---|---|---|---|
+| **wall** | 276750 (25,604) | 0.0254 µs/unit | 0.0042 µs/unit | **6.1×** |
+| **descent** | 274667 (600,047) | 0.0314 µs/unit | 0.0095 µs/unit | **3.3×** |
+
+Decisions IDENTICAL at every sample point in both. The scaffolding cost is unchanged at ~0.021 µs/unit
+— it was 8% of the unit, it is now 83%.
+
+**Lesson: a rejected optimisation is only rejected against the cost structure it was measured in.**
+Re-check rejections after anything that changes the mix.
+
+## Which lever is bigger — and a correction
+
+Fills are 41% of wall and evaluate is 46%, which initially read as "fix the fill first". That was
+wrong: **fills can only be removed (÷1), evaluate gets a 6.1× multiplier.**
+
+| change | stage lift |
+|---|---|
+| restructure only | **1.63×** |
+| fill fix only (on-demand → 0) | 1.34× |
+| **both** | **2.79×** |
+
+A multiplier on a slightly smaller share beats a subtraction on a slightly larger one. Recorded
+because the error took two passes to catch, in a section explicitly about not making that error.
+
+## Where the harness misleads
+
+Harness per-unit (0.0254 µs) is **3.3× faster than production** (0.084 µs busy-adjusted), despite
+being `nice -n 15` on a saturated box. The cause is that **the harness pre-fills the whole table and
+production does not** — so harness ratios describe the loop *with a warm table*, and production pays
+on-demand fills on top. Any harness ratio should be applied to the *evaluate* share only, never to a
+whole stage.
+
+## Queue after this section
+
+| # | item | targets | est. |
+|---|---|---|---|
+| 4 (revived) | inner-loop restructure | 46% of wall, ×6.1 | **1.63×** |
+| 3' | coverage before first batch (wait, not poll) | 26% of wall | 1.34× |
+| 7 | re-sweep `STAGE_ADOPT_SETTLE_MS` | descent floor | ~3% |
+
+`HOIST_FILL_SLICES` vs fleet size is **resolved incidentally**: with the M1 online, 22 claimants
+against 16 slices push coverage to 100% max. It regresses to 87.5% whenever the fleet is smaller than
+the slice count, so the constant is still wrong in principle, just not binding today.
