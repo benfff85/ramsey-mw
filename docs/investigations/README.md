@@ -1,6 +1,6 @@
 # Investigations — index
 
-Goal throughout: a 282-vertex 2-coloring with zero monochromatic K₈ ⇒ **R(8,8) ≥ 283**. Best-known 282-graph: **25,758** mono-8 (graph 26994, set by a perturbation kick on campaign 10). The older 25,840 (graph 8644) is still referenced by pre-July docs.
+Goal throughout: a 282-vertex 2-coloring with zero monochromatic K₈ ⇒ **R(8,8) ≥ 283**. Best-known 282-graph: **25,604** mono-8 (graph 276750, campaign 10, 2026-07-28). Superseded values still referenced by older docs, newest first: 25,618 (graph 222120, 2026-07-27), 25,758 (graph 26994), 25,840 (graph 8644). **Anything reading "nothing has ever gone below 25,840" predates 2026-07-27 and is no longer true.**
 
 **Start here:** `july-2026-next-steps.md` (live roadmap) → `search-status-2026-06-14.md` (consolidated findings + do-not-retry list).
 
