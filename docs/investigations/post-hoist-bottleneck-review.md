@@ -318,6 +318,65 @@ distribution of actual correction values and of `|P|` against `base_val − earl
 sweep, and count what fraction the bound would reject. That is a measurement, not a build — and given
 the record above it must come first.
 
+### MEASURED 2026-07-28 — 60× on the sweep, and the `|P|` bound above was the wrong one
+
+The `C(|P|, k−|S|)` bound sketched above **would barely have fired**: at ~50% density four seed
+vertices give `|P| ≈ 17`, and `C(17,4) = 2,380` — larger than the ~1,591 it must beat. A better bound
+falls straight out of the identity and costs *nothing*:
+
+> `X` counts red k-cliques in `R ∪ {b}` containing **both** `r` and `b`; `C_b` counts red k-cliques in
+> `R ∪ {b}` containing `b`. Every clique counted by `X` is counted by `C_b`, so **`X ≤ C_b`**. In the
+> all-red case `Y = 0`, hence `created = C_b − X + D_r ≥ D_r`. Symmetrically `Y ≤ D_r` gives
+> `created ≥ C_b` when the cross pairs are all blue.
+
+So **`D_r > early_limit` (all-red) or `C_b > early_limit` (all-blue) proves rejection** — one
+comparison on two values already in registers. This is exact algebra, not a heuristic: it cannot
+change a result, only skip work provably destined for rejection.
+
+`pair_hoist_check bound`, graph 222120 (25,618), 492,747 slow-path units across 12 sweep positions:
+
+```
+C_b  min 297  p1 784  p5 784        <- the left tail the earlier review never published
+D_r  min 281  p1 784  p5 784           early_limit near the floor is ~46
+
+bound would reject:  492,220 / 492,747  = 99.89%
+exact path rejects:  492,747 / 492,747  = 100.00%
+correction values:   min 0  p50 7  p90 39  p99 149  max 427
+SOUNDNESS:           0 violations
+```
+
+Corrections are tiny (median 7) against a bound of ~800, and in 493K sampled units computing the
+correction exactly **never changed an outcome**. Wired into the timed loop and integrated over a whole
+sweep, with the accepted-set equivalence check active:
+
+```
+hoisted        0.2634 us/unit  ->  103 s sweep
+restructured   0.2357 us/unit  ->   92 s   (1.12x)
+BOUNDED        0.0044 us/unit  ->  1.7 s   (60.0x)     decisions IDENTICAL at every sample point
+```
+
+**Do not read 60× as a fleet number.** A stage is 9.71 s of which only ~8.7 s is the sweep:
+
+| sweep speedup | stage | stage-level gain | sweep's share of the new stage |
+|---|---|---|---|
+| 60× | 1.15 s | **8.5×** | 13% |
+| 30× | 1.29 s | 7.5× | 23% |
+| 10× | 1.87 s | 5.2× | 47% |
+
+Amdahl ceiling with fill + ramp fixed at ~1.0 s is **9.7×**. The result is robust — even a 10× sweep
+still gives 5.2× — but it **relocates the bottleneck onto the fill and the residual ramp**, which
+become ~87% of the stage. Fix 3 (self-healing slice fill) and the residual ramp go from ~3% items to
+the main event the moment this lands. That is the fifth consecutive instance of the pattern, and this
+time it is predicted in advance rather than discovered afterwards.
+
+**Caveats before building:**
+- Measured on **one** graph, near the floor, where `early_limit ≈ 46` against `C_b` min 297 — a huge
+  margin. Mid-descent `early_limit` is far larger and the bound fires less; that regime is covered by
+  the existing bound-skip, but confirm rather than assume.
+- 0.11% of slow-path units still need the exact correction. The enumeration path stays.
+- Gate on `hoist_equiv_replay` — the change is exact, so a byte-identical full-stage replay is a real
+  test, not a formality.
+
 ---
 
 ## Smaller items
@@ -477,3 +536,53 @@ slices**, exactly as finding 3 predicts. Fix 3 is untouched by this change.
 Remaining budget of a 9.71 s full sweep: ~0.4 s fill, ~0.6 s residual ramp, ~8.7 s hoisted sweep — of
 which **98% is the X/Y correction**. Everything else in the queue (fixes 3, 5, 7) is ~3% each. The only
 item left with order-of-magnitude potential is **4b**, and it is a measurement before it is a build.
+
+### Fix 4b validation (2026-07-28)
+
+Implemented as `HoistTables::pair_created_bounded` on `feature/bound-pair-correction`.
+
+**Unit level** — the inequality everything rests on is brute-forced rather than argued:
+
+| test | what it proves |
+|---|---|
+| `corrections_never_exceed_the_single_edge_counts` | `X ≤ C_b` and `Y ≤ D_r` by brute force over every pair of four small graphs. If this were ever false the bound could reject an improving move — the only failure that would silently lose search progress. |
+| `bounded_matches_unbounded_at_every_limit` | every pair × 9 limits straddling the true value: `Some(v)` iff `created ≤ limit`, and `v` exact. Exercises both sides of every branch. |
+| `unlimited_bound_never_rejects_and_stays_exact` | inert at `i32::MAX`, which is what an unthresholded stage uses. |
+
+**Production scale** — `hoist_equiv_replay` driving the bounded path, full stage, graph 222120:
+
+```
+392,495,525 units, threshold = base + 6 (production-tight)
+  bound-rejected:  53,697,034  (13.681% of units, 100.00% of slow path)
+  kernel CPU 2674.5 s   hoist CPU 37.6 s   =>  71.1x
+  stream hash kernel: 0x1fa6992592611803
+  stream hash hoist : 0x1fa6992592611803
+  per-unit mismatches: 0
+  VERDICT: EQUIVALENT
+```
+
+**Gap in that run, and how it was closed.** Graph 222120 is the deeply-walled incumbent, so at a
+production-tight threshold **`non-exceeded units: 0`** — not one unit in the whole 392M space was
+accepted. The replay therefore validated the *reject* stream exhaustively but never compared an exact
+*accepted* count. A second replay at a deliberately loose threshold (`slack 2000`, which puts the
+limit above the typical `created ≈ 1,637`) forces the accept path at production scale. Worth recording
+as a methodology note: **a replay on a walled graph cannot validate the accept path, because there is
+nothing to accept.** Any future use of this harness as a gate should check `non_exceeded > 0` before
+claiming coverage.
+
+**Accept-path replay (loose threshold, `slack 2000`) — the complementary half:**
+
+```
+20,000,000 units
+  non-exceeded units:  19,984,011   (99.9% ACCEPTED -- exact counts compared and hashed)
+  bound-rejected:      2,322        (0.08% of slow path -- bound correctly stays out of the way)
+  kernel CPU 5243.6 s   hoist CPU 25.9 s   =>  202.4x
+  stream hash kernel: 0x27dbd600cee955d9
+  stream hash hoist : 0x27dbd600cee955d9
+  per-unit mismatches: 0
+  VERDICT: EQUIVALENT
+```
+
+The two replays are complementary by construction: the tight-threshold run bound-rejects **100%** of the
+slow path and accepts nothing, the loose-threshold run bound-rejects **0.08%** and accepts 99.9%. Between
+them every branch of `pair_created_bounded` is exercised against the shipped kernel at production scale.
