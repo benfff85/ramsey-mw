@@ -51,6 +51,11 @@ CREATE TABLE `ramsey-dev`.`stage` (
     -- table scan, and the table grows one row per stage advance (~4/min), so the cost climbs
     -- forever. Measured at 64k rows: 11.8ms scan -> 0.13ms covering-index lookup.
     KEY `idx_stage_campaign_status` (`campaign_id`, `status`),
+    -- The queue manager asks for ACTIVE stages ACROSS ALL campaigns (campaignId = null), which
+    -- cannot use idx_stage_campaign_status -- its leading column is campaign_id. That left the QM
+    -- full-scanning on every progression tick and TWICE on the critical path of every stage
+    -- advance (adoptAfterSettle + isStillActive). Measured at 215k rows: 45ms scan -> 0.06ms lookup.
+    KEY `idx_stage_status` (`status`),
     -- Serves MAX(stage_id) per campaign and the campaign-ordered progression scans.
     KEY `idx_stage_campaign_stage` (`campaign_id`, `stage_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -132,6 +137,12 @@ CREATE TABLE `ramsey-test`.`stage` (
                                       -- table scan, and the table grows one row per stage advance (~4/min), so the cost climbs
                                       -- forever. Measured at 64k rows: 11.8ms scan -> 0.13ms covering-index lookup.
                                       KEY `idx_stage_campaign_status` (`campaign_id`, `status`),
+                                      -- The queue manager asks for ACTIVE stages ACROSS ALL campaigns (campaignId = null),
+                                      -- which cannot use idx_stage_campaign_status -- its leading column is campaign_id. That
+                                      -- left the QM full-scanning on every progression tick and TWICE on the critical path of
+                                      -- every stage advance (adoptAfterSettle + isStillActive). Measured at 215k rows: 45ms
+                                      -- scan -> 0.06ms lookup.
+                                      KEY `idx_stage_status` (`status`),
                                       -- Serves MAX(stage_id) per campaign and the campaign-ordered progression scans.
                                       KEY `idx_stage_campaign_stage` (`campaign_id`, `stage_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -203,6 +214,12 @@ CREATE TABLE `ramsey`.`stage` (
                                       -- table scan, and the table grows one row per stage advance (~4/min), so the cost climbs
                                       -- forever. Measured at 64k rows: 11.8ms scan -> 0.13ms covering-index lookup.
                                       KEY `idx_stage_campaign_status` (`campaign_id`, `status`),
+                                      -- The queue manager asks for ACTIVE stages ACROSS ALL campaigns (campaignId = null),
+                                      -- which cannot use idx_stage_campaign_status -- its leading column is campaign_id. That
+                                      -- left the QM full-scanning on every progression tick and TWICE on the critical path of
+                                      -- every stage advance (adoptAfterSettle + isStillActive). Measured at 215k rows: 45ms
+                                      -- scan -> 0.06ms lookup.
+                                      KEY `idx_stage_status` (`status`),
                                       -- Serves MAX(stage_id) per campaign and the campaign-ordered progression scans.
                                       KEY `idx_stage_campaign_stage` (`campaign_id`, `stage_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
