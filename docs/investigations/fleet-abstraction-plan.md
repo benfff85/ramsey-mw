@@ -122,13 +122,37 @@ POST /api/ramsey/fleets/{platform}/resume     → 200  (convenience: sets status
 `PUT` upserts and sets `updated_date=now`; only the supplied fields change (partial update). `campaignId=null` unmaps; `status=PAUSED` holds the target but idles workers. These are the "move / pause / resume a fleet" primitives used by both a human (curl) and the Phase-2 ILS controller.
 
 ### 4.3 Bank / retire a campaign (replaces "set campaign INACTIVE")
-Banking is now two independent actions, both stage/fleet-level (no campaign.status):
+
+> **CORRECTED 2026-07-28.** This section originally specified
+> `POST /api/ramsey/campaigns/{id}/deactivate`. **That endpoint was never built** (it returns 404),
+> and it should not be — it is both non-RESTful and redundant. `campaign.status` is `@Transient`,
+> so there is nothing on the campaign resource to change; the state that decides liveness lives on
+> the **stage**, and `PUT /api/ramsey/stages/{id}` already edits it. Use that.
+
+Banking is two independent actions, both stage/fleet-level (no campaign.status):
 - **Stop working it:** `PUT /fleets/{platform}` with a different campaign (or null). Workers leave.
-- **Make the QM stop managing it:** deactivate its stage. Add:
+- **Make the QM stop managing it:** set its ACTIVE stage INACTIVE via the stage resource:
   ```
-  POST /api/ramsey/campaigns/{id}/deactivate   → marks the campaign's ACTIVE stage INACTIVE (no new stage)
+  GET  /api/ramsey/stages?status=ACTIVE          # find the campaign's active stage
+  PUT  /api/ramsey/stages/{stageId}              # same body, status: "INACTIVE"
   ```
-  After this the campaign has no ACTIVE stage → the single QM ignores it → it's historical. (Its graphs/stages remain for reporting.)
+  After this the campaign has no ACTIVE stage → the single QM ignores it → it's historical. (Its
+  graphs/stages remain for reporting.)
+
+> **The API does NOT clean up Redis, and neither does the DB.** `StageService.createOrUpdateStage`
+> is `stageRepo.save(stage)` and the middleware holds no Redis references at all — per-stage keys are
+> only ever cleared by the queue manager's `switchToNewStage`, i.e. by *normal progression*.
+> Deactivating a stage by any other route (this PUT, or raw SQL) orphans:
+> ```
+> stage_config:{id}        # ~40 KB, holds the base graph bitstring
+> stage_work_index:{id}
+> processed_count:{id}
+> best_results:{id}
+> best_result:{id}         # only present for SA-style results
+> ```
+> They are inert — no worker resolves a stage that is not ACTIVE — but they leak until Redis is
+> flushed. Delete them alongside the PUT. Observed live on 2026-07-28 retiring campaign 3's
+> stage 303600.
 
 > Auth: mw currently has no auth (internal network). Keep these internal; add auth later if mw is ever exposed. Note in the endpoint comments.
 
