@@ -78,7 +78,15 @@ services:
       # best of the top-50 rather than the first found, so the order no longer changes the outcome.
       WORK_ENUMERATION_STRATEGY: "SEQUENTIAL_WITH_SINGLES"
       TOP_RESULTS_COUNT: 50
-      STAGE_ADOPT_SETTLE_MS: 100      # pub/sub-armed settle window; 0 = pure polling
+      # A/B history. 100 -> 50 was tried 2026-07-28 and was CATASTROPHIC, not merely slower: the
+      # descent flatlined at ~836K after 80 min where the 100ms baseline reached its 25,721 floor in
+      # 43. Weaker steps did not just cost rate, they changed the TRAJECTORY into a basin the search
+      # could not leave -- and micro-improvements there kept resetting PERTURBATION_BASIN_STALE_STAGES,
+      # so no kick fired to rescue it either. That says the settle window is doing real selection
+      # work, not adding latency, which makes LENGTHENING it the interesting direction. Now testing
+      # 200. Judge on FLOOR REACHED per kick cycle, never on stage rate -- stage rate moves the wrong
+      # way for the right reason here.
+      STAGE_ADOPT_SETTLE_MS: 200      # pub/sub-armed settle window; 0 = pure polling
       # Grace period for in-flight workers once a stage's work is fully CLAIMED but not yet fully
       # reported. A full sweep now takes seconds rather than minutes, so 15s was comparable to a
       # whole stage; 3s still comfortably covers a worker finishing its current batch (~0.2s
@@ -95,11 +103,21 @@ services:
       PERTURBATION_ENABLED: "true"
       # Replaying campaign 10's basins, the gap between successive NEW basin minima reaches 249
       # stages near the floor — a basin goes quiet and then improves again. At 100 roughly half of
-      # them would be kicked before reaching the floor they actually had; 500 clears every gap
+      # them would be kicked before reaching the floor they actually had; 500 cleared every gap
       # observed, trading kick frequency for basin depth.
-      PERTURBATION_BASIN_STALE_STAGES: 500
-      PERTURBATION_EDGE_PAIRS: 60          # base kick; geometric escalation doubles: 60,120,240,480,960,1920
-      PERTURBATION_ESCALATION_CAP: 32      # max multiplier (x32) -> 6 steps
+      #
+      # 500 -> 1000 (2026-07-29), buying more depth still. Backtested over campaign 10's 71 kicks:
+      # healthy basins run 4,800-8,700 stages before flooring, so they were already sailing past a
+      # 500-stage window on genuine new minima; doubling it costs few kicks and gives a slow basin
+      # more room. KNOWN TRADEOFF: 4 of those 71 basins (5.6%) stalled >10x above the incumbent
+      # while STILL setting tiny new floors, which resets this clock -- one burned 18,412 stages
+      # (~15h) at 30.6x the incumbent before firing. Raising the window lengthens that tail. The
+      # real fix is an incumbent-RELATIVE guard (kick if the basin cannot get within Nx of the
+      # incumbent), not a bigger absolute count; see docs/investigations/post-hoist-bottleneck-review.md.
+      PERTURBATION_BASIN_STALE_STAGES: 1000
+      PERTURBATION_EDGE_PAIRS: 60          # base kick; geometric escalation doubles: 60,120,240,480,960,1920,3840
+      PERTURBATION_ESCALATION_CAP: 64      # max multiplier (x64) -> 7 steps; added a tier 2026-07-29 because
+                                           # every recent kick was already pinned at the old x32 cap
       PERTURBATION_CHECK_FREQUENCY_MS: 60000
       LOGGING_LEVEL_ROOT: INFO
     depends_on:
