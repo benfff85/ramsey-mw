@@ -691,3 +691,120 @@ whole stage.
 `HOIST_FILL_SLICES` vs fleet size is **resolved incidentally**: with the M1 online, 22 claimants
 against 16 slices push coverage to 100% max. It regresses to 87.5% whenever the fleet is smaller than
 the slice count, so the constant is still wrong in principle, just not binding today.
+
+---
+
+# Part 3 — the hoist gate saga, and where this leaves the project (2026-07-29/30)
+
+## What shipped after Part 2
+
+| # | change | measured |
+|---|---|---|
+| 5 | `MAX_FETCH_SIZE` 1M → 4M (ceiling had become binding) | throughput +25%, full sweeps 5.27 → 3.86 s |
+| 6 | stack buffer replacing the per-unit `vec![]` | evaluate/unit 56.3 → 40.1 ns |
+| 7 | wait-for-coverage + self-healing slice gap fill | misses/hoisted stage 3,780 → 2,094; fill 0.99 → 0.78 s |
+| 8 | **hoist gate 5M → 50k, `HoistGate` deleted (−238 lines)** | **throughput 0.635 → 2.668 M u/s** |
+| — | ILS: basin-stale 500 → 1000, escalation cap x32 → **x64** | see below |
+| — | `idx_stage_status`, docs, UI constant alignment | — |
+
+## The gate saga — the most instructive failure in this document
+
+The gate exists so a stage that advances immediately does not pay ~0.6 s building a per-edge table
+it will not reuse. It was set at a **fleet index of 5,000,000**, derived from *hoisted* throughput
+("a wall stage crosses 5M in ~0.24s") — but every unit before the gate is by definition **unhoisted**,
+so the real cost was **2.6 s near the floor and 35–41 s post-kick**, per stage.
+
+Three attempts, in order:
+
+1. **Predict from stage depth** (Part 2, fix 2). Marked a stage "deep" if it reached the 5M *engage*
+   gate. But engaging makes a stage ~20× faster, so it advances **sooner** — around 3M — records
+   itself shallow, and disarms the next stage. *The signal punished the stages where the hoist
+   worked.* 42% of stages paid full ramp.
+2. **Amortisation threshold + hysteresis.** Split "did this fill pay for itself" (250k) from the
+   engage gate, and required a run of 8 shallow stages before dropping eagerness. Got to 4%.
+3. **Predict from the QM's exhausted/improved outcome.** Semantically the cleanest — ground truth,
+   speed-independent — and **the worst of the three: 100% of stages paid full ramp.** Exhaustion
+   proxies *regime*; the gate needs *amortisation*. At high clique count a stage advancing on an
+   improvement still churns millions of units and amortises fine.
+
+**The answer was to lower the constant.** The space is `[0, 39_621)` singles then ~392.5M pairs; past
+~50k every unit is a pair, which is what the hoist is for. Singles need no gate either way — `created`
+for a single flip *is* the table entry.
+
+| | 5M + depth | 5M + QM outcome | **50k gate** |
+|---|---|---|---|
+| full-ramp stages | 4% | 100% | **0%** |
+| median engage index | 14,000 | 5.0M | **68,036** |
+| ramp to engage | — | — | **0.30 s** |
+| throughput | 0.635 M u/s | 0.451 M u/s | **2.668 M u/s** |
+
+Two things worth carrying forward:
+
+- **The decisive number was available three steps early.** `ramp 35.4 s vs wasted fill 0.61 s = 58:1`
+  means break-even is a **1.7%** chance a stage is worth it. At that ratio the correct gate is
+  "almost always engage" and *any* predictor is a liability. That was measured, written down, and
+  then ignored in favour of building a better predictor.
+- **The depth predictor was also engaging at the wrong place.** Its "eager" stages fired at a median
+  index of 14,000 — *inside* the singles block — so workers began filling slices while still
+  competing for singles work. That is why 4%-full-ramp still ran 4.2× slower than a 50k gate.
+
+## Running scoreboard (session end)
+
+| | at review start | now |
+|---|---|---|
+| full-sweep stage | 13.01 s | **~4.7 s** |
+| per-worker throughput | 2.1 M u/s | ~10 M u/s near floor |
+| descent-stage floor | ~181 ms | ~125 ms |
+| all-time best graph | 25,758 (as documented) | **25,604** (graph 276750) |
+
+## Proposed next steps, ranked
+
+### 1. Storage is now the binding operational constraint — NOT throughput
+
+`graph` went **9.91 GB → 20.68 GB in one day** (226,022 → 462,670 rows). At ~5,700 stages/hour and
+~44 KB per graph row that is **~6–11 GB/day**, and there is still no retention policy. A week of this
+is ~100 GB.
+
+Every stage writes a full 39,621-char bitstring, but consecutive stages differ by **1–2 edge flips**.
+Options, cheapest first: store flips-from-parent instead of full bitstrings for non-milestone graphs;
+or keep full data only for kick seeds, basin floors and incumbents and prune the rest on a schedule.
+This is the one item that will stop the search if ignored, and it got worse *because* the engine work
+succeeded.
+
+### 2. The ILS staleness trigger has a structural gap
+
+`PERTURBATION_BASIN_STALE_STAGES` counts stages since the basin's **own** floor improved. In a bad
+basin, tiny improvements are always available and each one resets the clock — so the mechanism that
+exists to rescue a stuck search is disabled by the search being stuck. Measured over campaign 10's
+71 kicks: **4 of 71 basins (5.6%) stalled >10× above the incumbent while still resetting the clock**,
+one for 18,412 stages (~15 h) at 30.6× the incumbent.
+
+Raising the window to 1000 lengthens that tail. The fix is an **incumbent-relative** guard — kick if a
+basin cannot get within N× of the incumbent within N stages — not a larger absolute count.
+
+### 3. Re-run the settle-timer A/B properly
+
+`STAGE_ADOPT_SETTLE_MS` 100 → 50 was **catastrophic** (descent flatlined at ~836K where the 100 ms
+baseline reached its 25,721 floor in 43 min), which is itself informative: the settle window does real
+selection work rather than adding latency. That makes **lengthening** it the interesting direction, and
+200 is currently deployed but **unmeasured** — its trial ran entirely inside a 15-hour stall and
+measured "stranded in a bad basin", not the setting. Judge on **floor reached per kick cycle**, never
+stage rate.
+
+### 4. Remaining engine items — small, and now clearly secondary
+
+- Blue-only slice striping (74–91% of on-demand misses are blue). **Requires a versioned Redis key**
+  (`hoist_shard_v2:`) — it changes the slice→edge mapping, and a fleet on an older image writing the
+  old layout into the same keys would silently corrupt tables.
+- Don't reset `current_fetch_size` on stage change when the stage is likely hoisted (~3%).
+- Full red-outer/blue-inner loop restructure: measured **~1.10×** in production (not the 7.3× the
+  harness shows — the harness/production gap is a *fixed* ~28.6 ns offset, not a ratio). Not worth
+  ~150 lines in the hottest loop.
+
+### 5. Methodological note for whoever picks this up
+
+Six estimates in this document collapsed on measurement, every one for the same reason: applying a
+speedup ratio to the wrong denominator. The rule, stated once more because it keeps being violated —
+**work out which fraction of the cost a change touches before working out how much faster it makes
+that fraction.** The corollary learned the hard way in Part 3: when the payoff asymmetry is large
+(58:1), stop optimising the decision and just take the cheap side always.
