@@ -115,9 +115,30 @@ services:
       # real fix is an incumbent-RELATIVE guard (kick if the basin cannot get within Nx of the
       # incumbent), not a bigger absolute count; see docs/investigations/post-hoist-bottleneck-review.md.
       PERTURBATION_BASIN_STALE_STAGES: 1000
-      PERTURBATION_EDGE_PAIRS: 60          # base kick; geometric escalation doubles: 60,120,240,480,960,1920,3840
-      PERTURBATION_ESCALATION_CAP: 64      # max multiplier (x64) -> 7 steps; added a tier 2026-07-29 because
-                                           # every recent kick was already pinned at the old x32 cap
+      PERTURBATION_EDGE_PAIRS: 60          # base kick; geometric escalation doubles: 60,120,240,480,960,1920
+      # 32 -> 64 (2026-07-29) on the reasoning that every recent kick was already pinned at x32.
+      # REVERTED to 32 on 2026-07-31: pinning was the SYMPTOM of kicks not working, not evidence that
+      # a bigger one would help. Measured over campaign 10's 22 kicks, outcome is bimodal -- an epoch
+      # either returns to ~1.0x the incumbent or strands on the ~785K shelf, nothing in between:
+      #
+      #   1920 pairs (x32):  16 kicks, 15 recovered (floors 25,705-25,796 in ~5-9k stages), 1 stranded
+      #   3840 pairs (x64):   5 kicks,  0 recovered, all stranded at 30-53x for 17-27k stages
+      #
+      # A 3840-pair kick peaks at ~4.6M, which is essentially a random 282-coloring (expectation
+      # ~6.7M) -- it discards the incumbent rather than perturbing it, and the descent then finds the
+      # generic shelf any random start finds. Stranded epochs burned 110,433 of the ~215,000 stages
+      # since kicks began (51% of fleet output); dropping the x64 tier removes ~100k of that.
+      #
+      # NOTE the staleness clock is NOT at fault here and needs no change: trailing stalls measured
+      # 1,019 / 1,004 / 796 / 1,017 stages, so every stranded epoch went properly stale and kicked on
+      # schedule. The descent to the shelf is 16-26k stages of GENUINE new minima, so basin staleness
+      # cannot detect doom early -- a doomed and a healthy descent look identical to it. Only an
+      # incumbent-RELATIVE test separates them, and it is thinner than it sounds: a HEALTHY basin sits
+      # at 64-68x the incumbent at stage 500 and 51-61x at stage 1000 (the drop to 1.0x comes late),
+      # versus 68.3-80.1x for stranded. That leaves a ~12% margin at stage 1000 on n=15/6 -- too thin
+      # to trust, and it would only catch the 1-in-16 x32 case now that x64 is gone. Deliberately NOT
+      # built; see docs/investigations/post-hoist-bottleneck-review.md.
+      PERTURBATION_ESCALATION_CAP: 32      # max multiplier (x32) -> 6 steps: 60,120,240,480,960,1920
       PERTURBATION_CHECK_FREQUENCY_MS: 60000
       LOGGING_LEVEL_ROOT: INFO
     depends_on:
