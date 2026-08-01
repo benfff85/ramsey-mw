@@ -8,7 +8,35 @@
 
 ---
 
-## CURRENT STATE (2026-07-26) — read this first; everything below is an older snapshot
+## CURRENT STATE (2026-07-31) — read this first; everything below is an older snapshot
+
+- **The kick MAGNITUDE axis is exhausted.** 22 kicks over 218,786 stages have produced **zero**
+  improvement — the incumbent 25,604 (graph 276750) was set at stage 267,359, *before* the whole
+  sequence. Outcome is bimodal: x32 kicks return to a 91-unit band (25,705–25,796) just above the
+  incumbent in 15 of 16 cases, while x64 kicks strand at 30–53× for 17–27k stages in 5 of 5. There is
+  no magnitude that lands somewhere new and good.
+- **`PERTURBATION_ESCALATION_CAP` reverted x64 → x32** (2026-07-31, mw #184). The x64 tier had been
+  added 07-29 because kicks were pinned at x32 — but pinning was the *symptom* of kicks not working.
+  A 3840-pair kick peaks at ~4.6M against a random-coloring expectation of ~6.7M, i.e. it discards
+  the incumbent rather than perturbing it. Stranded epochs had consumed 49% of all stages since the
+  first kick.
+- **`PERTURBATION_BASIN_STALE_STAGES` is 1000**, not 500 (raised 07-29). The clock is **not**
+  malfunctioning and needs no change: stranded epochs showed trailing stalls of 1,019 / 1,004 / 796 /
+  1,017 stages and fired on schedule. Staleness *cannot* detect a doomed descent early, because a
+  doomed and a healthy descent both keep setting genuine new minima. The incumbent-relative guard
+  that would distinguish them was measured and **rejected** (~12% margin, n=15/6) — see
+  `clique-guided-perturbation-proposal.md` §6.3 before re-deriving it.
+- **Next proposed move: kick SHAPE, not size** — `clique-guided-perturbation-proposal.md`. Bias the
+  kicked edges by mono-8-clique participation instead of choosing uniformly. Queue-manager-only.
+  **§8.1 defines a half-day falsification test (participation histogram on graph 276750) to run
+  before any search-affecting code is written.**
+- **Storage: retention policy now exists.** The `graph` table was 20.68 GB with 17.16 GB of
+  `edge_data`; the 07-30 prune nulled 445,163 superseded bitstrings, leaving 0.74 GB live and 18.38
+  GB reusable. `clique_count` (the trajectory the UI plots) is untouched — rows are NULLed, never
+  deleted. Procedure, retention rules, and the high-water-mark guard are in `database/README.md`.
+  Re-run weekly; growth is ~2–4 GB/day.
+
+## CURRENT STATE (2026-07-26) — an older snapshot; where it disagrees with the above, the above wins
 
 - **All-time best is now 25,604** (graph 276750, 2026-07-28 11:01), set by a perturbation kick on
   campaign 10. Still not a witness (≠ 0). Progression of record-holders: 25,840 (graph 8644,

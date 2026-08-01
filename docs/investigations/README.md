@@ -10,6 +10,7 @@ Goal throughout: a 282-vertex 2-coloring with zero monochromatic K₈ ⇒ **R(8,
 |---|---|
 | `july-2026-next-steps.md` | **Live roadmap** — multi-seed basin program (campaigns 11+), ranked queue |
 | `post-hoist-bottleneck-review.md` | **Live perf work** — measured wall-clock budget after the hoist shipped; ranked fix queue (stage-status index, regime-aware hoist gate, slice fill, inner loop) with before/after baselines |
+| `clique-guided-perturbation-proposal.md` | **PROPOSED, not built** — kick edges by mono-8-clique participation instead of uniformly at random. Motivated by 22 kicks / 218,786 stages producing zero improvement on the incumbent: small kicks re-enter the same basin, large ones strand. Queue-manager-only; §8.1 defines a half-day falsification test to run *before* any code |
 | `fleet-abstraction-plan.md` | **SHIPPED** — `RAMSEY_CAMPAIGN_ID` env-pinning replaced by a DB `fleet` table (platform→campaign); single campaign-agnostic QM. Repointing/pausing is a DB update, not a redeploy. Phase 2 (perturbation/ILS) built on it and is also live. |
 | `pair-move-hoist-proposal.md` | **SHIPPED** — the original proposal for hoisting per-edge clique counts out of the pair-move inner loop |
 | `pair-move-hoist-review.md` | **SHIPPED** — measured review of that proposal (found a shared-vertex bug in its pseudocode), plus the outcome: what the kernel change actually bought once the surrounding bottlenecks were removed |
