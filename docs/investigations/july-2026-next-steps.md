@@ -8,7 +8,41 @@
 
 ---
 
-## CURRENT STATE (2026-07-31) — read this first; everything below is an older snapshot
+## CURRENT STATE (2026-08-08) — read this first; everything below is an older snapshot
+
+- **The Paley(281)+1 line is CLOSED and campaign 10 is RETIRED.** Full writeup:
+  **`frozen-paley-core-investigation.md`**. Headlines:
+  - The 281-vertex core stayed **bit-identical to Paley(281)** for all 519k stages, so the live
+    search space was vertex 281's **281-bit row** — **20,001 of 392,495,511 work units per stage
+    (0.005%)** could possibly improve anything. All 25,604 cliques pass through that one vertex.
+  - Reaching zero requires **`max K7-free induced subgraph of Paley(281) >= 141`**. It is **105**
+    (converged) and rigorously **<= 214**. Proving `<= 140` by SAT is ~10^8 core-years.
+  - **Paley(281) is rigid:** 0 of 39,340 single edge flips keep it K8-free in both colours. It is an
+    isolated point in the space of valid bases, which is why every core flip "avalanches".
+  - This **narrows the scope** of three earlier results (windowed MaxSAT, 2-vertex joint, multi-seed):
+    all sampled uniformly over an edge set that is 99.3% frozen. See §4 of the new doc.
+- **Fleet state:** `m1` and `m4-max` both **unmapped** (`campaignId: null`) and idling; campaign 10's
+  ACTIVE stage set INACTIVE; 1.38M orphaned per-stage Redis keys cleared (1.09 GiB → 125 MiB, with
+  `processed_graph_hashes` intact at 652,271). Re-point via `PUT /fleets/{platform}` when there is a
+  new target.
+- **Glue construction: PROPOSED AND FALSIFIED the same day** (`frozen-paley-core-investigation.md`
+  §10). Gluing an off-the-shelf (7,8)-Ramsey graph to an (8,7) one and searching only the cross edges
+  is hopelessly over-constrained — ~19,740 cross bits (13,683 nats) against **E ~ 3.4e6** expected
+  mixed mono-K8s, 248x too large; a random glue starts ~100x WORSE than Paley+1. **Do not build the
+  search.** Caveat worth carrying: the first moment kills random/searched glue but not a *structured*
+  one (the same argument "disproves" Paley(281), which achieves zero), so the decomposition tells you
+  what to look for without making it easier. Revisit only with a specific algebraic interface.
+- **No open computational avenue remains for R(8,8) >= 283.** Every construction family is closed
+  (cyclotomic to order 1021, all four order-282 Cayley groups, Seidel switching, circulants), every
+  local move class is closed, Paley(281) is rigid, and the >=141 criterion is out of SAT reach. The
+  next step needs new mathematics, not more compute. **What survives is triage:** `k7free search`
+  scores any candidate base by its split in seconds and `k7free rigid` reports its neighbourhood, so
+  a future base can be assessed in minutes rather than given to a fleet for months.
+- **R(5,5) pivot: DEPROMOTED for an R(8,8)-only goal.** No mathematical bridge, and the complete
+  methods that settle k=5 (`C(48,5) = 1.7M`) are exactly the ones that die at k=8
+  (`C(282,8) ~ 3.2e13`). Success there would not transfer.
+
+## CURRENT STATE (2026-07-31) — an older snapshot
 
 - **The kick MAGNITUDE axis is exhausted.** 22 kicks over 218,786 stages have produced **zero**
   improvement — the incumbent 25,604 (graph 276750) was set at stage 267,359, *before* the whole

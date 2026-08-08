@@ -2,12 +2,22 @@
 
 Goal throughout: a 282-vertex 2-coloring with zero monochromatic K₈ ⇒ **R(8,8) ≥ 283**. Best-known 282-graph: **25,604** mono-8 (graph 276750, campaign 10, 2026-07-28). Superseded values still referenced by older docs, newest first: 25,618 (graph 222120, 2026-07-27), 25,758 (graph 26994), 25,840 (graph 8644). **Anything reading "nothing has ever gone below 25,840" predates 2026-07-27 and is no longer true.**
 
-**Start here:** `july-2026-next-steps.md` (live roadmap) → `search-status-2026-06-14.md` (consolidated findings + do-not-retry list).
+**Start here:** `frozen-paley-core-investigation.md` (what the search space actually was, and why the
+Paley+1 line is closed) → `july-2026-next-steps.md` (live roadmap) → `search-status-2026-06-14.md`
+(consolidated findings + do-not-retry list).
+
+> **2026-08-08 — scope correction.** Campaign 10's 281-vertex core was bit-identical to Paley(281)
+> for all 519k stages, so the live search space was one vertex's 281-bit row (0.005% of each stage's
+> work units), and Paley(281) is a rigid isolated base (0 of 39,340 single flips keep it K8-free).
+> Reaching zero needs `max K7-free induced subgraph >= 141`; it is 105, and rigorously <= 214. This
+> narrows the stated scope of the windowed-MaxSAT, joint-reoptimisation and multi-seed results —
+> see `frozen-paley-core-investigation.md` §4. Campaign 10 is retired; both fleets are unmapped.
 
 ## Live / current
 
 | Doc | What it is |
 |---|---|
+| `frozen-paley-core-investigation.md` | **The Paley+1 line, characterised and closed** — frozen core, the 281-bit search space, the `>=141` split criterion, base rigidity, phase-transition map, do-not-retry list, and the glue construction as the forward direction |
 | `july-2026-next-steps.md` | **Live roadmap** — multi-seed basin program (campaigns 11+), ranked queue |
 | `post-hoist-bottleneck-review.md` | **Live perf work** — measured wall-clock budget after the hoist shipped; ranked fix queue (stage-status index, regime-aware hoist gate, slice fill, inner loop) with before/after baselines |
 | `clique-guided-perturbation-proposal.md` | **PROPOSED, not built** — kick edges by mono-8-clique participation instead of uniformly at random. Motivated by 22 kicks / 218,786 stages producing zero improvement on the incumbent: small kicks re-enter the same basin, large ones strand. Queue-manager-only; §8.1 defines a half-day falsification test to run *before* any code |
