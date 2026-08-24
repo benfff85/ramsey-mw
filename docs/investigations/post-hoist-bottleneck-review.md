@@ -1084,3 +1084,30 @@ still stands: the quantisation histogram (66% → 21% of stages ending within 10
 is a structural measurement of queue-manager behaviour, and the drop in worker idle is per-process.
 The honest summary is **"removed the poll quantisation, direction confirmed, magnitude not cleanly
 measured"** rather than a specific percentage.
+
+
+# Part 6 — worker count was 3.6% left on the table (2026-08-24)
+
+Workers are single-threaded, so N of them cap at N×100% CPU. Measured on the M4 Max (16 logical:
+12P+4E) at the deployed 14: **workers took 1343% of 1600% available and every other service on the
+box took 13%** — about 2.4 cores idle, with the workers themselves already at 96% each and therefore
+unable to absorb it.
+
+Swept under the Part 5 protocol (m1 paused, 5-minute ramp discarded, fleet throughput sampled 10×30 s
+per config, and 14 run both first and last to detrend drift — which turned out to be 3.1%, larger
+than the effect being measured, so the bracketing mattered):
+
+| workers | fleet M units/sec | vs interpolated 14-worker baseline |
+|---|---|---|
+| 12 | 80.67 ± 0.62 | −9.0% |
+| 14 | 86.62 ± 0.61 (first), 89.28 ± 0.69 (last) | baseline |
+| 16 | **90.43 ± 0.54** | **+3.6%** |
+| 18 | 91.01 ± 0.87 | +3.5% |
+
+Marginal gain per added worker: +7.3, +2.5, +0.6. Saturated at 16 — the last two workers land on
+efficiency cores and contribute little, and beyond that more containers are pure overhead. **16 is
+deployed.**
+
+Worth noting what this says about the shape of the problem: it is a 3.6% win with zero code risk,
+found by looking at `docker stats` rather than at the code. The engine has been optimised hard; the
+*deployment* had not been looked at once. Re-sweep on any new host rather than carrying 16 over.
