@@ -808,3 +808,178 @@ speedup ratio to the wrong denominator. The rule, stated once more because it ke
 **work out which fraction of the cost a change touches before working out how much faster it makes
 that fraction.** The corollary learned the hard way in Part 3: when the payoff asymmetry is large
 (58:1), stop optimising the decision and just take the cheap side always.
+
+---
+
+# Part 4 — stage turnover was the bottleneck, not the inner loop (2026-08-24)
+
+## What this part settles
+
+Part 3 left "remaining engine items" as the queue and treated throughput as roughly done. That was
+right about the inner loop and wrong about the fleet: the largest single non-compute cost was
+**stage-turnover latency**, and it had been sitting in plain sight in a docstring the whole time.
+`StageAdoptScheduler` says the poll interval "also floors the stage duration" — true of the
+improvement path, which is why the settle timer exists, and equally true of the **exhaustion** path,
+which never got an event.
+
+## Finding 5 — the 1 s progression poll quantised every exhausted stage
+
+The queue manager only learned a stage was finished on its next `checkForProgression` tick. Workers
+that had exhausted the work space sat idle until then.
+
+The signature is unmistakable in the `stage` table. Lifetime of exhaustion-driven stages
+(`updated_date - created_date`, stages > 1500 ms), bucketed by `ms mod 1000`, n = 446:
+
+| ms mod 1000 | 0–99 | 100–899 (8 buckets) | 900–999 |
+|---|---|---|---|
+| count | 69 | 153 total | 224 |
+
+**66% of stages ended within 100 ms of a whole second**, where a distribution not pinned to the tick
+puts 20% there. Every QM "fully processed" log line in a sample of twelve landed at `.409` ± 6 ms —
+the same sub-second phase, i.e. the scheduler tick, not the work.
+
+Mean exhaustion-driven stage: **4128 ms**, of which ~500 ms was waiting for the tick. Exhaustion
+stages were 446/600 of stages and the overwhelming majority of wall-clock, so this was
+**~11.6% of fleet wall-clock spent with every worker idle and nothing left to claim.**
+
+### Why the earlier `STAGE_PROGRESSION_FREQUENCY_MS` A/B missed it
+
+1000 → 100 was A/B'd on 2026-08-23 and read NULL (−1.3σ on throughput, idle unchanged), which is
+why the compose comment concludes "exhaustion detection was NOT the source of the ~13% worker idle".
+That conclusion was wrong, but the measurement was not: polling 10× more often recovers the latency
+**and** spends CPU on a box already saturated by 14 workers, and the two cancel. The A/B could only
+ever have shown the net of those. Judging it on stage rate rather than units/s would not have helped
+either — both move together here.
+
+The lesson generalises the Part 3 corollary: **an A/B that changes two things at once cannot falsify
+a hypothesis about one of them.** The quantisation histogram above is the measurement that should
+have been run first — it is one SQL query, it needs no deploy, and it isolates the variable.
+
+### The fix: event-driven completion (worker #112, QM #84)
+
+The worker whose report carries `processed_count` over `total_pairs` publishes the stage id on a new
+`stage_exhausted_events` channel. `INCRBY` is atomic, so exactly one worker sees the crossing and
+the QM gets one event per stage rather than one per straggler.
+
+Deliberately **not** the settle-timer treatment `best_result_events` gets, and the asymmetry is the
+whole point:
+
+| | new best | stage complete |
+|---|---|---|
+| what it means | weakest qualifying improvement so far | every unit evaluated **and** reported |
+| can something better still arrive? | yes | **no** — the top-N set is final |
+| therefore | wait out a settle window for a better step | act immediately |
+
+A settle window on completion would buy zero quality while the whole fleet idles. Hence a separate
+channel rather than a second reason to arm the same timer.
+
+**The event cannot cause a wrong advance.** It is only a trigger: `checkStageNow()` runs the same
+per-stage logic under the same per-campaign lock as the polling loop, and `handleExhaustedStage`
+independently re-checks `isStageExhausted` and `isFullyProcessed`. A spurious, duplicated or late
+event produces a no-op check. The polling loop remains the fallback, so a dropped pub/sub message
+costs latency, never correctness.
+
+### Measured
+
+| | before | after |
+|---|---|---|
+| stages within 100 ms of a whole second | 66% (n=446) | **21% (n=122)** — flat is 20% |
+| mean exhaustion-driven stage | 4128 ms | **3880 ms** |
+| stage rate | 18.60/min (sd 2.26, n=15) | 20.00/min (sd 1.15, n=7), **+7.5%, 1.9σ** |
+
+The rate window is the weakest of the three: n=7 and its tail overlapped a local `--release` test
+run competing for the same cores, which depresses the *after* number. The quantisation histogram is
+the load-independent measurement and it moved exactly as predicted, from 66% to flat.
+
+Predicted 11.6%, delivered ~6–7.5%. The gap is the rest of the turnover cost, which the event does
+not touch: batch-tail skew (a worker that exhausts early still waits out the slowest peer's in-flight
+batch), QM progression (~25 ms) and stage seeding.
+
+## Finding 6 — per-stage Redis keys never expired (worker #111)
+
+`processed_count`, `stage_work_index` and `best_results` are deleted by the QM on stage advance, but
+in-flight workers recreate them immediately afterwards. Adding the `processed_count` delete (QM #83)
+cut that leak by only **19%** — stragglers recreated it on 81% of stages. **Deletion cannot win that
+race; expiry can.** Every worker write path now sets a refreshing 1 h TTL.
+
+Measured over 137 stages with half the fleet upgraded: **3.90 → 1.80 keys/stage**, and what remains
+now expires rather than accumulating forever.
+
+Two things worth keeping:
+
+- **`stage_work_index` still reads `ttl=-1` in production and that is expected.** `SET` clears a
+  TTL; `INCR` and `ZADD` preserve one. A worker on an older image issuing a bare `SET` strips the
+  TTL a new worker just set, which is why only this key looks immortal while the other two show
+  3600. It resolves when every fleet on the campaign is upgraded. The TTL now rides on the `SET`
+  itself (`SET ... EX`) so there is no window where the key is written without one.
+- **The TTL introduced a stall risk, which is fixed in the same PR.** `stage_work_index` is the key
+  the QM reads to *detect* exhaustion, and once the last unit is claimed no successful claim writes
+  it again. A fleet paused between full-claim and advance would have lost the key and stalled
+  unrecoverably. The exhausted branch refreshes too. Workers stop asking about a stage as soon as it
+  advances, so this cannot keep a dead stage alive.
+
+## Finding 7 — three cost hypotheses, measured and closed
+
+Recorded because the methodology note in Part 3 is about estimates that collapse; these collapsed
+*before* anything was built, which is the cheaper place for it to happen.
+
+- **Skipping the per-cycle middleware call.** Part 2 costed the cycle preamble at "~22 ms", which
+  would make the fleet active-stage call ~11% of a 184 ms batch and worth caching against the
+  pub/sub announcements. Measured directly: **2.2 ms mean, 1.1 ms median, 8.2 ms max** — about 1% of
+  a batch. Not worth the fleet-repoint staleness. Do not revisit without re-measuring the endpoint.
+- **Shrinking the batch to cut tail skew.** Total loss ≈ `c/(c+T) + T/(2S)` for per-cycle overhead
+  `c`, batch work `T`, stage `S`. With `c ≈ 3 ms` and `S ≈ 3300 ms` the optimum is `T ≈ 140 ms`
+  against the deployed `TARGET_BATCH_LOOP_MILLIS = 200`: 4.5% → 4.2%, i.e. **~0.3%**. The 200 ms
+  target was chosen when `c` was ~22 ms and is still near-optimal at the new `c`. Leave it.
+- **On-demand fill cost is smaller than the log line suggests.** "N on-demand fills costing X (10% of
+  busy)" counts `fills`, which *includes* the worker's co-operative slice share (`slice`). True
+  on-demand misses are the separate `misses` figure, ~30% of `fills` ≈ **3% of busy**. The other 7%
+  is the unavoidable rebuild of the ~8,983 entries (23% of the table) that a stage's flip
+  invalidates. Blue-only slice striping (Part 3, item 4) therefore targets ~3%, not ~10%.
+
+## Finding 8 — the hoist carry is now validated at production scale (worker #113)
+
+`carry_forward` keeps every entry whose `cross_pairs` relation to the flipped edges is Mixed in both
+graphs. Too permissive by any margin and a stale `created` is served to every unit of the stage
+**and published to peers**, with nothing downstream to catch it. Its coverage was exhaustive but only
+at n=9/10, k=4/5.
+
+Now checked on three consecutive real campaign-3 base graphs at **n=282, k=8** — a single-edge
+advance, a pair-edge advance, and the two-advances-at-once case a worker hits when it misses an
+announcement — comparing all 39,621 entries against a fresh rebuild. **Zero mismatches.**
+Mutation-checked rather than assumed: dropping the `cross_pairs` terms produces **2,399**
+disagreements on the single-edge case, so the test has teeth. ~43 s for all three:
+
+```
+cargo test --release --test carry_forward_production_scale -- --ignored
+```
+
+## Finding 9 — the sequential inner-loop restructure, closed for good (worker #108)
+
+An independently proposed full red-outer/blue-inner restructure claimed 4.2×. Reviewed in detail: no
+correctness flaw, same results as the current loop. But the harness/production gap here is a **fixed
+per-unit offset, not a ratio**, so a speedup measured against the harness's much smaller denominator
+does not carry over. Production: **~1.05×**, consistent with the ~1.10× already recorded in Part 3
+item 4. Not worth ~150 lines in the hottest loop in the codebase. PR closed and branch deleted; this
+is the second independent measurement of the same idea, so treat it as settled.
+
+## Running scoreboard (Part 4 end)
+
+| | Part 3 end | now |
+|---|---|---|
+| mean exhaustion-driven stage | 4128 ms | **3880 ms** |
+| stage rate (campaign 3, 14 workers) | 18.60/min | **20.00/min** |
+| worker idle | 9–17% of wall | **~7%** |
+| per-stage Redis key growth | 3.90 keys/stage | **1.80** (half the fleet upgraded), and now expiring |
+| hoist carry validated at | n=9/10, k=4/5 | **n=282, k=8, real campaign graphs** |
+
+## Queue after Part 4
+
+1. **Storage retention is still the binding operational constraint** (Part 3 item 1). Untouched, and
+   every throughput win makes it worse. This is the one that stops the search.
+2. **The ILS staleness trigger gap** (Part 3 item 2). Untouched. Currently parked behind
+   `PERTURBATION_BASIN_STALE_STAGES: 50000`.
+3. **Upgrade the M1 fleet.** It is running neither Part 4 change, and its bare `SET` strips
+   `stage_work_index` TTLs on campaign 3, so finding 6's leak fix is only half-deployed.
+4. **Remaining turnover cost is batch-tail skew**, and finding 7 shows batch resizing cannot recover
+   it. Anything further here needs a different mechanism, not a tuned constant.

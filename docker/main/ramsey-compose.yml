@@ -93,6 +93,14 @@ services:
       # hoisted, ~1s unhoisted).
       EXHAUSTION_DELAY_MS: 3000
       CYCLE_PREVENTION_GRAPH_LOOKBACK_COUNT: 5000
+      # A/B'd 1000 -> 100 on 2026-08-23: NULL (-1.3 sigma on throughput, idle unchanged) -- but the
+      # CONCLUSION drawn from that ("exhaustion detection is not the source of the idle") was WRONG.
+      # Polling 10x more often recovers the latency AND spends CPU on a box already saturated by 14
+      # workers; the A/B could only show the net. Exhaustion detection WAS ~11.6% of wall-clock:
+      # 66% of exhausted stages ended within 100ms of a whole second (flat = 20%). Fixed properly on
+      # 2026-08-24 by the stage_exhausted_events channel, which gets the latency back without the
+      # polling cost -- so this stays at 1000 and is now only a fallback. See
+      # docs/investigations/post-hoist-bottleneck-review.md Part 4.
       STAGE_PROGRESSION_FREQUENCY_MS: 1000
       IMMEDIATELY_PROGRESS_STAGE_ON_IMPROVEMENT: "true"
       # Phase 2 perturbation (ILS kick): when the current basin has gone this many
@@ -114,7 +122,15 @@ services:
       # (~15h) at 30.6x the incumbent before firing. Raising the window lengthens that tail. The
       # real fix is an incumbent-RELATIVE guard (kick if the basin cannot get within Nx of the
       # incumbent), not a bigger absolute count; see docs/investigations/post-hoist-bottleneck-review.md.
-      PERTURBATION_BASIN_STALE_STAGES: 1000
+      #
+      # 1000 -> 50000 (2026-08-08, Ben's call). ILS is deliberately parked: at 50k stages the
+      # staleness clock will effectively never fire, so the fleet grinds plain descent with no kicks.
+      # Rationale: the kick MAGNITUDE axis was exhausted on campaign 10 (31 kicks / 379k stages, zero
+      # improvement on 25,604) and the whole Paley+1 line is now closed
+      # (docs/investigations/frozen-paley-core-investigation.md), so the fleet is holding on
+      # campaign 3 as a benchmark while a new direction is chosen. Restore to 1000 before any
+      # campaign where ILS is meant to do real work.
+      PERTURBATION_BASIN_STALE_STAGES: 50000
       PERTURBATION_EDGE_PAIRS: 60          # base kick; geometric escalation doubles: 60,120,240,480,960,1920
       # 32 -> 64 (2026-07-29) on the reasoning that every recent kick was already pinned at x32.
       # REVERTED to 32 on 2026-07-31: pinning was the SYMPTOM of kicks not working, not evidence that
