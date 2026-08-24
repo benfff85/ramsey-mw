@@ -1305,3 +1305,77 @@ cargo test --release --test carry_forward_production_scale -- --ignored
 - Composition is unreliable in **both** directions. Part 7's two changes composed to 11.3% and
   measured 8.5%; these three compose to 17.7% and measured 16.9%. Neither the optimistic nor the
   pessimistic reading of a stacked estimate is safe — measure the ends.
+
+# Part 9 — a second kernel push: +12.4% (2026-08-24)
+
+## Result
+
+**+12.4% end-to-end** (14.5σ), measured as alternating pairs against the commit this push started
+from (`52581bb`):
+
+| pair | before | after | delta |
+|---|---|---|---|
+| 1 | 6.473 ± 0.058 | 7.150 ± 0.063 | +10.5% |
+| 2 | 6.340 ± 0.048 | 7.257 ± 0.049 | +14.5% |
+| **pooled** | **6.407** | **7.204** | **+12.4%** |
+
+Per-worker throughput 6.29 → 7.20 M units/sec. Two changes, both in the counting kernel, both
+behaviour-preserving:
+
+| change | measured |
+|---|---|
+| thread the candidate count to the child (#117) | +6.9% |
+| fold the third-to-last recursion level (#118) | +7.5% |
+
+## Re-profiling paid for itself again
+
+The previous kernel change **concentrated** the bottleneck rather than moving it:
+`bron_kerbosch_count_inplace` 74.4% → **76.7%**, `no_x_with_limit` 15.9% → 11.4%, still 88% in the
+two kernels. Both wins came straight off that profile, and neither would have been found by
+inspecting the code for something that looked slow.
+
+The two redundancies removed:
+
+- **Two passes where one suffices.** Every general level ANDs to build a child's candidate set and
+  the child then popcounts that same set. `and_assign_cardinality` fuses them and the count is
+  handed down, so the child never re-measures. The `no_x` variant's second-to-last level had also
+  never received the fusion its sibling got in Part 8.
+- **A recursion level whose body was already inlined below it.** Every child of a `clique_size - 3`
+  node is a `clique_size - 2` node consisting solely of the fused loop. Folding removes a call and
+  three entry branches per candidate, on the level that spawns the most children.
+
+## Two things measured and NOT adopted
+
+- **Worker count.** A first sweep suggested 24 workers was +3.8% — but against a baseline drifting
+  −5.7% across the run. Re-tested as alternating pairs on the new kernel, the two pairs disagreed in
+  **sign** (−2.8%, +1.3%). No effect. Adopting the first reading would have banked a phantom gain.
+- **The set-bit iterator.** Already optimal — trailing-zeros plus clear-lowest-bit, word by word, no
+  rescanning. Rejected without building anything.
+
+## `docker stats` undercounts CPU — do not size headroom with it
+
+It reported 66% per worker and **534% of headroom**, implying 5.3 idle cores. Host-level `top` said
+**85.2% user, 14.8% idle**. Real headroom was ~15%, which is exactly why 50% more workers bought
+almost nothing. Redis round-trips (0.33 ms) and the middleware endpoint (3.8 ms) were measured
+directly and together account for ~3% of a 170 ms cycle, ruling out an I/O explanation.
+
+**Cross-check container CPU against the host before concluding there is headroom.**
+
+## A correct null mutation is not a weak test
+
+Mutating the folded level's `cv >= 2` guard to `cv >= 1` does **not** change the answer, and should
+not: with a single candidate the inner AND is against that vertex's own adjacency row, which
+excludes itself, so the term is zero. The guard is a pure optimisation, not a correctness condition.
+The mutation that matters — dropping the inner `clear` — is caught, reporting exactly double
+(1,488,976 against 744,488).
+
+Recorded so nobody reads that null result as a hole in the oracle.
+
+## Scoreboard
+
+| | start of day | now |
+|---|---|---|
+| per-worker throughput | 5.93 M units/sec | **7.20 M units/sec** |
+| fleet (16 local workers, m1 paused) | ~88 M units/sec | **~111 M units/sec** |
+| fleet incl. m1 | — | **132 M units/sec** |
+| hoist entries rebuilt per stage | ~8,983 | 1–2 |
