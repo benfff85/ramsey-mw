@@ -1205,3 +1205,30 @@ construction the values this derives.
 | fleet throughput (16 local workers) | 86.71 M units/sec | **93.61 M units/sec** |
 | hoist entries rebuilt per stage advance | ~8,983 | **1–2** (the flipped edges only) |
 | worker idle | ~3.6% of wall | ~2–3% |
+
+## Addendum — 18 workers is now WORSE, and why the sweep had to be re-run
+
+Part 6 measured 16 and 18 as equivalent (+3.6% / +3.5% over 14) with the rebuild carry. After the
+derived carry the profile changed — per-worker CPU fell from 96% to 90% and 159% of headroom
+appeared — so the sweep was re-run. It **inverted**:
+
+| pair | 16 workers | 18 workers | delta |
+|---|---|---|---|
+| 1 | 98.93 ± 0.83 | 95.60 ± 1.17 | −3.4% |
+| 2 | 95.80 ± 0.73 | 92.76 ± 1.06 | −3.2% |
+
+Less work per stage means more of a worker's time is stage turnover rather than compute, so extra
+workers add contention instead of absorbing headroom — and the extra pair lands on efficiency cores.
+**16 remains deployed.** Any future engine change that shifts the compute/turnover balance should
+re-run this; the optimum is a function of the engine, not of the hardware alone.
+
+### The measurement design that made this readable
+
+Both pairs agree to within 0.2 points **while the box drifted 3.2% downward across the run**
+(16 workers read 98.93 then 95.80). A sequential 16-then-18 comparison would have reported roughly
+−3.4% and a sequential 18-then-16 roughly zero — from the same underlying truth.
+
+The drift is not thermal and not harness noise: **the campaign's own hourly stage count varies ±5% at
+fixed configuration** (944–1119 stages/hour over one session), because the search itself changes what
+each stage costs. That is the resolution floor for any A/B on this fleet. Below roughly 2%, use
+**alternating** blocks and paired differences, not sequential ones — or do not claim the result.
