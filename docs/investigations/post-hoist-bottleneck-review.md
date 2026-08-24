@@ -987,3 +987,100 @@ is the second independent measurement of the same idea, so treat it as settled.
    `stage_work_index` TTLs on campaign 3, so finding 6's leak fix is only half-deployed.
 4. **Remaining turnover cost is batch-tail skew**, and finding 7 shows batch resizing cannot recover
    it. Anything further here needs a different mechanism, not a tuned constant.
+
+---
+
+# Part 5 — the measurement protocol, written down because Part 4 was measured badly (2026-08-24)
+
+Part 4's engineering conclusions stand. Its *numbers* were produced by a process that then generated
+three consecutive wrong answers in a row, and this part exists so the next person does not repeat it.
+
+## What went wrong
+
+Chasing a stage-tail optimisation, the following were reported in sequence, each confidently, each
+wrong:
+
+1. "the taper is a −9.6% regression" — the deploy changed **two** things (the taper *and* the
+   redis 1.6.0 bump that had landed on `develop` in between).
+2. "redis 1.6.0 is the regression" — it is **+4.0% faster**.
+3. "the taper is a −13.5% regression" — it is **indistinguishable from zero**.
+
+Four distinct defects produced those, and each is cheap to avoid:
+
+- **An uncontrolled second fleet.** `m1` was mapped to the same campaign and contributing ~15% of
+  fleet throughput. It contaminates campaign stage rate obviously — but also *per-worker* throughput,
+  because work it claims is work local workers then sit idle waiting for. Pausing it moved local idle
+  from ~8.7% to ~3.6%. **Pause every other fleet before measuring** (`fleet.campaign_id = NULL`, a DB
+  update, no redeploy).
+- **Sampling during the restart ramp.** A recreated worker starts with a cold hoist table and needs
+  **~4 minutes** to reach steady state. Readings taken at 2–3 minutes understated throughput by
+  ~20% (4.8–5.6 M u/s against a true 6.0–6.3). **Discard the first 4 minutes, always.**
+- **A fragile parser.** Extracting fields with several `grep`s joined by `paste` silently
+  mis-aligns when any log line lacks a clause, and the misalignment shifts every later field. It
+  reported 98 samples in a 7-minute window and 28 in a 9-minute one. **One regex per line, skip
+  lines that do not match.**
+- **No control.** Two runs of the *identical* build 30 minutes apart differ by **4.9σ** (6.304 vs
+  6.210 M u/s). The environment drifts ~1.5% on that timescale, so anything smaller than that is not
+  attributable without an interleaved control. **Re-measure the baseline after the variant**, and if
+  the repeat does not reproduce, discard both.
+
+## The protocol
+
+Per-worker `units/sec` from the workers' own throughput lines, not campaign stage rate — stage rate
+mixes in every other fleet on the campaign.
+
+1. Pause all other fleets on the campaign.
+2. Deploy variant, **discard 4 minutes**, measure 10 (`n ≈ 275` across 14 workers).
+3. Deploy baseline again, same treatment.
+4. Report the variant against the **adjacent** baseline, and state the baseline-to-baseline drift.
+
+`collect.py` in the session scratchpad implements steps 2–4.
+
+## Results under the protocol
+
+| config | units/sec/worker | idle % of wall | batches/30s | ms/batch |
+|---|---|---|---|---|
+| redis 1.5.0, no taper | 6.060 ± 0.016 | 4.02 | 159.9 | 181.0 |
+| redis 1.6.0, no taper | **6.304 ± 0.014** | 3.64 | — | — |
+| redis 1.6.0 + taper | 6.174 ± 0.020 | **2.33** | 169.0 | 174.2 |
+| redis 1.6.0, no taper (repeat) | 6.210 ± 0.013 | 3.15 | 161.7 | 180.3 |
+
+**redis 1.6.0 is +4.0% over 1.5.0** (11.5σ). Not a regression. The release notes showed no plausible
+mechanism for a regression, which should have been enough to suspect the measurement first.
+
+## The stage-tail taper: mechanism works, net effect zero — NOT merged
+
+The idea: a stage ends when its slowest worker finishes, so a worker claiming a full batch as the
+space drains holds the fleet idle for that batch. The claim script therefore hands out at most
+`1/8` of what is left, floored at `1/8` of a batch so the drain terminates.
+
+It does exactly what it was designed to do — **idle 3.15% → 2.33%** (3.7σ), busy 96.8% → 97.6%,
+`ms/batch` 180 → 174 — and the gain is then **entirely consumed by its own overhead**: batches/30s
+rise 161.7 → 169.0, and each extra claim costs a Redis round trip plus a full worker cycle. Net
+−0.6% at 1.5σ against a baseline that drifts 1.5%.
+
+So it is not merged. Two things to know before anyone tries again:
+
+- **The prize is smaller than it looks.** The tapered region is `8 × batch ≈ 7.5 M` of a 392 M unit
+  space — **1.9%**, about 100 ms of fleet time. Sizing this against *total idle* rather than against
+  the work actually sitting in the tapered region is the same denominator error Part 3 warns about.
+- **There is a feedback path.** `next_fetch_size` divides elapsed time by the units *actually*
+  granted, so a tapered batch's fixed overhead inflates its apparent per-unit cost and the worker
+  shrinks its request — which shrinks `minimum = batch/8` — which shrinks the next grant. Any retry
+  must take the floor from a **stage-level** constant (e.g. `total_pairs / 1000`), never from the
+  requesting worker's adaptive batch. The unit test missed this entirely because it drains the space
+  with a constant batch size instead of driving it through `next_fetch_size`.
+
+What survives and is worth keeping: the live-Redis test asserting that claims **tile `[0, total)`
+exactly once** — no gaps, no overlaps, ending exactly at the total. A gap is a silently skipped work
+unit and an overlap is duplicated effort, and neither is visible downstream. Mutation-checked both
+directions.
+
+## Scoreboard correction
+
+Part 4's stage-rate figures (+15.1%, +20.3%) were measured with `m1` active on the same campaign and
+so are not attributable to the event-driven change alone. The change's own evidence is unaffected and
+still stands: the quantisation histogram (66% → 21% of stages ending within 100 ms of a whole second)
+is a structural measurement of queue-manager behaviour, and the drop in worker idle is per-process.
+The honest summary is **"removed the poll quantisation, direction confirmed, magnitude not cleanly
+measured"** rather than a specific percentage.
