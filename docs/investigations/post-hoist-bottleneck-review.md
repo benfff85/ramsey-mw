@@ -1232,3 +1232,76 @@ The drift is not thermal and not harness noise: **the campaign's own hourly stag
 fixed configuration** (944–1119 stages/hour over one session), because the search itself changes what
 each stage costs. That is the resolution floor for any A/B on this fleet. Below roughly 2%, use
 **alternating** blocks and paired differences, not sequential ones — or do not claim the result.
+
+# Part 8 — the counting kernel, and the goal met (2026-08-24)
+
+## Result
+
+**+16.9% end-to-end** (16.4σ), measured as alternating pairs so drift cancels:
+
+| pair | before (14 workers, pre-carry, pre-kernel) | after (16 workers, carry + kernel) | delta |
+|---|---|---|---|
+| 1 | 88.86 ± 0.69 | 103.58 ± 0.96 | +16.6% |
+| 2 | 87.90 ± 0.84 | 103.12 ± 1.11 | +17.3% |
+| **pooled** | **88.38** | **103.35** | **+16.9%** |
+
+Contributions, each measured against its own adjacent baseline: worker count 14→16 **+3.6%**,
+derived hoist carry **+7.35%**, counting kernel **+8.5%**.
+
+## Profile first, and it moved
+
+`sample` on a native worker running against the live fleet, non-kernel frames only:
+
+| function | share of compute |
+|---|---|
+| `bron_kerbosch_count_inplace` | **74.4%** |
+| `bron_kerbosch_count_no_x_with_limit` | 15.9% |
+| `cycle_counter_based` closure | 7.3% |
+| `single_created` | 1.4% |
+| `carry_forward` | 0.0% |
+
+That last pair is Part 7 landing: `single_created` had been ~5% of busy and is now 1.4%. **Every
+optimisation relocates the bottleneck** — this document's third statement of the same rule — and the
+profile is what says where it went, rather than a guess about which constant to tune.
+
+## The two changes
+
+Both are **count-preserving by construction**, not by testing:
+
+- **Fused AND + popcount.** The second-to-last recursion level copied P, ANDed a row into the copy,
+  popcounted it and threw it away, once per candidate. It is the most-executed operation in the
+  worker, and the materialised intermediate is why the compiler could not collapse it.
+  `BitMatrix::and_cardinality` does the AND and the popcount in one pass over five words with no
+  copy and no store.
+- **Stop the loop once it provably contributes nothing.** `p` loses one member per iteration and a
+  child receives `p & adj[v]` with `v` excluded, so `|new_p| <= remaining - 1`. Once
+  `remaining + depth < clique_size`, every remaining candidate contributes zero, so the loop breaks
+  instead of making calls that return 0 only after a copy, an AND and a popcount.
+
+`bron_kerbosch_count_no_x_with_limit` is untouched.
+
+## The test the repo did not have
+
+Every correctness test here checked the code against *itself*: carried tables against fresh
+rebuilds, hoisted values against the seeded kernel, sharded fills against solo fills. All of them
+would keep passing if a kernel optimisation silently changed a clique count, because both sides
+would change together.
+
+The three production fixtures carry `clique_count` values **computed and recorded in the campaign
+database by an earlier build**. That makes them an external oracle. Counting all mono-8-cliques of a
+282-vertex graph drives the kernel to full production depth and must reproduce 744488 / 744489 /
+744489 exactly — it does. Mutation-checked: tightening the new bound by one reports 592087.
+
+Any future change to the counting kernel should run this first:
+
+```
+cargo test --release --test carry_forward_production_scale -- --ignored
+```
+
+## Measurement notes
+
+- The fleet counter resolves ~1.2%; the per-worker metric at fixed worker count resolves ~0.4% and
+  settled a first read where two pairs disagreed by 3.1σ (+9.9% vs +2.7%) into +9.2% / +7.8%.
+- Composition is unreliable in **both** directions. Part 7's two changes composed to 11.3% and
+  measured 8.5%; these three compose to 17.7% and measured 16.9%. Neither the optimistic nor the
+  pessimistic reading of a stacked estimate is safe — measure the ends.
