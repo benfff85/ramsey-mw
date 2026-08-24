@@ -95,6 +95,26 @@ table and temporarily needs ~2× its size; not run, and not needed while free sp
 
 Re-run the prune weekly, or when `data_free` approaches zero.
 
+### Run log
+
+| date | before | after | rows nulled | notes |
+|---|---|---|---|---|
+| 2026-07-30 | 21.55 GB | 21.55 GB file, `data_free` 18.38 GB | — | ran **without** the high-water-mark guard; nulled 16 post-snapshot graphs including the active base, breaking QM progression until the chain advanced past them. This is why the guard exists. |
+| 2026-08-24 | 25.21 GB, `data_free` **0.00 GB** | 4.94 GB, `data_free` 20.20 GB | 529,142 | clean. 12 batches of 50k. Retention set 20,116; 20,136 rows left holding data. Verified after: active stage's base intact, 0 of the last 20,000 stages have a null base, 0 QM errors, stage rate unchanged at ~19–21/min. |
+
+Two things learned on the 2026-08-24 run, worth doing the same way next time:
+
+- **Compute the high-water mark once and hold it for the whole run**, rather than recomputing per
+  batch. A fixed mark guarantees that every graph created *during* the prune sits above it and is
+  protected for the entire run; a moving mark only protects the newest 1,000 at each instant, which
+  is a weaker guarantee the longer the run takes.
+- **`data_free` had reached exactly 0.00 GB**, meaning the tablespace had stopped absorbing inserts
+  and the file was growing on disk again. That is the real trigger, and it arrived ~25 days after
+  the previous prune rather than the ~5–9 days the 2026-07-30 note predicted — the estimate was made
+  before the throughput work, and stage cadence has roughly doubled since. Check `data_free`
+  directly (after `ANALYZE TABLE`, which is required or it reads 0 spuriously) rather than trusting
+  a day count.
+
 ## Set up the MySQL Connection
 
 Login with DBeaver, you may need to set the following in the Driver properties tab of the connection details.
