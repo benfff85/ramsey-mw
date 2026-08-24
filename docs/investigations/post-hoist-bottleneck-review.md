@@ -1111,3 +1111,97 @@ deployed.**
 Worth noting what this says about the shape of the problem: it is a 3.6% win with zero code risk,
 found by looking at `docker stats` rather than at the code. The engine has been optimised hard; the
 *deployment* had not been looked at once. Re-sweep on any new host rather than carrying 16 over.
+
+# Part 7 — the carried table never needed rebuilding (2026-08-24)
+
+## Result
+
+**+8.5% end-to-end** (5.8σ), from two changes measured separately and then confirmed together:
+
+| change | effect | risk |
+|---|---|---|
+| worker count 14 → 16 (Part 6) | +3.6% | none — a compose flag |
+| derive carried hoist entries instead of rebuilding them | **+7.35%** (6.6σ) | accuracy-critical, validated five ways |
+| composed arithmetic | +11.3% | — |
+| **measured end-to-end** | **+8.5%** | — |
+
+Note the last two rows. Composing two separately-measured A/Bs predicted 11.3%; measuring the
+original config against the final one directly gave 8.5%. **Gains do not multiply** — the second
+worker pair helps less once each stage carries less work. Always confirm a stacked claim end to end.
+
+## What changed
+
+`carry_forward` kept only the entries it could *prove* unchanged (`cross_pairs == Mixed`) and threw
+away the rest — ~8,983 of 39,621 (23%) per stage advance — each then rebuilt by an uncapped
+traversal at ~168 µs.
+
+They never needed rebuilding. `single_G(e)` counts k-cliques that become monochromatic when `e`
+flips: cliques containing `e` whose every *other* edge already has the colour `e` is about to become.
+Flipping a different edge `f` cannot change `c_e`, so the target colour is fixed and only cliques
+containing **both** `e` and `f` can move. For such a clique, with all its other edges already the
+target colour, it qualifies before the flip iff `c_f` was the target colour and after iff it was
+not. Exactly one holds, so the whole population moves one way:
+
+```text
+single_{G xor f}(e) = single_G(e) + N   when c_f == c_e
+single_{G xor f}(e) = single_G(e) - N   when c_f != c_e
+
+N = #{ k-cliques containing V(e) | V(f), every edge except e and f in colour NOT c_e }
+```
+
+**The old predicate was the `N == 0` case of this formula.** When `cross_pairs(e, f) == Mixed` the
+cross edges cannot all be `NOT c_e`, so `N` is zero — the module had half the arithmetic in it since
+the original hoist work, used only as a keep/discard test rather than as a correction. That
+consistency is why the derivation was trusted enough to build.
+
+`N` is cheap: `W = V(e) | V(f)` is 3–4 vertices, a wrong colour anywhere inside `W` (other than `e`
+and `f`) makes it zero — the common case — and otherwise it is `(k-|W|)`-cliques in the common
+target-colour neighbourhood of `W`, ~18 vertices at n=282. Only the flipped edges themselves remain
+underivable (their own `single` measures the reverse flip): one or two entries per stage instead of
+8,983.
+
+## Why it beat its own estimate
+
+Predicted 4–5% from the instrumented on-demand fill cost (5% of busy); delivered 7.35%. The fill
+counter only measures fills happening **inside the unit loop**. The co-operative slice fill at stage
+engage — this worker's share of rebuilding those 8,983 entries — is charged to "busy" as ordinary
+work and never appears in that counter. The derived carry removes both, so the real target was
+larger than the instrumentation showed.
+
+This is the **denominator error in reverse**, and worth recording as such: Part 3 catalogued six
+estimates that collapsed because a ratio was applied to too large a denominator. This one
+under-delivered on paper because the denominator was measured by a counter that did not cover all
+of the cost. Check what an instrument excludes, not just what it reports.
+
+## Validation
+
+A wrong value here is served to every unit of the stage **and published to peers**, with nothing
+downstream to catch it. Five independent layers, all in-repo:
+
+1. `shared_created` against a brute-force reading of the definition, exhaustive over every ordered
+   pair of distinct edges (n=8,9; k=4,5).
+2. The carry identity itself, exhaustive for every edge against every flip (n=8,9,10; k=4,5).
+3. The pre-existing exhaustive carried-vs-rebuilt test, now also asserting that only the flipped
+   edge is invalidated rather than 23% of the table.
+4. Production scale: real 282-vertex k=8 campaign graphs, all 39,621 entries against a fresh
+   rebuild, zero mismatches on all three transition shapes.
+5. Mutation testing: flipping the correction's sign, and dropping the W-internal colour check, are
+   both caught.
+
+Mixed-fleet safe — a peer on the old build publishes rebuilt values for the same graph, which are by
+construction the values this derives.
+
+## Also measured, and not adopted
+
+- **`TARGET_CPU=apple-m4`**: +1.4% at 0.8σ against a baseline that drifts 1.4%. Indistinguishable
+  from noise at fleet-counter resolution; being re-tested with the per-worker metric (~0.3%
+  resolution). Left generic meanwhile.
+- **Stage-tail taper** (Part 5): null. Unchanged by this work.
+
+## Scoreboard
+
+| | before this session | now |
+|---|---|---|
+| fleet throughput (16 local workers) | 86.71 M units/sec | **93.61 M units/sec** |
+| hoist entries rebuilt per stage advance | ~8,983 | **1–2** (the flipped edges only) |
+| worker idle | ~3.6% of wall | ~2–3% |
