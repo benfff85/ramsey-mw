@@ -93,7 +93,35 @@ the file stops growing for ~5–9 days. Run `ANALYZE TABLE graph` afterwards —
 until statistics refresh. Reclaiming actual disk needs `OPTIMIZE TABLE graph`, which rebuilds the
 table and temporarily needs ~2× its size; not run, and not needed while free space remains.
 
-Re-run the prune weekly, or when `data_free` approaches zero.
+### Scheduled daily (2026-08-24)
+
+`prune-graph-edge-data.sh` implements the procedure above and runs **daily at 04:15** via the
+LaunchAgent in `com.setminusx.ramsey.graph-prune.plist`. Install instructions are in the plist's own
+comment; the log is `~/Library/Logs/ramsey-graph-prune.log`.
+
+It is safe to run at any time and as often as you like — with nothing outside the retention set it
+nulls 0 rows and exits. Run `./database/prune-graph-edge-data.sh --dry-run` to see what a run would
+do without touching anything.
+
+Daily rather than weekly because the retention window is now *shorter than a day*: at ~21 stages/min
+the fleet produces ~30,000 stages a day against a 20,000-stage retention window. A weekly cadence
+would let ~200,000 prunable rows accumulate between runs, which is what let `data_free` hit zero.
+
+Beyond the guard, the script adds three things the manual procedure did not have:
+
+- **A single-run lock** (`mkdir`-based; macOS ships no `flock`). Two overlapping prunes would each
+  rebuild the retention set and recompute the high-water mark, destroying the guarantee the fixed
+  mark exists to provide. A lock older than six hours is treated as abandoned.
+- **An explicit `PATH`.** launchd starts jobs without `/usr/local/bin`, where the `docker` CLI
+  lives, so without this the scheduled run fails while the interactive run succeeds.
+- **A post-run check** that no ACTIVE stage, and none of the last `KEEP_STAGES` stages, has a NULL
+  base graph. The 2026-07-30 failure was silent until the queue manager started throwing; this
+  turns it into a non-zero exit on the same run that caused it.
+
+Verified on install by running it through launchd itself (`launchctl kickstart`), not just from a
+shell — that is where `PATH` and Docker-socket access break.
+
+Re-run manually any time, or when `data_free` approaches zero.
 
 ### Run log
 

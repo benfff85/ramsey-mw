@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Daily graph.edge_data prune. See database/README.md.
+
+  Install (paths must match this checkout):
+    cp database/com.setminusx.ramsey.graph-prune.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.setminusx.ramsey.graph-prune.plist
+    launchctl kickstart -p gui/$(id -u)/com.setminusx.ramsey.graph-prune   # run once now to verify
+
+  A LaunchAgent, not a LaunchDaemon: the script talks to Docker, which runs as the logged-in user,
+  so a root daemon would not see the containers anyway.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.setminusx.ramsey.graph-prune</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/benferenchak/IdeaProjects/ramsey/ramsey-mw/database/prune-graph-edge-data.sh</string>
+    </array>
+
+    <!-- 04:15 daily: outside any window someone is likely to be watching the fleet. -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key><integer>4</integer>
+        <key>Minute</key><integer>15</integer>
+    </dict>
+
+    <!-- Not at load: bootstrapping the agent should not kick off a prune as a side effect.
+         A day is never skipped regardless — launchd runs a missed StartCalendarInterval job when
+         the machine wakes, so an overnight sleep delays the prune rather than dropping it. -->
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/benferenchak/Library/Logs/ramsey-graph-prune.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/benferenchak/Library/Logs/ramsey-graph-prune.log</string>
+
+    <key>ProcessType</key>
+    <string>Background</string>
+</dict>
+</plist>
