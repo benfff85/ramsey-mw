@@ -1470,3 +1470,85 @@ work noted (one threadgroup per correction rather than one thread).
 | per-worker throughput | 5.93 M units/sec | **10.00 M units/sec** |
 | fleet (16 local workers, m1 paused) | ~88 M units/sec | ~155 M units/sec |
 | **live fleet incl. m1** | — | **172 M units/sec** |
+
+# Part 11 — the GPU, after three wrong verdicts (2026-08-25)
+
+## Result
+
+**+42% fleet-wide** at the measured optimum mix. Deployed: **6 Docker CPU workers + 10 native
+GPU-assisted workers** on the M4 Max (16 logical cores, 40-core GPU).
+
+| CPU | GPU | fleet M units/sec |
+|---|---|---|
+| 16 | 0 | 189.6 |
+| 12 | 4 | 221.6 |
+| 10 | 6 | 252.7 |
+| 8 | 8 | 262.7 |
+| **6** | **10** | **269.1** ← deployed |
+| 4 | 12 | 258.4 |
+| 0 | 16 | 237.3 |
+
+Every point bracketed against adjacent controls. Totals other than the core count lose: 14 workers
+−7%, 20 workers −10%.
+
+## Three verdicts, each overturned by the next measurement
+
+1. **"~8x, offload it."** A feasibility probe compared GPU against CPU and both agreed to the digit.
+   Both implemented the same wrong algorithm — edges-within-a-neighbourhood, three times the
+   triangle count, not `(k-n)`-cliques. Agreement between two implementations of one
+   misunderstanding is not validation. Against the real CPU primitive, 20,000 of 20,000 disagreed.
+2. **"0.6x, dead end."** True, and the wrong question. It compared the GPU against SIXTEEN cores.
+   Against the one core it actually relieves it is ~10x.
+3. **"1.5x ceiling, not worth the refactor."** Also wrong, because it assumed the GPU's capacity
+   from a synchronous benchmark. A pipelined worker drives the device far harder.
+
+## Concurrency is the whole mechanism
+
+| | units/sec (1 worker) | vs CPU-only |
+|---|---|---|
+| CPU-only | 6.98 M | — |
+| hybrid, dispatch-and-wait | 17.62 M | 2.52x |
+| **hybrid, pipelined** | **36.93 M** | **5.29x** |
+
+Dispatch-and-wait alternates CPU and GPU and leaves both idle half the time. Dispatching chunk N and
+classifying chunk N+1 while it runs, then collecting N, more than doubles it.
+
+## The mix is a two-resource balance, not "GPU good"
+
+`0 CPU + 16 GPU` is **worse** than the mixed configs. With every worker hybrid they queue on one
+device while cores idle. The optimum keeps both busy, and it is an interior point — which also means
+it moves with any engine change. The curve is recorded in `scripts/gpu-fleet.sh` so it is re-derived
+rather than assumed on new hardware.
+
+The GPU's value is a function of **CPU scarcity**, not of the kernel:
+
+| worker count | GPU gain |
+|---|---|
+| 6 workers (cores abundant, 22.9 M u/s each) | +2.7% |
+| 16 workers (cores scarce, 11.9 M u/s each) | +15.0% |
+
+## Correctness
+
+Structural rather than a second implementation: `pair_created_bounded` is written in terms of
+`pair_classify` + `finish_pair`; the candidate-recording tail is one shared function; and a deferred
+unit settles against a slightly staler — therefore **looser** — threshold, so batching can only cost
+extra work, never reject a candidate it should have kept.
+
+Verified: all **3,000,000 units** identical across CPU-only, hybrid-sync and hybrid-pipelined; GPU vs
+the CPU primitive over 20k corrections per graph in both colours and both seed shapes; the external
+oracle still at 744488/744489/744489; Linux container build unaffected (built to confirm).
+
+## Measured and NOT adopted
+
+- **Containerised vs native CPU workers**: pairs disagreed in sign (+0.7%, −4.2%). No measurable
+  container overhead. Keep Docker for the CPU half — better tooling, no throughput cost.
+- **M1's GPU**: its workers are containerised and cannot reach Metal; native deployment needs
+  machine access there is no SSH for. M1 now contributes ~3.3% of fleet throughput (down from ~15%
+  before today, because the M4 got ~2.4x faster), so even a large relative gain is ~1% fleet-wide.
+  **Updating M1's image to the current build is worth far more** and needs the same access.
+
+## A measurement note
+
+The M1 contribution figure above (+3.3%) came from a test where RUNNING always preceded PAUSED in
+both pairs — not counterbalanced. Direction is probably right, magnitude is soft. Recorded rather
+than quietly presented as solid.
