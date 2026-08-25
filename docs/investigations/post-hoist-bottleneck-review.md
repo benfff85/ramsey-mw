@@ -1379,3 +1379,94 @@ Recorded so nobody reads that null result as a hole in the oracle.
 | fleet (16 local workers, m1 paused) | ~88 M units/sec | **~111 M units/sec** |
 | fleet incl. m1 | — | **132 M units/sec** |
 | hoist entries rebuilt per stage | ~8,983 | 1–2 |
+
+# Part 10 — the GPU question answered by a CPU change: +53.2% (2026-08-25)
+
+## Result
+
+Second push of the day, measured end to end against `52581bb` as alternating pairs:
+
+| pair | before | after | delta |
+|---|---|---|---|
+| 1 | 6.567 ± 0.039 | 9.891 ± 0.095 | +50.6% |
+| 2 | 6.477 ± 0.038 | 10.098 ± 0.103 | +55.9% |
+| **pooled** | **6.522** | **9.995** | **+53.2%** |
+
+Three changes: thread the candidate count to the child (+6.9%), fold the third-to-last recursion
+level (+7.5%), and **count corrections on a dense `u64` subgraph (+37.9%)**.
+
+Per-worker throughput across the whole day: **5.93 -> 10.00 M units/sec**. Live fleet 172 M
+units/sec with m1.
+
+## The change that mattered
+
+Below the first intersection, the correction only manipulates subsets of `P` — and `P` is small.
+Measured over 400k corrections on real campaign graphs:
+
+| | mean \|P\| | max \|P\| |
+|---|---|---|
+| n=4 (both edges disjoint, dominates production) | 17.0 | **32** |
+| n=3 (edges share a vertex) | 34.5 | **49** |
+
+**It always fits in one 64-bit word**, yet every AND and popcount in that recursion was running
+across five. Relabelling `P` into a dense `0..|P|` index space and building the induced subgraph as
+one `u64` mask per candidate moves the whole recursion onto single-word operations. Candidate sets
+above 64 keep the full-width path — that never fired in 400k samples, but the bound is empirical,
+not structural, so the fallback stays.
+
+## How it was found: by failing at something else
+
+This came out of investigating **GPU offload**, which does not work (see below). Profiling *why* the
+Metal kernel collapsed pointed at register pressure per recursion level, which is what prompted
+measuring `|P|` in the first place. Nobody had, and the hottest loop in the project had been
+manipulating a 17-element set with 320-bit registers for its entire existence.
+
+## The first implementation measured 0.94x — SLOWER
+
+Same algorithm, same maths. It zeroed a 288-byte vertex-to-index array and copied a full-width
+adjacency row per candidate, on every call. With `|P| ~ 17` a plain pairwise probe is fewer
+operations than restricting each row and translating its surviving bits, and the scratch zeroing
+alone outweighed everything the compression saved. Removing both took it from **0.94x to 1.68x** in
+the micro-benchmark and +37.9% in production.
+
+**A negative micro-benchmark on a sound idea can be an implementation artefact.** Look at where the
+cycles went before discarding the idea.
+
+The model behind the idea was also wrong even though the conclusion was right: "five words to one,
+therefore 5x" ignores that five independent `u64` ANDs issue in parallel on a wide out-of-order
+core. The gain is cheaper *nodes* in a deep recursion, which is why n=3 — one level deeper — gains
+more than n=4.
+
+## GPU offload: measured, negative, recorded
+
+The M4 Max has a 40-core GPU sitting at 0% while the fleet runs. It does not help:
+
+| case | GPU | CPU 1 core | vs the 16-core fleet |
+|---|---|---|---|
+| n=4 (dominant) | 9.62 M/s | 0.98 M/s | **0.6x — slower than the fleet** |
+| n=3 | 3.99 M/s | 0.12 M/s | 2.0x |
+
+A hybrid tops out near 1.5x, before the classify/dispatch/finalize refactor it needs. The correct
+kernel nests three levels deeper than a naive one, so each thread carries several 40-byte candidate
+sets (register pressure, spilling) and the variable-length inner loops diverge across a SIMD group.
+
+Two structural facts worth keeping:
+
+- **No containerised worker can ever reach Metal.** The worker image is Linux/aarch64 and the
+  container has no GPU device nodes. GPU work would require native macOS workers.
+- **A feasibility probe validated GPU against CPU and both were wrong.** The probe computed edges
+  within a neighbourhood — three times the triangle count — not `(k-n)`-cliques. The two agreed to
+  the digit, which felt like validation and was not: both implemented the same misunderstanding.
+  Comparing two implementations of one wrong idea is exactly what an ORACLE exists to prevent. The
+  moment the engine met the real CPU primitive, 20,000 of 20,000 corrections disagreed.
+
+The engine is kept as draft worker PR #119, validated and reusable, with the redesign that might
+work noted (one threadgroup per correction rather than one thread).
+
+## Scoreboard
+
+| | start of 2026-08-24 | now |
+|---|---|---|
+| per-worker throughput | 5.93 M units/sec | **10.00 M units/sec** |
+| fleet (16 local workers, m1 paused) | ~88 M units/sec | ~155 M units/sec |
+| **live fleet incl. m1** | — | **172 M units/sec** |
