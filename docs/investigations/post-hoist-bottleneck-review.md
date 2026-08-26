@@ -1552,3 +1552,64 @@ oracle still at 744488/744489/744489; Linux container build unaffected (built to
 The M1 contribution figure above (+3.3%) came from a test where RUNNING always preceded PAUSED in
 both pairs — not counterbalanced. Direction is probably right, magnitude is soft. Recorded rather
 than quietly presented as solid.
+
+# Part 12 — the fill path had never been compressed (2026-08-26)
+
+## Result
+
+**+14.1% fleet-wide** (274.3 -> 313.1 M units/sec), both pairs clearing 10% independently
+(+10.7%, +17.6%). Live fleet with m1: **321.9 M units/sec**.
+
+## Re-profiling found it in one step
+
+The GPU hybrid moved the bottleneck somewhere entirely new. Profiling a live GPU-assisted worker:
+
+| function | share of CPU |
+|---|---|
+| `pair_classify` | 35.8% |
+| `bron_kerbosch_count_no_x_with_limit` | 31.3% |
+| `cycle_counter_based` closure | 14.2% |
+| `single_created` | 10.8% |
+| `count_dense` (the pair correction) | **0.3%** |
+
+The pair correction — the thing Parts 8-10 were entirely about — is now 0.3%, because the GPU has
+it. What surfaced underneath is `single_created`, the per-edge hoist table fill, at ~42% with its
+descendants. **It had never been compressed**: Part 10 applied the dense-subgraph trick only to
+`count_cliques_through_vertex_set`, and this path goes through `get_new_cliques_with_limit` instead.
+
+Seeding on ONE edge leaves `|P| ~ 70`, too wide for a `u64`, so unlike the pair correction it cannot
+compress at the top. One level down it fits, and everything below runs on single-word masks.
+
+## The `exceeded` flag is the part that needed care
+
+Unlike the pair correction, this path carries an early-exit limit and returns `(count, exceeded)`.
+`count_dense_limited` mirrors the bitset version level for level **including that flag** — a test
+comparing only counts would silently accept a short count from an aborted search, which is exactly
+the failure this kind of rewrite produces.
+
+So the equivalence test checks both, unlimited *and* at four limits per edge, with assertions that
+the limit-exceeded cases actually fire rather than the test quietly never reaching them.
+
+## A correct null mutation, again
+
+Dropping `exc ||` from the propagation does **not** change the answer, and should not: a child
+reporting exceeded has by construction overrun the remaining budget `limit - c`, so `c + sub > limit`
+and the plain comparison already catches it. An off-by-one in the dense bound IS caught.
+
+That is the third correct-null mutation recorded in this document. They are worth writing down —
+each one looks like a hole in the oracle until the argument is made.
+
+## Where the time goes now
+
+Both compressions are in, and the correction is on the GPU. The remaining CPU profile is dominated
+by `pair_classify` (the per-unit table lookups, cross-pairs decision and bound) — which is the
+irreducible cost of *enumerating* 392 M units per stage rather than of evaluating any of them.
+Anything further probably has to reduce the number of units considered, not the cost of each.
+
+## Scoreboard
+
+| | 2026-08-24 start | now |
+|---|---|---|
+| fleet, m4 only | ~88 M units/sec | ~313 M units/sec |
+| **fleet incl. m1** | — | **321.9 M units/sec** |
+| campaign 3 minimum | 744,468 | 743,721 |
