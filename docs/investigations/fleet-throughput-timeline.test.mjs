@@ -15,7 +15,7 @@ test('the report embeds ordered, positive WU/s milestones with scoped M4-only be
 
   const requiredTitles = [
     'Java worker era',
-    'Rust worker deployed',
+    'Sustained early Rust era',
     'Hoisted pair evaluation',
     'GPU hybrid optimum',
     'Dense-64 Metal correction',
@@ -32,6 +32,23 @@ test('the report embeds ordered, positive WU/s milestones with scoped M4-only be
 
   const m4Only = milestones.filter((point) => point.title.includes('GPU'));
   assert.ok(m4Only.some((point) => point.scope.includes('M1 paused')), 'M4-only results must disclose that M1 was paused');
+});
+
+test('the early Rust anchor uses sustained stage evidence instead of a switchover outlier', async () => {
+  const html = await readFile(reportUrl, 'utf8');
+  const match = html.match(/<script id="timeline-data" type="application\/json">([\s\S]*?)<\/script>/);
+  const { milestones, events } = JSON.parse(match[1]);
+  const sustainedRust = milestones.find((point) => point.title === 'Sustained early Rust era');
+
+  assert.deepEqual(
+    { date: sustainedRust?.date, rate: sustainedRust?.rate, kind: sustainedRust?.kind },
+    { date: '2026-03-01', rate: 58194, kind: 'legacy-equivalent' },
+    'the plotted Rust-era anchor must use the 577-stage sustained window',
+  );
+  assert.match(sustainedRust.source, /577 campaign-1 stage rows/, 'the sustained Rust source must retain its sample size');
+  assert.ok(events.some((event) => event.title === 'Rust worker deployed' && event.date === '2025-12-21'), 'the Dec 21 deployment must remain visible as an unplotted event');
+  assert.ok(!milestones.some((point) => point.rate === 949000), 'a single 449-second stage must not remain a plotted Rust milestone');
+  assert.doesNotMatch(html, /949k/i, 'the superseded one-stage rate must not remain displayed in the report');
 });
 
 test('the report provides an offline SVG chart with selectable evidence layers', async () => {

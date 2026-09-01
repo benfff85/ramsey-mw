@@ -565,14 +565,14 @@
       "note": "Low-confidence stage-cadence equivalent, retained only to anchor the Java-to-Rust transition."
     },
     {
-      "date": "2025-12-21",
-      "title": "Rust worker deployed",
-      "rate": 949000,
-      "scope": "Campaign 1 Rust deployment era",
+      "date": "2026-03-01",
+      "title": "Sustained early Rust era",
+      "rate": 58194,
+      "scope": "Campaign 1, Mar 1–Apr 19; nominal stage-cadence equivalent, not a persisted work counter",
       "kind": "legacy-equivalent",
       "commit": "0d41cd8; compose switch 3d45c3f",
-      "source": "campaign 1, stage 13; 427,000,896 nominal units over 449 s",
-      "note": "Early Rust stage-cadence equivalent. It is directional rather than a controlled A/B."
+      "source": "577 campaign-1 stage rows; 246,379,516,992 nominal units over 4,233,793 s",
+      "note": "58,194 WU/s sustained stage-cadence equivalent. It replaces the nonrepresentative 449-second switchover stage and is directional rather than a controlled A/B."
     },
     {
       "date": "2026-07-25",
@@ -696,6 +696,12 @@
     { "date": "2026-08-31 12:00", "rate": 478687000, "label": "Dense-64 operational window" }
   ],
   "events": [
+    {
+      "date": "2025-12-21",
+      "title": "Rust worker deployed",
+      "commit": "0d41cd8; compose switch 3d45c3f",
+      "note": "Initial Rust deployment. The lone 449-second switchover-stage estimate was not retained as the sustained Rust anchor."
+    },
     {
       "date": "2025-12-25",
       "title": "Release build tuning",
