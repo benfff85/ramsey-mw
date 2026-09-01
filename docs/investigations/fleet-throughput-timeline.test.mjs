@@ -72,22 +72,32 @@ test('the chart lets readers switch its vertical axis between log and linear sca
   assert.match(html, /scaleControls\.forEach/, 'the scale selector must re-render the chart');
 });
 
+test('the report stays focused on one chart and one compact evidence table', async () => {
+  const html = await readFile(reportUrl, 'utf8');
+
+  assert.equal((html.match(/<section\b/g) ?? []).length, 2, 'the page must contain only the chart and evidence-table sections');
+  assert.match(html, /<table id="evidence-table">/, 'the compact evidence table is missing');
+  assert.match(html, /<th>Rate<\/th>/, 'the table must retain the WU\/s rate');
+  assert.match(html, /<th>Evidence<\/th>/, 'the table must retain provenance');
+  assert.doesNotMatch(html, /id="event-list"/, 'the separate event rail should not be rendered');
+  assert.doesNotMatch(html, /id="proxy-list"/, 'the separate stage-progression list should not be rendered');
+  assert.doesNotMatch(html, /id="methodology"/, 'the separate methodology panel should not be rendered');
+});
+
 test('the report suppresses the browser fallback favicon request', async () => {
   const html = await readFile(reportUrl, 'utf8');
   assert.match(html, /<link rel="icon" href="data:,">/, 'the self-contained page must declare an empty data favicon');
 });
 
-test('the ledger distinguishes measured, controlled, and legacy evidence', async () => {
+test('the compact ledger keeps rate and evidence boundaries visible', async () => {
   const html = await readFile(reportUrl, 'utf8');
 
-  assert.match(html, /<th>Measurement<\/th>/, 'the evidence ledger needs a measurement-type column');
-  assert.match(html, /kindName\(point\.kind\)/, 'the ledger must derive its measurement type from the shared dataset');
-  assert.match(html, /cell\.className = 'measurement'/, 'the ledger must style the measurement type separately from provenance');
+  assert.doesNotMatch(html, /<th>Measurement<\/th>/, 'measurement type belongs in compact evidence copy, not its own column');
+  assert.doesNotMatch(html, /<th>Scope<\/th>/, 'scope belongs in compact evidence copy, not its own column');
+  assert.match(html, /point\.commit \+ ' · ' \+ point\.source/, 'the table must derive concise provenance from the shared dataset');
 
   for (const requiredText of [
     'stage-equivalent',
-    'does not represent actual total fleet throughput',
-    'early-adopt stages may contain only partial work',
     'M1 paused',
     'stage-cadence equivalent',
   ]) {
