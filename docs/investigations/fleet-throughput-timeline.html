@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ramsey Fleet Throughput Timeline</title>
+</head>
+<body>
+  <main>
+    <header>
+      <p>Ramsey distributed search / performance history</p>
+      <h1>Fleet throughput, from Java to Metal</h1>
+      <p>A source-backed history of the work units the fleet can process each second.</p>
+    </header>
+
+    <section id="chart-panel" aria-labelledby="chart-heading">
+      <h2 id="chart-heading">Throughput timeline</h2>
+      <p>The interactive visualization is rendered from the embedded historical dataset.</p>
+    </section>
+
+    <section id="milestone-ledger" aria-labelledby="ledger-heading">
+      <h2 id="ledger-heading">Milestone ledger</h2>
+    </section>
+
+    <section id="methodology" aria-labelledby="methodology-heading">
+      <h2 id="methodology-heading">How to read this report</h2>
+    </section>
+  </main>
+
+  <script id="timeline-data" type="application/json">
+{
+  "milestones": [
+    {
+      "date": "2025-12-16",
+      "title": "Java worker era",
+      "rate": 3389,
+      "scope": "Legacy campaign-1 stage cadence; not a persisted work counter",
+      "kind": "legacy-equivalent",
+      "commit": "Pre-Rust baseline",
+      "source": "campaign 1, stage 5; 427,000,896 nominal units over 125,978 s",
+      "note": "Low-confidence stage-cadence equivalent, retained only to anchor the Java-to-Rust transition."
+    },
+    {
+      "date": "2025-12-21",
+      "title": "Rust worker deployed",
+      "rate": 949000,
+      "scope": "Campaign 1 Rust deployment era",
+      "kind": "legacy-equivalent",
+      "commit": "0d41cd8; compose switch 3d45c3f",
+      "source": "campaign 1, stage 13; 427,000,896 nominal units over 449 s",
+      "note": "Early Rust stage-cadence equivalent. It is directional rather than a controlled A/B."
+    },
+    {
+      "date": "2026-07-25",
+      "title": "Pre-hoist baseline",
+      "rate": 1040000,
+      "scope": "14 workers on one M4 Max",
+      "kind": "measured-fleet",
+      "commit": "cb1269b proposal baseline",
+      "source": "pair-move-hoist-proposal.md, measured fleet rate",
+      "note": "Measured saturated pre-hoist pair-evaluation rate; a full 392M-unit sweep took about 6.3 minutes."
+    },
+    {
+      "date": "2026-07-28",
+      "title": "Hoisted pair evaluation",
+      "rate": 29000000,
+      "scope": "14 workers on m4-max",
+      "kind": "measured-fleet",
+      "commit": "cb1269b; 7b8be0b",
+      "source": "post-hoist-bottleneck-review.md, lines 30-34",
+      "note": "Hoisting created counts out of the pair loop moved the fleet into the tens of millions of WU/s."
+    },
+    {
+      "date": "2026-08-24",
+      "title": "Carried hoist table",
+      "rate": 93610000,
+      "scope": "16 local workers",
+      "kind": "controlled",
+      "commit": "2c7c560; de5cd3b",
+      "source": "post-hoist-bottleneck-review.md, Part 7",
+      "note": "Carried surviving hoist entries across a stage advance: 86.71 to 93.61 M WU/s."
+    },
+    {
+      "date": "2026-08-24",
+      "title": "Counting-kernel push",
+      "rate": 132000000,
+      "scope": "Live fleet including M1",
+      "kind": "measured-fleet",
+      "commit": "d0a9155; 1fa26e6",
+      "source": "post-hoist-bottleneck-review.md, Part 9 scoreboard",
+      "note": "Fused popcount and folded recursion levels lifted the live fleet to 132 M WU/s."
+    },
+    {
+      "date": "2026-08-25",
+      "title": "Compressed candidate kernel",
+      "rate": 172000000,
+      "scope": "Live fleet including M1",
+      "kind": "measured-fleet",
+      "commit": "6eed90b",
+      "source": "post-hoist-bottleneck-review.md, Part 10 scoreboard",
+      "note": "Dense u64 correction counting replaced five-word candidate sets on the hot correction path."
+    },
+    {
+      "date": "2026-08-25",
+      "title": "GPU hybrid optimum",
+      "rate": 269100000,
+      "scope": "M4 only: 6 Docker CPU + 10 native GPU-assisted workers",
+      "kind": "controlled",
+      "commit": "4285fb0; 1231775",
+      "source": "post-hoist-bottleneck-review.md, Part 11 mix sweep",
+      "note": "The measured interior optimum was 269.1 M WU/s on the M4; this is deliberately not labelled all-fleet."
+    },
+    {
+      "date": "2026-08-25",
+      "title": "GPU hybrid live fleet",
+      "rate": 274300000,
+      "scope": "M4 hybrid fleet plus M1; operational live observation",
+      "kind": "measured-fleet",
+      "commit": "4285fb0; 1231775",
+      "source": "post-hoist-bottleneck-review.md, Parts 11-12",
+      "note": "The M4 optimum was 6 Docker CPU plus 10 native GPU-assisted workers; 274.3 M WU/s is the pre-fill live reference."
+    },
+    {
+      "date": "2026-08-26",
+      "title": "Compressed single-edge fill",
+      "rate": 321900000,
+      "scope": "Live fleet including M1",
+      "kind": "measured-fleet",
+      "commit": "2698d26",
+      "source": "post-hoist-bottleneck-review.md, Part 12",
+      "note": "A dense lower recursion in the single-edge fill path raised the live fleet from 274.3 to 321.9 M WU/s."
+    },
+    {
+      "date": "2026-08-31",
+      "title": "Shape-packed GPU dispatch",
+      "rate": 415545000,
+      "scope": "M4 composite (10 native GPU + 6 Docker CPU); M1 paused",
+      "kind": "controlled",
+      "commit": "Uncommitted working-tree deployment",
+      "source": "post-hoist-bottleneck-review.md, Part 13 ABAB",
+      "note": "Exact n=3/n=4 dispatch bucketing raised the M4 composite mean from 386.646 to 415.545 M WU/s."
+    },
+    {
+      "date": "2026-08-31",
+      "title": "Dense-64 Metal correction",
+      "rate": 559418000,
+      "scope": "M4 composite (10 native GPU + 6 Docker CPU); M1 paused",
+      "kind": "controlled",
+      "commit": "Uncommitted working-tree deployment",
+      "source": "post-hoist-bottleneck-review.md, Part 14 ABAB",
+      "note": "Dense u64 correction for 33-64 candidate n=3 requests raised the M4 composite mean from 407.121 to 559.418 M WU/s."
+    }
+  ],
+  "stageEvidence": [
+    { "date": "2026-06-19 12:00", "rate": 636000, "label": "Best-novel cache, pre/post window" },
+    { "date": "2026-06-19 18:00", "rate": 2071000, "label": "Best-novel cache, post window" },
+    { "date": "2026-07-15 06:00", "rate": 2289000, "label": "Kernel optimization, pre window" },
+    { "date": "2026-07-15 18:00", "rate": 3797000, "label": "Kernel optimization, post window" },
+    { "date": "2026-07-25 06:00", "rate": 2635000, "label": "Hoist deployment, pre window" },
+    { "date": "2026-07-25 12:00", "rate": 545968000, "label": "Hoist deployment, post window" },
+    { "date": "2026-07-27 00:00", "rate": 257240000, "label": "Post-hoist operational window" },
+    { "date": "2026-07-27 06:00", "rate": 339456000, "label": "Post-hoist operational window" },
+    { "date": "2026-08-23 06:00", "rate": 94971000, "label": "Before carry-forward and kernel work" },
+    { "date": "2026-08-24 00:00", "rate": 115956000, "label": "Carry-forward deployment window" },
+    { "date": "2026-08-24 18:00", "rate": 136669000, "label": "Kernel deployment window" },
+    { "date": "2026-08-25 06:00", "rate": 212235000, "label": "Candidate-compression window" },
+    { "date": "2026-08-25 18:00", "rate": 342563000, "label": "GPU hybrid deployment window" },
+    { "date": "2026-08-26 06:00", "rate": 381336000, "label": "Single-edge fill deployment window" },
+    { "date": "2026-08-26 18:00", "rate": 378084000, "label": "Single-edge fill steady window" },
+    { "date": "2026-08-30 18:00", "rate": 397834000, "label": "Pre-shape-packing operational window" },
+    { "date": "2026-08-31 06:00", "rate": 435989000, "label": "Shape-packing operational window" },
+    { "date": "2026-08-31 12:00", "rate": 478687000, "label": "Dense-64 operational window" }
+  ],
+  "events": [
+    {
+      "date": "2025-12-25",
+      "title": "Release build tuning",
+      "commit": "40d2237; 9e5406c",
+      "note": "Fat LTO and CPU-targeted image work after the initial Rust conversion; no retained controlled fleet WU/s sample."
+    },
+    {
+      "date": "2026-06-19",
+      "title": "Best-novel threshold",
+      "commit": "edd4a40",
+      "note": "Novel-result cache and slot-0 threshold: 6.48 to 18.4 stages/hour on the same 14 workers. This is an effective-search-stage result, not converted into actual WU/s."
+    },
+    {
+      "date": "2026-07-15",
+      "title": "Bron-Kerbosch kernel round",
+      "commit": "fcb5252; 6420c94",
+      "note": "Leaf shortcut, dual adjacency, destructive bit iteration, and k-2 inline work; about 1.40x in the kernel review."
+    },
+    {
+      "date": "2026-08-23",
+      "title": "Stage turnover repair",
+      "commit": "c6ad376; 2c7c560",
+      "note": "Completion events, TTL handling, incremental carry, and active-stage hand-off removed work between very short stages."
+    }
+  ]
+}
+  </script>
+</body>
+</html>
