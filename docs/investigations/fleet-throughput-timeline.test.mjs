@@ -33,3 +33,38 @@ test('the report embeds ordered, positive WU/s milestones with scoped M4-only be
   const m4Only = milestones.filter((point) => point.title.includes('GPU'));
   assert.ok(m4Only.some((point) => point.scope.includes('M1 paused')), 'M4-only results must disclose that M1 was paused');
 });
+
+test('the report provides an offline SVG chart with selectable evidence layers', async () => {
+  const html = await readFile(reportUrl, 'utf8');
+
+  assert.match(html, /<svg[^>]+id="throughput-chart"/, 'the report must render its chart in an SVG');
+  assert.match(html, /data-mode="both"/, 'the combined-layer control is missing');
+  assert.match(html, /data-mode="milestones"/, 'the measured-throughput control is missing');
+  assert.match(html, /data-mode="stage-evidence"/, 'the stage-equivalent control is missing');
+  assert.match(html, /function renderChart\(mode\)/, 'the chart renderer is missing');
+  assert.doesNotMatch(html, /<(?:script|link|img|iframe)[^>]+(?:src|href)=["']https?:/i, 'the report must not load an external resource');
+});
+
+test('the report suppresses the browser fallback favicon request', async () => {
+  const html = await readFile(reportUrl, 'utf8');
+  assert.match(html, /<link rel="icon" href="data:,">/, 'the self-contained page must declare an empty data favicon');
+});
+
+test('the ledger distinguishes measured, controlled, and legacy evidence', async () => {
+  const html = await readFile(reportUrl, 'utf8');
+
+  assert.match(html, /<th>Measurement<\/th>/, 'the evidence ledger needs a measurement-type column');
+  assert.match(html, /kindName\(point\.kind\)/, 'the ledger must derive its measurement type from the shared dataset');
+  assert.match(html, /cell\.className = 'measurement'/, 'the ledger must style the measurement type separately from provenance');
+
+  for (const requiredText of [
+    'stage-equivalent',
+    'does not represent actual total fleet throughput',
+    'early-adopt stages may contain only partial work',
+    'M1 paused',
+    'stage-cadence equivalent',
+  ]) {
+    assert.ok(html.includes(requiredText), 'missing disclosure: ' + requiredText);
+  }
+  assert.match(html, /function formatRate\(rate\)/, 'one formatter must own WU/s display');
+});

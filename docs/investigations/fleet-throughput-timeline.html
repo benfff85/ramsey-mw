@@ -3,28 +3,510 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
   <title>Ramsey Fleet Throughput Timeline</title>
+  <style>
+    :root {
+      --void: #07131a;
+      --deep: #0b1c25;
+      --slate: #102b36;
+      --slate-2: #163d4b;
+      --grid: #214552;
+      --phosphor: #53e3c2;
+      --phosphor-dim: #2d9989;
+      --amber: #f0b35a;
+      --blue: #85a8ff;
+      --paper: #d8e8e8;
+      --muted: #89a9af;
+      --faint: #507078;
+      --danger: #ff8c83;
+      --shadow: rgba(0, 0, 0, 0.34);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { background: var(--void); }
+
+    body {
+      min-width: 320px;
+      margin: 0;
+      color: var(--paper);
+      background:
+        radial-gradient(circle at 85% -10%, rgba(57, 162, 142, 0.17), transparent 34rem),
+        radial-gradient(circle at 0 18%, rgba(55, 101, 143, 0.12), transparent 29rem),
+        var(--void);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      line-height: 1.5;
+    }
+
+    body::before {
+      position: fixed;
+      z-index: -1;
+      inset: 0;
+      pointer-events: none;
+      content: "";
+      opacity: 0.26;
+      background-image:
+        linear-gradient(rgba(93, 175, 172, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(93, 175, 172, 0.035) 1px, transparent 1px);
+      background-size: 32px 32px;
+      mask-image: linear-gradient(to bottom, black, transparent 72%);
+    }
+
+    button,
+    table { font: inherit; }
+
+    .page-shell {
+      width: min(1440px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 44px 0 72px;
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 16px;
+      color: var(--phosphor);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      width: 30px;
+      height: 1px;
+      background: currentColor;
+      content: "";
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.55fr) minmax(260px, 0.85fr);
+      gap: 32px;
+      align-items: end;
+      padding: 34px;
+      overflow: hidden;
+      border: 1px solid rgba(83, 227, 194, 0.22);
+      border-radius: 22px;
+      background: linear-gradient(135deg, rgba(16, 43, 54, 0.9), rgba(7, 19, 26, 0.72));
+      box-shadow: 0 28px 64px var(--shadow);
+    }
+
+    .hero h1 {
+      max-width: 14ch;
+      margin: 0;
+      font-family: ui-rounded, "Avenir Next", Avenir, "Segoe UI", sans-serif;
+      font-size: clamp(2.2rem, 5vw, 4.8rem);
+      font-weight: 780;
+      letter-spacing: -0.065em;
+      line-height: 0.93;
+    }
+
+    .hero p:not(.eyebrow) {
+      max-width: 64ch;
+      margin: 20px 0 0;
+      color: var(--muted);
+      font-size: 0.93rem;
+    }
+
+    .hero-key {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 24px;
+    }
+
+    .chip {
+      padding: 5px 9px;
+      border: 1px solid rgba(216, 232, 232, 0.2);
+      border-radius: 999px;
+      color: var(--paper);
+      font-size: 0.69rem;
+      letter-spacing: 0.04em;
+    }
+
+    .chip--amber { border-color: rgba(240, 179, 90, 0.55); color: #ffd58f; }
+    .chip--blue { border-color: rgba(133, 168, 255, 0.58); color: #bed0ff; }
+
+    .peak-card {
+      position: relative;
+      padding: 22px;
+      overflow: hidden;
+      border: 1px solid rgba(240, 179, 90, 0.33);
+      border-radius: 15px;
+      background: rgba(5, 15, 21, 0.42);
+    }
+
+    .peak-card::after {
+      position: absolute;
+      top: -50px;
+      right: -35px;
+      width: 150px;
+      height: 150px;
+      border: 1px solid rgba(240, 179, 90, 0.19);
+      border-radius: 50%;
+      box-shadow: 0 0 0 23px rgba(240, 179, 90, 0.04), 0 0 0 46px rgba(240, 179, 90, 0.03);
+      content: "";
+    }
+
+    .metric-label,
+    .section-kicker,
+    .table-label {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.67rem;
+      font-weight: 700;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+
+    .metric-value {
+      position: relative;
+      z-index: 1;
+      margin: 8px 0 4px;
+      color: var(--amber);
+      font-family: ui-rounded, "Avenir Next", Avenir, "Segoe UI", sans-serif;
+      font-size: clamp(2rem, 3.9vw, 3.55rem);
+      font-weight: 740;
+      letter-spacing: -0.07em;
+      line-height: 0.95;
+    }
+
+    .metric-value span { font-size: 0.38em; letter-spacing: -0.03em; }
+
+    .metric-note {
+      position: relative;
+      z-index: 1;
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 0.75rem;
+      line-height: 1.45;
+    }
+
+    .panel {
+      margin-top: 24px;
+      border: 1px solid rgba(137, 169, 175, 0.17);
+      border-radius: 18px;
+      background: rgba(11, 28, 37, 0.78);
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.18);
+    }
+
+    .chart-panel { padding: 26px 26px 18px; }
+
+    .panel-heading {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    h2, h3 {
+      font-family: ui-rounded, "Avenir Next", Avenir, "Segoe UI", sans-serif;
+    }
+
+    h2 {
+      margin: 4px 0 0;
+      font-size: clamp(1.3rem, 2.6vw, 2rem);
+      letter-spacing: -0.045em;
+    }
+
+    .panel-description {
+      max-width: 72ch;
+      margin: 9px 0 0;
+      color: var(--muted);
+      font-size: 0.81rem;
+    }
+
+    .trace-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .trace-controls button {
+      min-height: 33px;
+      padding: 7px 10px;
+      cursor: pointer;
+      border: 1px solid rgba(137, 169, 175, 0.3);
+      border-radius: 7px;
+      color: var(--muted);
+      background: rgba(7, 19, 26, 0.5);
+      font-size: 0.69rem;
+      transition: background 150ms ease, border-color 150ms ease, color 150ms ease, transform 150ms ease;
+    }
+
+    .trace-controls button:hover,
+    .trace-controls button:focus-visible {
+      border-color: var(--phosphor);
+      color: var(--paper);
+      outline: none;
+      transform: translateY(-1px);
+    }
+
+    .trace-controls button[aria-pressed="true"] {
+      border-color: var(--phosphor);
+      color: var(--void);
+      background: var(--phosphor);
+      box-shadow: 0 0 0 3px rgba(83, 227, 194, 0.11);
+    }
+
+    .chart-shell {
+      position: relative;
+      min-height: 370px;
+      overflow: hidden;
+      border: 1px solid rgba(83, 227, 194, 0.13);
+      border-radius: 12px;
+      background:
+        linear-gradient(180deg, rgba(24, 63, 75, 0.21), rgba(8, 22, 30, 0.44)),
+        var(--deep);
+    }
+
+    #throughput-chart {
+      display: block;
+      width: 100%;
+      min-height: 370px;
+    }
+
+    .chart-tooltip {
+      position: absolute;
+      z-index: 2;
+      width: min(310px, calc(100% - 20px));
+      padding: 12px 13px;
+      pointer-events: none;
+      border: 1px solid rgba(216, 232, 232, 0.25);
+      border-radius: 9px;
+      color: var(--paper);
+      background: rgba(4, 14, 20, 0.95);
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+      font-size: 0.72rem;
+      line-height: 1.4;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity 120ms ease, transform 120ms ease;
+    }
+
+    .chart-tooltip.is-visible { opacity: 1; transform: translateY(0); }
+    .chart-tooltip strong { display: block; margin-bottom: 3px; color: var(--phosphor); font-size: 0.78rem; }
+    .chart-tooltip .tooltip-rate { color: var(--amber); font-size: 0.85rem; font-weight: 700; }
+    .chart-tooltip .tooltip-meta { margin-top: 5px; color: var(--muted); }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin: 14px 2px 0;
+      color: var(--muted);
+      font-size: 0.7rem;
+    }
+
+    .legend-item { display: inline-flex; align-items: center; gap: 7px; }
+    .legend-swatch { width: 18px; height: 2px; background: var(--phosphor); }
+    .legend-swatch--proxy { background: repeating-linear-gradient(90deg, var(--blue) 0 4px, transparent 4px 7px); }
+    .legend-swatch--event { width: 8px; height: 8px; border: 1px solid var(--amber); background: transparent; transform: rotate(45deg); }
+
+    .chart-note {
+      margin: 13px 2px 0;
+      color: var(--faint);
+      font-size: 0.69rem;
+    }
+
+    .two-up {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 0.72fr);
+      gap: 24px;
+    }
+
+    .subpanel { padding: 23px; }
+    .subpanel h2 { font-size: 1.45rem; }
+    .subpanel > p:not(.section-kicker) { color: var(--muted); font-size: 0.78rem; }
+
+    .event-list,
+    .proxy-list {
+      display: grid;
+      gap: 0;
+      margin: 18px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .event-list li,
+    .proxy-list li {
+      display: grid;
+      grid-template-columns: 86px minmax(0, 1fr);
+      gap: 12px;
+      padding: 13px 0;
+      border-top: 1px solid rgba(137, 169, 175, 0.13);
+    }
+
+    .event-date { color: var(--amber); font-size: 0.68rem; }
+    .event-list strong,
+    .proxy-list strong { display: block; color: var(--paper); font-size: 0.78rem; }
+    .event-list span,
+    .proxy-list span { display: block; margin-top: 3px; color: var(--muted); font-size: 0.7rem; }
+    .proxy-list .proxy-rate { color: var(--blue); font-size: 0.78rem; font-weight: 700; }
+
+    .ledger-panel { padding: 26px; }
+    .table-wrap { overflow-x: auto; margin-top: 18px; border: 1px solid rgba(137, 169, 175, 0.15); border-radius: 10px; }
+
+    table { width: 100%; min-width: 850px; border-collapse: collapse; text-align: left; }
+    th, td { padding: 12px 13px; vertical-align: top; border-bottom: 1px solid rgba(137, 169, 175, 0.12); }
+    th { color: var(--muted); background: rgba(7, 19, 26, 0.5); font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase; }
+    td { color: var(--muted); font-size: 0.72rem; }
+    td strong { display: block; color: var(--paper); font-size: 0.75rem; }
+    td.rate { color: var(--phosphor); font-weight: 700; white-space: nowrap; }
+    td.measurement { color: var(--amber); font-size: 0.67rem; }
+    td.evidence { color: var(--faint); font-size: 0.67rem; }
+    tr:last-child td { border-bottom: 0; }
+
+    .method-panel { padding: 28px; }
+    .method-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 36px; margin-top: 19px; }
+    .method-grid h3 { margin: 0 0 7px; color: var(--phosphor); font-size: 0.83rem; }
+    .method-grid p { margin: 0; color: var(--muted); font-size: 0.76rem; }
+    .formula {
+      margin-top: 12px !important;
+      padding: 10px 11px;
+      border-left: 2px solid var(--blue);
+      color: #c3d3ff !important;
+      background: rgba(133, 168, 255, 0.06);
+      font-size: 0.72rem !important;
+    }
+
+    .footer-note { margin: 24px 2px 0; color: var(--faint); font-size: 0.68rem; }
+
+    @media (max-width: 840px) {
+      .page-shell { width: min(100% - 24px, 1440px); padding-top: 18px; }
+      .hero, .two-up { grid-template-columns: 1fr; }
+      .hero { gap: 24px; padding: 24px; }
+      .panel-heading { display: block; }
+      .trace-controls { justify-content: flex-start; margin-top: 15px; }
+      .chart-panel, .ledger-panel, .method-panel, .subpanel { padding: 18px; }
+      .chart-shell, #throughput-chart { min-height: 330px; }
+      .method-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 480px) {
+      .hero h1 { font-size: 2.6rem; }
+      .metric-value { font-size: 2.7rem; }
+      .trace-controls button { flex: 1 1 100%; }
+      .event-list li, .proxy-list li { grid-template-columns: 1fr; gap: 5px; }
+      .chart-panel { padding: 14px; }
+      .chart-shell, #throughput-chart { min-height: 290px; }
+    }
+  </style>
 </head>
 <body>
-  <main>
-    <header>
-      <p>Ramsey distributed search / performance history</p>
-      <h1>Fleet throughput, from Java to Metal</h1>
-      <p>A source-backed history of the work units the fleet can process each second.</p>
+  <main class="page-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Ramsey distributed search / performance history</p>
+        <h1>Fleet throughput, from Java to Metal.</h1>
+        <p>A source-backed performance trace of the work units the search fleet can process each second. Controlled A/B measurements lead; all-fleet stage cadence is kept visibly separate.</p>
+        <div class="hero-key" aria-label="Report key facts">
+          <span class="chip">Dec 2025 → Aug 2026</span>
+          <span class="chip chip--amber">WU/s throughout</span>
+          <span class="chip chip--blue">offline / self-contained</span>
+        </div>
+      </div>
+      <aside class="peak-card" aria-label="Peak controlled result">
+        <p class="metric-label">Peak controlled result</p>
+        <p class="metric-value">559.418 <span>M WU/s</span></p>
+        <p class="metric-note">Dense-64 Metal correction, ABAB mean on the M4 composite. M1 paused; this is not presented as an all-fleet rate.</p>
+      </aside>
     </header>
 
     <section id="chart-panel" aria-labelledby="chart-heading">
-      <h2 id="chart-heading">Throughput timeline</h2>
-      <p>The interactive visualization is rendered from the embedded historical dataset.</p>
+      <div class="panel chart-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="section-kicker">The actual WU/s record</p>
+            <h2 id="chart-heading">A logarithmic trace of the search engine</h2>
+            <p class="panel-description">The primary staircase is made of reported, direct measurements. The dashed blue trace is a separate all-fleet stage-equivalent cadence proxy; use it to see operational change around commits, not as a counter-derived throughput measurement.</p>
+          </div>
+          <div class="trace-controls" aria-label="Visible chart layers">
+            <button type="button" data-mode="both" aria-pressed="true">Both traces</button>
+            <button type="button" data-mode="milestones" aria-pressed="false">Measured WU/s</button>
+            <button type="button" data-mode="stage-evidence" aria-pressed="false">Stage-equivalent</button>
+          </div>
+        </div>
+        <div class="chart-shell">
+          <svg id="throughput-chart" viewBox="0 0 1180 450" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="chart-heading chart-description">
+            <desc id="chart-description">Interactive logarithmic chart of Ramsey worker throughput milestones and a separately labelled all-fleet stage-equivalent cadence proxy.</desc>
+          </svg>
+          <div id="chart-tooltip" class="chart-tooltip" role="status" aria-live="polite"></div>
+        </div>
+        <div class="legend" aria-label="Chart legend">
+          <span class="legend-item"><span class="legend-swatch"></span>directly measured milestone</span>
+          <span class="legend-item"><span class="legend-swatch legend-swatch--proxy"></span>stage-equivalent cadence proxy</span>
+          <span class="legend-item"><span class="legend-swatch legend-swatch--event"></span>commit / operational event</span>
+        </div>
+        <p class="chart-note">Hover or focus a point for its source and scope. Same-date points can use different fleets; their notes make the measurement boundary explicit.</p>
+      </div>
     </section>
 
-    <section id="milestone-ledger" aria-labelledby="ledger-heading">
+    <section class="two-up" aria-label="Supporting evidence">
+      <article class="panel subpanel" aria-labelledby="events-heading">
+        <p class="section-kicker">Unmeasured, but material</p>
+        <h2 id="events-heading">Engineering event rail</h2>
+        <p>These commits changed capability or effective search progression without a retained controlled WU/s sample. They remain visible so the story does not pretend only benchmarked work mattered.</p>
+        <ol id="event-list" class="event-list"></ol>
+      </article>
+      <article class="panel subpanel" aria-labelledby="proxy-heading">
+        <p class="section-kicker">All active campaigns / six-hour windows</p>
+        <h2 id="proxy-heading">Stage-progression context</h2>
+        <p>The derived rate below is intentionally not the headline throughput line. It is a stage-equivalent signal that makes concurrent fleet activity around a deployment visible.</p>
+        <ol id="proxy-list" class="proxy-list"></ol>
+      </article>
+    </section>
+
+    <section id="milestone-ledger" class="panel ledger-panel" aria-labelledby="ledger-heading">
+      <p class="section-kicker">Every plotted direct measurement, with its boundary</p>
       <h2 id="ledger-heading">Milestone ledger</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Change</th>
+              <th>Measurement</th>
+              <th>Rate</th>
+              <th>Scope</th>
+              <th>Evidence</th>
+            </tr>
+          </thead>
+          <tbody id="milestone-rows"></tbody>
+        </table>
+      </div>
     </section>
 
-    <section id="methodology" aria-labelledby="methodology-heading">
-      <h2 id="methodology-heading">How to read this report</h2>
+    <section id="methodology" class="panel method-panel" aria-labelledby="methodology-heading">
+      <p class="section-kicker">Methodology and limits</p>
+      <h2 id="methodology-heading">What each trace does — and does not — say</h2>
+      <div class="method-grid">
+        <div>
+          <h3>Measured milestone trace</h3>
+          <p>These points come from worker throughput output or recorded processed_total samples. They are expressed directly in work units per second. Their labels retain the tested fleet, worker mix, and whether M1 was paused.</p>
+        </div>
+        <div>
+          <h3>Java and initial Rust anchors</h3>
+          <p>The earliest persistence era has no stored processed-work counter. Its two anchors are therefore stage-cadence equivalent estimates: useful for scale, not controlled worker-versus-worker results.</p>
+        </div>
+        <div>
+          <h3>All-fleet stage-equivalent proxy</h3>
+          <p>For a six-hour window, the report sums each ordinary campaign stage transition’s nominal campaign.total_pairs and divides by 21,600 seconds. It combines active campaigns and fleets into one operational signal.</p>
+          <p class="formula">stage-equivalent WU/s = Σ nominal campaign work per ordinary transition ÷ 21,600</p>
+        </div>
+        <div>
+          <h3>The boundary that matters</h3>
+          <p>The stage-equivalent proxy does not represent actual total fleet throughput: source: EXHAUSTIVE records the producer type, not full-stage completion, and early-adopt stages may contain only partial work. Historical per-stage processed counters expire; the durable processed_total counter has no timestamp history.</p>
+        </div>
+      </div>
     </section>
+
+    <p class="footer-note">Evidence assembled from Ramsey Git history, the investigation notes, and read-only MySQL stage-progression aggregation. Last evidence window: 2026-08-31 12:00 local.</p>
   </main>
 
   <script id="timeline-data" type="application/json">
@@ -198,6 +680,403 @@
     }
   ]
 }
+  </script>
+  <script>
+    (() => {
+      const data = JSON.parse(document.getElementById('timeline-data').textContent);
+      const svg = document.getElementById('throughput-chart');
+      const chartShell = svg.parentElement;
+      const tooltip = document.getElementById('chart-tooltip');
+      const controls = [...document.querySelectorAll('[data-mode]')];
+      const svgNs = 'http://www.w3.org/2000/svg';
+      const formatter = new Intl.NumberFormat('en-US');
+      let activeMode = 'both';
+
+      function parseDate(value) {
+        const normalized = value.length === 10 ? value + 'T12:00:00' : value.replace(' ', 'T') + ':00';
+        return new Date(normalized);
+      }
+
+      function formatRate(rate) {
+        if (rate >= 1_000_000) {
+          return (rate / 1_000_000).toLocaleString('en-US', {
+            maximumFractionDigits: 3,
+            minimumFractionDigits: rate < 10_000_000 ? 2 : 0,
+          }) + ' M WU/s';
+        }
+        if (rate >= 1_000) {
+          return (rate / 1_000).toLocaleString('en-US', {
+            maximumFractionDigits: rate < 100_000 ? 2 : 0,
+          }) + ' k WU/s';
+        }
+        return formatter.format(rate) + ' WU/s';
+      }
+
+      function shortDate(value) {
+        return parseDate(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' });
+      }
+
+      function createSvg(name, attributes = {}, text = '') {
+        const node = document.createElementNS(svgNs, name);
+        Object.entries(attributes).forEach(([key, value]) => node.setAttribute(key, String(value)));
+        if (text) node.textContent = text;
+        return node;
+      }
+
+      function clamp(value, min, max) {
+        return Math.min(Math.max(value, min), max);
+      }
+
+      function addTooltipLine(container, className, value) {
+        const line = document.createElement('div');
+        if (className) line.className = className;
+        line.textContent = value;
+        container.append(line);
+      }
+
+      function showTooltip(point, type, target) {
+        tooltip.replaceChildren();
+        const title = document.createElement('strong');
+        title.textContent = point.title || point.label;
+        tooltip.append(title);
+        addTooltipLine(tooltip, 'tooltip-rate', formatRate(point.rate));
+        addTooltipLine(tooltip, 'tooltip-meta', type === 'stage' ? 'All-fleet stage-equivalent cadence proxy' : point.scope);
+        addTooltipLine(tooltip, 'tooltip-meta', point.source || point.label);
+        if (point.note) addTooltipLine(tooltip, 'tooltip-meta', point.note);
+
+        const shellBounds = chartShell.getBoundingClientRect();
+        const pointBounds = target.getBoundingClientRect();
+        const left = clamp(pointBounds.left - shellBounds.left + 14, 8, shellBounds.width - 320);
+        const top = clamp(pointBounds.top - shellBounds.top - 10, 8, shellBounds.height - 165);
+        tooltip.style.left = left + 'px';
+        tooltip.style.top = top + 'px';
+        tooltip.classList.add('is-visible');
+      }
+
+      function hideTooltip() {
+        tooltip.classList.remove('is-visible');
+      }
+
+      function bindPoint(node, point, type) {
+        node.setAttribute('tabindex', '0');
+        node.setAttribute('role', 'img');
+        node.setAttribute('aria-label', (point.title || point.label) + ': ' + formatRate(point.rate) + '. ' + (type === 'stage' ? 'Stage-equivalent cadence proxy.' : point.scope));
+        node.addEventListener('mouseenter', () => showTooltip(point, type, node));
+        node.addEventListener('mouseleave', hideTooltip);
+        node.addEventListener('focus', () => showTooltip(point, type, node));
+        node.addEventListener('blur', hideTooltip);
+      }
+
+      function kindName(kind) {
+        const names = {
+          controlled: 'controlled A/B',
+          'measured-fleet': 'live fleet measurement',
+          'legacy-equivalent': 'stage-cadence equivalent',
+        };
+        return names[kind] || kind;
+      }
+
+      function renderChart(mode) {
+        svg.replaceChildren();
+        hideTooltip();
+
+        const width = 1180;
+        const height = 450;
+        const left = 94;
+        const right = 38;
+        const top = 30;
+        const bottom = 334;
+        const eventY = 365;
+        const xLabelY = 417;
+        const plotWidth = width - left - right;
+        const plotHeight = bottom - top;
+        const yMin = Math.log10(1_000);
+        const yMax = Math.log10(1_000_000_000);
+        const yForRate = (rate) => bottom - ((Math.log10(rate) - yMin) / (yMax - yMin)) * plotHeight;
+
+        const anchorValues = [
+          ...data.milestones.map((point) => point.date),
+          ...data.stageEvidence.map((point) => point.date),
+          ...data.events.map((point) => point.date),
+        ];
+        const anchors = [...new Set(anchorValues)].map(parseDate).sort((a, b) => a - b);
+        const anchorTimes = anchors.map(Number);
+        const xForDate = (value) => {
+          const time = Number(parseDate(value));
+          const lastIndex = anchorTimes.length - 1;
+          if (time <= anchorTimes[0]) return left;
+          if (time >= anchorTimes[lastIndex]) return left + plotWidth;
+          const upper = anchorTimes.findIndex((anchor) => anchor >= time);
+          const lower = upper - 1;
+          const fraction = (time - anchorTimes[lower]) / (anchorTimes[upper] - anchorTimes[lower]);
+          return left + ((lower + fraction) / lastIndex) * plotWidth;
+        };
+
+        const plotBackground = createSvg('rect', {
+          x: left,
+          y: top,
+          width: plotWidth,
+          height: plotHeight,
+          rx: 5,
+          fill: 'rgba(7, 19, 26, 0.27)',
+        });
+        svg.append(plotBackground);
+
+        const yTicks = [1_000, 10_000, 100_000, 1_000_000, 10_000_000, 100_000_000, 1_000_000_000];
+        yTicks.forEach((rate) => {
+          const y = yForRate(rate);
+          svg.append(createSvg('line', {
+            x1: left,
+            y1: y,
+            x2: width - right,
+            y2: y,
+            stroke: '#214552',
+            'stroke-width': 1,
+            opacity: rate === 1_000 || rate === 1_000_000_000 ? 0.8 : 0.53,
+          }));
+          svg.append(createSvg('text', {
+            x: left - 13,
+            y: y + 4,
+            fill: '#89a9af',
+            'font-size': 11,
+            'text-anchor': 'end',
+            'font-family': 'ui-monospace, monospace',
+          }, rate === 1_000_000_000 ? '1B' : rate >= 1_000_000 ? (rate / 1_000_000) + 'M' : rate >= 1_000 ? (rate / 1_000) + 'k' : rate));
+        });
+
+        svg.append(createSvg('line', {
+          x1: left,
+          y1: top,
+          x2: left,
+          y2: bottom,
+          stroke: '#507078',
+          'stroke-width': 1,
+        }));
+        svg.append(createSvg('line', {
+          x1: left,
+          y1: bottom,
+          x2: width - right,
+          y2: bottom,
+          stroke: '#507078',
+          'stroke-width': 1,
+        }));
+
+        svg.append(createSvg('text', {
+          x: left,
+          y: 15,
+          fill: '#89a9af',
+          'font-size': 10,
+          'font-family': 'ui-monospace, monospace',
+          'letter-spacing': 1.3,
+        }, 'WORK UNITS / SECOND  ·  LOG SCALE'));
+
+        const tickIndexes = [...new Set([0, 1, 2, Math.max(3, anchors.length - 6), anchors.length - 1])];
+        tickIndexes.forEach((index) => {
+          const anchor = anchors[index];
+          const x = left + (index / (anchors.length - 1)) * plotWidth;
+          svg.append(createSvg('line', {
+            x1: x,
+            y1: bottom,
+            x2: x,
+            y2: bottom + 6,
+            stroke: '#507078',
+            'stroke-width': 1,
+          }));
+          svg.append(createSvg('text', {
+            x,
+            y: xLabelY,
+            fill: '#89a9af',
+            'font-size': 10,
+            'text-anchor': index === 0 ? 'start' : index === anchors.length - 1 ? 'end' : 'middle',
+            'font-family': 'ui-monospace, monospace',
+          }, anchor.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })));
+        });
+
+        svg.append(createSvg('text', {
+          x: width - right,
+          y: xLabelY,
+          fill: '#507078',
+          'font-size': 9,
+          'text-anchor': 'end',
+          'font-family': 'ui-monospace, monospace',
+        }, 'event-spaced time'));
+
+        if (mode === 'both' || mode === 'stage-evidence') {
+          const evidencePath = data.stageEvidence.map((point, index) => {
+            const x = xForDate(point.date).toFixed(2);
+            const y = yForRate(point.rate).toFixed(2);
+            return (index === 0 ? 'M ' : 'L ') + x + ' ' + y;
+          }).join(' ');
+          svg.append(createSvg('path', {
+            d: evidencePath,
+            fill: 'none',
+            stroke: '#85a8ff',
+            'stroke-width': 2,
+            'stroke-dasharray': '5 6',
+            opacity: 0.93,
+          }));
+          data.stageEvidence.forEach((point) => {
+            const marker = createSvg('rect', {
+              x: xForDate(point.date) - 3.5,
+              y: yForRate(point.rate) - 3.5,
+              width: 7,
+              height: 7,
+              rx: 1.2,
+              fill: '#85a8ff',
+              stroke: '#07131a',
+              'stroke-width': 1.5,
+            });
+            bindPoint(marker, point, 'stage');
+            svg.append(marker);
+          });
+        }
+
+        if (mode === 'both' || mode === 'milestones') {
+          const milestonePath = data.milestones.map((point, index) => {
+            const x = xForDate(point.date).toFixed(2);
+            const y = yForRate(point.rate).toFixed(2);
+            if (index === 0) return 'M ' + x + ' ' + y;
+            const previousX = xForDate(data.milestones[index - 1].date).toFixed(2);
+            return 'H ' + x + ' V ' + y + (previousX === x ? '' : '');
+          }).join(' ');
+          svg.append(createSvg('path', {
+            d: milestonePath,
+            fill: 'none',
+            stroke: '#53e3c2',
+            'stroke-width': 3.5,
+            'stroke-linejoin': 'round',
+            'stroke-linecap': 'round',
+            filter: 'drop-shadow(0 0 6px rgba(83, 227, 194, 0.35))',
+          }));
+          data.milestones.forEach((point) => {
+            const color = point.kind === 'controlled' ? '#f0b35a' : point.kind === 'legacy-equivalent' ? '#a5b9b6' : '#53e3c2';
+            const marker = createSvg('circle', {
+              cx: xForDate(point.date),
+              cy: yForRate(point.rate),
+              r: point.kind === 'controlled' ? 5.6 : 4.7,
+              fill: color,
+              stroke: '#07131a',
+              'stroke-width': 2,
+            });
+            bindPoint(marker, point, 'milestone');
+            svg.append(marker);
+          });
+        }
+
+        data.events.forEach((event) => {
+          const x = xForDate(event.date);
+          const diamond = createSvg('path', {
+            d: 'M ' + x + ' ' + (eventY - 5) + ' L ' + (x + 5) + ' ' + eventY + ' L ' + x + ' ' + (eventY + 5) + ' L ' + (x - 5) + ' ' + eventY + ' Z',
+            fill: '#07131a',
+            stroke: '#f0b35a',
+            'stroke-width': 1.2,
+          });
+          diamond.setAttribute('tabindex', '0');
+          diamond.setAttribute('role', 'img');
+          diamond.setAttribute('aria-label', shortDate(event.date) + ': ' + event.title + '. ' + event.note);
+          diamond.addEventListener('mouseenter', () => {
+            showTooltip({ title: event.title, rate: 1, scope: event.commit, source: shortDate(event.date), note: event.note }, 'event', diamond);
+            tooltip.querySelector('.tooltip-rate').remove();
+          });
+          diamond.addEventListener('mouseleave', hideTooltip);
+          diamond.addEventListener('focus', () => {
+            showTooltip({ title: event.title, rate: 1, scope: event.commit, source: shortDate(event.date), note: event.note }, 'event', diamond);
+            tooltip.querySelector('.tooltip-rate').remove();
+          });
+          diamond.addEventListener('blur', hideTooltip);
+          svg.append(diamond);
+        });
+      }
+
+      function renderEventRail() {
+        const list = document.getElementById('event-list');
+        list.replaceChildren();
+        data.events.forEach((event) => {
+          const item = document.createElement('li');
+          const date = document.createElement('time');
+          date.className = 'event-date';
+          date.dateTime = event.date;
+          date.textContent = shortDate(event.date);
+          const body = document.createElement('div');
+          const title = document.createElement('strong');
+          title.textContent = event.title;
+          const note = document.createElement('span');
+          note.textContent = event.commit + ' · ' + event.note;
+          body.append(title, note);
+          item.append(date, body);
+          list.append(item);
+        });
+      }
+
+      function renderProxyList() {
+        const list = document.getElementById('proxy-list');
+        list.replaceChildren();
+        const selected = [0, 1, 4, 5, 8, 10, 12, 14, 16, 17];
+        selected.forEach((index) => {
+          const point = data.stageEvidence[index];
+          const item = document.createElement('li');
+          const date = document.createElement('time');
+          date.className = 'event-date';
+          date.dateTime = point.date.replace(' ', 'T');
+          date.textContent = shortDate(point.date);
+          const body = document.createElement('div');
+          const rate = document.createElement('strong');
+          rate.className = 'proxy-rate';
+          rate.textContent = formatRate(point.rate);
+          const note = document.createElement('span');
+          note.textContent = point.label;
+          body.append(rate, note);
+          item.append(date, body);
+          list.append(item);
+        });
+      }
+
+      function renderLedger() {
+        const body = document.getElementById('milestone-rows');
+        body.replaceChildren();
+        data.milestones.forEach((point) => {
+          const row = document.createElement('tr');
+          const cells = [
+            shortDate(point.date),
+            point.title,
+            kindName(point.kind),
+            formatRate(point.rate),
+            point.scope,
+            point.commit + ' · ' + point.source,
+          ];
+          cells.forEach((value, index) => {
+            const cell = document.createElement('td');
+            if (index === 1) {
+              const title = document.createElement('strong');
+              title.textContent = value;
+              const detail = document.createElement('span');
+              detail.textContent = point.note;
+              cell.append(title, detail);
+            } else {
+              cell.textContent = value;
+            }
+            if (index === 2) cell.className = 'measurement';
+            if (index === 3) cell.className = 'rate';
+            if (index === 5) cell.className = 'evidence';
+            row.append(cell);
+          });
+          body.append(row);
+        });
+      }
+
+      controls.forEach((button) => {
+        button.addEventListener('click', () => {
+          activeMode = button.dataset.mode;
+          controls.forEach((control) => control.setAttribute('aria-pressed', String(control === button)));
+          renderChart(activeMode);
+        });
+      });
+
+      renderChart(activeMode);
+      renderEventRail();
+      renderProxyList();
+      renderLedger();
+    })();
   </script>
 </body>
 </html>
