@@ -220,14 +220,37 @@
       font-size: 0.81rem;
     }
 
-    .trace-controls {
+    .chart-controls {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 12px;
+      align-items: center;
       justify-content: flex-end;
     }
 
-    .trace-controls button {
+    .control-set {
+      display: flex;
+      gap: 7px;
+      align-items: center;
+    }
+
+    .control-label {
+      color: var(--faint);
+      font-size: 0.59rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .trace-controls,
+    .scale-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .trace-controls button,
+    .scale-controls button {
       min-height: 33px;
       padding: 7px 10px;
       cursor: pointer;
@@ -240,14 +263,17 @@
     }
 
     .trace-controls button:hover,
-    .trace-controls button:focus-visible {
+    .trace-controls button:focus-visible,
+    .scale-controls button:hover,
+    .scale-controls button:focus-visible {
       border-color: var(--phosphor);
       color: var(--paper);
       outline: none;
       transform: translateY(-1px);
     }
 
-    .trace-controls button[aria-pressed="true"] {
+    .trace-controls button[aria-pressed="true"],
+    .scale-controls button[aria-pressed="true"] {
       border-color: var(--phosphor);
       color: var(--void);
       background: var(--phosphor);
@@ -382,7 +408,7 @@
       .hero, .two-up { grid-template-columns: 1fr; }
       .hero { gap: 24px; padding: 24px; }
       .panel-heading { display: block; }
-      .trace-controls { justify-content: flex-start; margin-top: 15px; }
+      .chart-controls { justify-content: flex-start; margin-top: 15px; }
       .chart-panel, .ledger-panel, .method-panel, .subpanel { padding: 18px; }
       .chart-shell, #throughput-chart { min-height: 330px; }
       .method-grid { grid-template-columns: 1fr; }
@@ -391,7 +417,11 @@
     @media (max-width: 480px) {
       .hero h1 { font-size: 2.6rem; }
       .metric-value { font-size: 2.7rem; }
+      .control-set { width: 100%; flex-wrap: wrap; }
+      .trace-controls { width: 100%; }
       .trace-controls button { flex: 1 1 100%; }
+      .scale-controls { flex: 1 1 auto; }
+      .scale-controls button { flex: 1 1 0; }
       .event-list li, .proxy-list li { grid-template-columns: 1fr; gap: 5px; }
       .chart-panel { padding: 14px; }
       .chart-shell, #throughput-chart { min-height: 290px; }
@@ -423,13 +453,25 @@
         <div class="panel-heading">
           <div>
             <p class="section-kicker">The actual WU/s record</p>
-            <h2 id="chart-heading">A logarithmic trace of the search engine</h2>
+            <h2 id="chart-heading">A <span id="chart-scale-name">logarithmic</span> trace of the search engine</h2>
             <p class="panel-description">The primary staircase is made of reported, direct measurements. The dashed blue trace is a separate all-fleet stage-equivalent cadence proxy; use it to see operational change around commits, not as a counter-derived throughput measurement.</p>
           </div>
-          <div class="trace-controls" aria-label="Visible chart layers">
-            <button type="button" data-mode="both" aria-pressed="true">Both traces</button>
-            <button type="button" data-mode="milestones" aria-pressed="false">Measured WU/s</button>
-            <button type="button" data-mode="stage-evidence" aria-pressed="false">Stage-equivalent</button>
+          <div class="chart-controls" aria-label="Chart controls">
+            <div class="control-set">
+              <span class="control-label">Trace</span>
+              <div class="trace-controls" role="group" aria-label="Visible chart layers">
+                <button type="button" data-mode="both" aria-pressed="true">Both traces</button>
+                <button type="button" data-mode="milestones" aria-pressed="false">Measured WU/s</button>
+                <button type="button" data-mode="stage-evidence" aria-pressed="false">Stage-equivalent</button>
+              </div>
+            </div>
+            <div class="control-set">
+              <span class="control-label">Scale</span>
+              <div class="scale-controls" role="group" aria-label="Vertical axis scale">
+                <button type="button" data-scale="log" aria-pressed="true">Log</button>
+                <button type="button" data-scale="linear" aria-pressed="false">Linear</button>
+              </div>
+            </div>
           </div>
         </div>
         <div class="chart-shell">
@@ -443,7 +485,7 @@
           <span class="legend-item"><span class="legend-swatch legend-swatch--proxy"></span>stage-equivalent cadence proxy</span>
           <span class="legend-item"><span class="legend-swatch legend-swatch--event"></span>commit / operational event</span>
         </div>
-        <p class="chart-note">Hover or focus a point for its source and scope. Same-date points can use different fleets; their notes make the measurement boundary explicit.</p>
+        <p class="chart-note">Use log to reveal early-era gains; use linear to compare absolute fleet capacity. Hover or focus a point for its source and scope.</p>
       </div>
     </section>
 
@@ -687,10 +729,14 @@
       const svg = document.getElementById('throughput-chart');
       const chartShell = svg.parentElement;
       const tooltip = document.getElementById('chart-tooltip');
-      const controls = [...document.querySelectorAll('[data-mode]')];
+      const traceControls = [...document.querySelectorAll('[data-mode]')];
+      const scaleControls = [...document.querySelectorAll('[data-scale]')];
+      const chartScaleName = document.getElementById('chart-scale-name');
+      const chartDescription = document.getElementById('chart-description');
       const svgNs = 'http://www.w3.org/2000/svg';
       const formatter = new Intl.NumberFormat('en-US');
       let activeMode = 'both';
+      let activeScale = 'log';
 
       function parseDate(value) {
         const normalized = value.length === 10 ? value + 'T12:00:00' : value.replace(' ', 'T') + ':00';
@@ -790,9 +836,33 @@
         const xLabelY = 417;
         const plotWidth = width - left - right;
         const plotHeight = bottom - top;
+        const isLinear = activeScale === 'linear';
+        const maxPlottedRate = Math.max(
+          ...data.milestones.map((point) => point.rate),
+          ...data.stageEvidence.map((point) => point.rate),
+        );
+        const linearTickStep = Math.ceil(maxPlottedRate / 6 / 50_000_000) * 50_000_000;
+        const linearMax = linearTickStep * 6;
+        const yTicks = isLinear
+          ? Array.from({ length: 7 }, (_, index) => index * linearTickStep)
+          : [1_000, 10_000, 100_000, 1_000_000, 10_000_000, 100_000_000, 1_000_000_000];
         const yMin = Math.log10(1_000);
         const yMax = Math.log10(1_000_000_000);
-        const yForRate = (rate) => bottom - ((Math.log10(rate) - yMin) / (yMax - yMin)) * plotHeight;
+        const yForRate = isLinear
+          ? (rate) => bottom - (rate / linearMax) * plotHeight
+          : (rate) => bottom - ((Math.log10(rate) - yMin) / (yMax - yMin)) * plotHeight;
+        const axisTickLabel = (rate) => rate === 0
+          ? '0'
+          : rate === 1_000_000_000
+            ? '1B'
+            : rate >= 1_000_000
+              ? (rate / 1_000_000) + 'M'
+              : rate >= 1_000
+                ? (rate / 1_000) + 'k'
+                : rate;
+
+        chartScaleName.textContent = isLinear ? 'linear' : 'logarithmic';
+        chartDescription.textContent = 'Interactive ' + (isLinear ? 'linear' : 'logarithmic') + ' chart of Ramsey worker throughput milestones and a separately labelled all-fleet stage-equivalent cadence proxy.';
 
         const anchorValues = [
           ...data.milestones.map((point) => point.date),
@@ -822,7 +892,6 @@
         });
         svg.append(plotBackground);
 
-        const yTicks = [1_000, 10_000, 100_000, 1_000_000, 10_000_000, 100_000_000, 1_000_000_000];
         yTicks.forEach((rate) => {
           const y = yForRate(rate);
           svg.append(createSvg('line', {
@@ -832,7 +901,7 @@
             y2: y,
             stroke: '#214552',
             'stroke-width': 1,
-            opacity: rate === 1_000 || rate === 1_000_000_000 ? 0.8 : 0.53,
+            opacity: rate === yTicks[0] || rate === yTicks[yTicks.length - 1] ? 0.8 : 0.53,
           }));
           svg.append(createSvg('text', {
             x: left - 13,
@@ -841,7 +910,7 @@
             'font-size': 11,
             'text-anchor': 'end',
             'font-family': 'ui-monospace, monospace',
-          }, rate === 1_000_000_000 ? '1B' : rate >= 1_000_000 ? (rate / 1_000_000) + 'M' : rate >= 1_000 ? (rate / 1_000) + 'k' : rate));
+          }, axisTickLabel(rate)));
         });
 
         svg.append(createSvg('line', {
@@ -868,7 +937,7 @@
           'font-size': 10,
           'font-family': 'ui-monospace, monospace',
           'letter-spacing': 1.3,
-        }, 'WORK UNITS / SECOND  ·  LOG SCALE'));
+        }, 'WORK UNITS / SECOND  ·  ' + (isLinear ? 'LINEAR' : 'LOG') + ' SCALE'));
 
         const tickIndexes = [...new Set([0, 1, 2, Math.max(3, anchors.length - 6), anchors.length - 1])];
         tickIndexes.forEach((index) => {
@@ -1064,10 +1133,18 @@
         });
       }
 
-      controls.forEach((button) => {
+      traceControls.forEach((button) => {
         button.addEventListener('click', () => {
           activeMode = button.dataset.mode;
-          controls.forEach((control) => control.setAttribute('aria-pressed', String(control === button)));
+          traceControls.forEach((control) => control.setAttribute('aria-pressed', String(control === button)));
+          renderChart(activeMode);
+        });
+      });
+
+      scaleControls.forEach((button) => {
+        button.addEventListener('click', () => {
+          activeScale = button.dataset.scale;
+          scaleControls.forEach((control) => control.setAttribute('aria-pressed', String(control === button)));
           renderChart(activeMode);
         });
       });

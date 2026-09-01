@@ -45,6 +45,16 @@ test('the report provides an offline SVG chart with selectable evidence layers',
   assert.doesNotMatch(html, /<(?:script|link|img|iframe)[^>]+(?:src|href)=["']https?:/i, 'the report must not load an external resource');
 });
 
+test('the chart lets readers switch its vertical axis between log and linear scales', async () => {
+  const html = await readFile(reportUrl, 'utf8');
+
+  assert.match(html, /data-scale="log"/, 'the log-scale selector is missing');
+  assert.match(html, /data-scale="linear"/, 'the linear-scale selector is missing');
+  assert.match(html, /let activeScale = 'log';/, 'log must remain the initial chart scale');
+  assert.match(html, /activeScale === 'linear'/, 'the renderer must branch for a linear axis');
+  assert.match(html, /scaleControls\.forEach/, 'the scale selector must re-render the chart');
+});
+
 test('the report suppresses the browser fallback favicon request', async () => {
   const html = await readFile(reportUrl, 'utf8');
   assert.match(html, /<link rel="icon" href="data:,">/, 'the self-contained page must declare an empty data favicon');
