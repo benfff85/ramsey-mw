@@ -15,6 +15,11 @@
         <relativePath/>
     </parent>
 
+    <properties>
+        <java.version>27</java.version>
+        <lombok.version>1.18.48</lombok.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -94,7 +99,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.16.0</version>
                 <configuration>
-                    <release>25</release>
+                    <release>27</release>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>
