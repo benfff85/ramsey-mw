@@ -90,8 +90,17 @@ chain degrades cycle prevention by one entry rather than failing.
 Nulling frees pages *inside* the tablespace; it does not shrink `graph.ibd`. After the 2026-07-30
 prune the file stayed at 21.55 GB but `data_free` went to 18.38 GB, so inserts reuse that space and
 the file stops growing for ~5–9 days. Run `ANALYZE TABLE graph` afterwards — `data_free` reads 0
-until statistics refresh. Reclaiming actual disk needs `OPTIMIZE TABLE graph`, which rebuilds the
-table and temporarily needs ~2× its size; not run, and not needed while free space remains.
+until statistics refresh. Reclaiming actual disk needs a table rebuild such as `OPTIMIZE TABLE graph`.
+Budget temporary space for both the rebuilt table and any sort files; do not start this on a nearly
+full disk. For fresh size measurements, set `SESSION information_schema_stats_expiry=0` before
+querying `information_schema.tables` (otherwise cached values can still describe the old file).
+
+On **2026-09-09**, after cache cleanup and a verified logical backup, a one-off compaction reduced
+`graph.ibd` from **25.477 GiB to 1.098 GiB**. All 3,665,898 graph rows and 20,142 retained edge strings
+survived, and the full-table checksum was unchanged. The daily prune remains unchanged; compaction
+is **not** scheduled daily. See [the cleanup record](../docs/investigations/disk-cleanup-2026-09-09.md)
+for the backup, checks, and disk-space measurements. The file can grow again as workers generate
+new graphs between daily prunes; compaction is not a permanent cap on its size.
 
 ### Scheduled daily (2026-08-24)
 

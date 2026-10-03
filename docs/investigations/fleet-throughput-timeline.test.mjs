@@ -15,7 +15,7 @@ test('the report embeds ordered, positive WU/s milestones with scoped M4-only be
 
   const requiredTitles = [
     'Java worker era',
-    'Rust worker deployed',
+    'Sustained early Rust era',
     'Hoisted pair evaluation',
     'GPU hybrid optimum',
     'Dense-64 Metal correction',
@@ -32,6 +32,23 @@ test('the report embeds ordered, positive WU/s milestones with scoped M4-only be
 
   const m4Only = milestones.filter((point) => point.title.includes('GPU'));
   assert.ok(m4Only.some((point) => point.scope.includes('M1 paused')), 'M4-only results must disclose that M1 was paused');
+});
+
+test('the early Rust anchor uses sustained stage evidence instead of a switchover outlier', async () => {
+  const html = await readFile(reportUrl, 'utf8');
+  const match = html.match(/<script id="timeline-data" type="application\/json">([\s\S]*?)<\/script>/);
+  const { milestones, events } = JSON.parse(match[1]);
+  const sustainedRust = milestones.find((point) => point.title === 'Sustained early Rust era');
+
+  assert.deepEqual(
+    { date: sustainedRust?.date, rate: sustainedRust?.rate, kind: sustainedRust?.kind },
+    { date: '2026-03-01', rate: 58194, kind: 'legacy-equivalent' },
+    'the plotted Rust-era anchor must use the 577-stage sustained window',
+  );
+  assert.match(sustainedRust.source, /577 campaign-1 stage rows/, 'the sustained Rust source must retain its sample size');
+  assert.ok(events.some((event) => event.title === 'Rust worker deployed' && event.date === '2025-12-21'), 'the Dec 21 deployment must remain visible as an unplotted event');
+  assert.ok(!milestones.some((point) => point.rate === 949000), 'a single 449-second stage must not remain a plotted Rust milestone');
+  assert.doesNotMatch(html, /949k/i, 'the superseded one-stage rate must not remain displayed in the report');
 });
 
 test('the report provides an offline SVG chart with selectable evidence layers', async () => {
@@ -55,22 +72,32 @@ test('the chart lets readers switch its vertical axis between log and linear sca
   assert.match(html, /scaleControls\.forEach/, 'the scale selector must re-render the chart');
 });
 
+test('the report stays focused on one chart and one compact evidence table', async () => {
+  const html = await readFile(reportUrl, 'utf8');
+
+  assert.equal((html.match(/<section\b/g) ?? []).length, 2, 'the page must contain only the chart and evidence-table sections');
+  assert.match(html, /<table id="evidence-table">/, 'the compact evidence table is missing');
+  assert.match(html, /<th>Rate<\/th>/, 'the table must retain the WU\/s rate');
+  assert.match(html, /<th>Evidence<\/th>/, 'the table must retain provenance');
+  assert.doesNotMatch(html, /id="event-list"/, 'the separate event rail should not be rendered');
+  assert.doesNotMatch(html, /id="proxy-list"/, 'the separate stage-progression list should not be rendered');
+  assert.doesNotMatch(html, /id="methodology"/, 'the separate methodology panel should not be rendered');
+});
+
 test('the report suppresses the browser fallback favicon request', async () => {
   const html = await readFile(reportUrl, 'utf8');
   assert.match(html, /<link rel="icon" href="data:,">/, 'the self-contained page must declare an empty data favicon');
 });
 
-test('the ledger distinguishes measured, controlled, and legacy evidence', async () => {
+test('the compact ledger keeps rate and evidence boundaries visible', async () => {
   const html = await readFile(reportUrl, 'utf8');
 
-  assert.match(html, /<th>Measurement<\/th>/, 'the evidence ledger needs a measurement-type column');
-  assert.match(html, /kindName\(point\.kind\)/, 'the ledger must derive its measurement type from the shared dataset');
-  assert.match(html, /cell\.className = 'measurement'/, 'the ledger must style the measurement type separately from provenance');
+  assert.doesNotMatch(html, /<th>Measurement<\/th>/, 'measurement type belongs in compact evidence copy, not its own column');
+  assert.doesNotMatch(html, /<th>Scope<\/th>/, 'scope belongs in compact evidence copy, not its own column');
+  assert.match(html, /point\.commit \+ ' · ' \+ point\.source/, 'the table must derive concise provenance from the shared dataset');
 
   for (const requiredText of [
     'stage-equivalent',
-    'does not represent actual total fleet throughput',
-    'early-adopt stages may contain only partial work',
     'M1 paused',
     'stage-cadence equivalent',
   ]) {

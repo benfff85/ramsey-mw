@@ -223,7 +223,10 @@ services:
         loki-external-labels: "machine=MacBook-Pro-M4Max-1,service_name={{.Name}}"
     restart: unless-stopped
     mem_limit: 2g
-    scale: 14
+    # 6 Docker CPU workers + 10 native GPU-assisted workers (ramsey-worker-rust/scripts/gpu-fleet.sh)
+    # = 16, the M4 Max core count. This was 14 from the CPU-only era; the running stack has used
+    # --scale 6 since the GPU hybrid, so a plain `up` would have oversubscribed the cores.
+    scale: 6
 
   ramsey-worker-rust-sa:
     image: benferenchak/ramsey-worker-rust:develop
@@ -341,6 +344,11 @@ services:
       API_BASE_URL: http://ramsey-mw:8080
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      # Campaign 3's progression has grown past 800k points. The dashboard's current sampling
+      # path materializes that response before reducing it, so the JDK's container-default 512 MiB
+      # heap OOMs before it can return the bounded result. This is a temporary safety margin until
+      # progression is bounded at the middleware boundary.
+      JAVA_TOOL_OPTIONS: "-Xmx2g"
     depends_on:
       ramsey-mw:
         condition: service_healthy
@@ -354,7 +362,8 @@ services:
         loki-batch-size: 1000
         loki-external-labels: "machine=MacBook-Pro-M4Max-1,service_name={{.Name}}"
     restart: unless-stopped
-    mem_limit: 2g
+    # Leave room for metaspace, HTTP buffers, and WebSocket threads above the 2 GiB Java heap.
+    mem_limit: 4g
     scale: 1
 
 networks:

@@ -57,9 +57,9 @@
     table { font: inherit; }
 
     .page-shell {
-      width: min(1440px, calc(100% - 40px));
+      width: min(1280px, calc(100% - 40px));
       margin: 0 auto;
-      padding: 44px 0 72px;
+      padding: 38px 0 64px;
     }
 
     .eyebrow {
@@ -81,108 +81,38 @@
       content: "";
     }
 
-    .hero {
-      display: grid;
-      grid-template-columns: minmax(0, 1.55fr) minmax(260px, 0.85fr);
-      gap: 32px;
-      align-items: end;
-      padding: 34px;
-      overflow: hidden;
-      border: 1px solid rgba(83, 227, 194, 0.22);
-      border-radius: 22px;
-      background: linear-gradient(135deg, rgba(16, 43, 54, 0.9), rgba(7, 19, 26, 0.72));
-      box-shadow: 0 28px 64px var(--shadow);
+    .report-heading {
+      max-width: 76ch;
+      padding: 2px 2px 0;
     }
 
-    .hero h1 {
-      max-width: 14ch;
-      margin: 0;
+    .report-heading h1,
+    h2 {
       font-family: ui-rounded, "Avenir Next", Avenir, "Segoe UI", sans-serif;
-      font-size: clamp(2.2rem, 5vw, 4.8rem);
-      font-weight: 780;
-      letter-spacing: -0.065em;
-      line-height: 0.93;
     }
 
-    .hero p:not(.eyebrow) {
-      max-width: 64ch;
-      margin: 20px 0 0;
+    .report-heading h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3.8rem);
+      font-weight: 760;
+      letter-spacing: -0.06em;
+      line-height: 0.98;
+    }
+
+    .report-heading > p:not(.eyebrow) {
+      max-width: 68ch;
+      margin: 12px 0 0;
       color: var(--muted);
-      font-size: 0.93rem;
+      font-size: 0.86rem;
     }
 
-    .hero-key {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 24px;
-    }
-
-    .chip {
-      padding: 5px 9px;
-      border: 1px solid rgba(216, 232, 232, 0.2);
-      border-radius: 999px;
-      color: var(--paper);
-      font-size: 0.69rem;
-      letter-spacing: 0.04em;
-    }
-
-    .chip--amber { border-color: rgba(240, 179, 90, 0.55); color: #ffd58f; }
-    .chip--blue { border-color: rgba(133, 168, 255, 0.58); color: #bed0ff; }
-
-    .peak-card {
-      position: relative;
-      padding: 22px;
-      overflow: hidden;
-      border: 1px solid rgba(240, 179, 90, 0.33);
-      border-radius: 15px;
-      background: rgba(5, 15, 21, 0.42);
-    }
-
-    .peak-card::after {
-      position: absolute;
-      top: -50px;
-      right: -35px;
-      width: 150px;
-      height: 150px;
-      border: 1px solid rgba(240, 179, 90, 0.19);
-      border-radius: 50%;
-      box-shadow: 0 0 0 23px rgba(240, 179, 90, 0.04), 0 0 0 46px rgba(240, 179, 90, 0.03);
-      content: "";
-    }
-
-    .metric-label,
-    .section-kicker,
-    .table-label {
+    .section-kicker {
       margin: 0;
       color: var(--muted);
       font-size: 0.67rem;
       font-weight: 700;
       letter-spacing: 0.13em;
       text-transform: uppercase;
-    }
-
-    .metric-value {
-      position: relative;
-      z-index: 1;
-      margin: 8px 0 4px;
-      color: var(--amber);
-      font-family: ui-rounded, "Avenir Next", Avenir, "Segoe UI", sans-serif;
-      font-size: clamp(2rem, 3.9vw, 3.55rem);
-      font-weight: 740;
-      letter-spacing: -0.07em;
-      line-height: 0.95;
-    }
-
-    .metric-value span { font-size: 0.38em; letter-spacing: -0.03em; }
-
-    .metric-note {
-      position: relative;
-      z-index: 1;
-      margin: 12px 0 0;
-      color: var(--muted);
-      font-size: 0.75rem;
-      line-height: 1.45;
     }
 
     .panel {
@@ -194,6 +124,7 @@
     }
 
     .chart-panel { padding: 26px 26px 18px; }
+    #chart-panel .panel { margin-top: 24px; }
 
     .panel-heading {
       display: flex;
@@ -201,10 +132,6 @@
       align-items: flex-start;
       justify-content: space-between;
       margin-bottom: 20px;
-    }
-
-    h2, h3 {
-      font-family: ui-rounded, "Avenir Next", Avenir, "Segoe UI", sans-serif;
     }
 
     h2 {
@@ -340,89 +267,42 @@
       font-size: 0.69rem;
     }
 
-    .two-up {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 0.72fr);
-      gap: 24px;
-    }
+    .ledger-panel { padding: 24px 26px 22px; }
+    .table-wrap { overflow-x: auto; margin-top: 16px; border: 1px solid rgba(137, 169, 175, 0.15); border-radius: 10px; }
 
-    .subpanel { padding: 23px; }
-    .subpanel h2 { font-size: 1.45rem; }
-    .subpanel > p:not(.section-kicker) { color: var(--muted); font-size: 0.78rem; }
-
-    .event-list,
-    .proxy-list {
-      display: grid;
-      gap: 0;
-      margin: 18px 0 0;
-      padding: 0;
-      list-style: none;
-    }
-
-    .event-list li,
-    .proxy-list li {
-      display: grid;
-      grid-template-columns: 86px minmax(0, 1fr);
-      gap: 12px;
-      padding: 13px 0;
-      border-top: 1px solid rgba(137, 169, 175, 0.13);
-    }
-
-    .event-date { color: var(--amber); font-size: 0.68rem; }
-    .event-list strong,
-    .proxy-list strong { display: block; color: var(--paper); font-size: 0.78rem; }
-    .event-list span,
-    .proxy-list span { display: block; margin-top: 3px; color: var(--muted); font-size: 0.7rem; }
-    .proxy-list .proxy-rate { color: var(--blue); font-size: 0.78rem; font-weight: 700; }
-
-    .ledger-panel { padding: 26px; }
-    .table-wrap { overflow-x: auto; margin-top: 18px; border: 1px solid rgba(137, 169, 175, 0.15); border-radius: 10px; }
-
-    table { width: 100%; min-width: 850px; border-collapse: collapse; text-align: left; }
-    th, td { padding: 12px 13px; vertical-align: top; border-bottom: 1px solid rgba(137, 169, 175, 0.12); }
-    th { color: var(--muted); background: rgba(7, 19, 26, 0.5); font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase; }
+    table { width: 100%; min-width: 760px; border-collapse: collapse; text-align: left; }
+    th, td { padding: 11px 13px; vertical-align: top; border-bottom: 1px solid rgba(137, 169, 175, 0.12); }
+    th { color: var(--muted); background: rgba(7, 19, 26, 0.5); font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; }
     td { color: var(--muted); font-size: 0.72rem; }
-    td strong { display: block; color: var(--paper); font-size: 0.75rem; }
+    td strong { color: var(--paper); font-size: 0.76rem; }
     td.rate { color: var(--phosphor); font-weight: 700; white-space: nowrap; }
-    td.measurement { color: var(--amber); font-size: 0.67rem; }
-    td.evidence { color: var(--faint); font-size: 0.67rem; }
+    td.evidence { max-width: 46ch; color: var(--faint); font-size: 0.67rem; line-height: 1.45; }
     tr:last-child td { border-bottom: 0; }
 
-    .method-panel { padding: 28px; }
-    .method-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 36px; margin-top: 19px; }
-    .method-grid h3 { margin: 0 0 7px; color: var(--phosphor); font-size: 0.83rem; }
-    .method-grid p { margin: 0; color: var(--muted); font-size: 0.76rem; }
-    .formula {
-      margin-top: 12px !important;
-      padding: 10px 11px;
-      border-left: 2px solid var(--blue);
-      color: #c3d3ff !important;
-      background: rgba(133, 168, 255, 0.06);
-      font-size: 0.72rem !important;
+    .source-note {
+      max-width: 100ch;
+      margin: 15px 1px 0;
+      color: var(--faint);
+      font-size: 0.69rem;
     }
 
-    .footer-note { margin: 24px 2px 0; color: var(--faint); font-size: 0.68rem; }
+    .source-note strong { color: var(--blue); }
 
     @media (max-width: 840px) {
-      .page-shell { width: min(100% - 24px, 1440px); padding-top: 18px; }
-      .hero, .two-up { grid-template-columns: 1fr; }
-      .hero { gap: 24px; padding: 24px; }
+      .page-shell { width: min(100% - 24px, 1280px); padding-top: 24px; }
       .panel-heading { display: block; }
       .chart-controls { justify-content: flex-start; margin-top: 15px; }
-      .chart-panel, .ledger-panel, .method-panel, .subpanel { padding: 18px; }
+      .chart-panel, .ledger-panel { padding: 18px; }
       .chart-shell, #throughput-chart { min-height: 330px; }
-      .method-grid { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 480px) {
-      .hero h1 { font-size: 2.6rem; }
-      .metric-value { font-size: 2.7rem; }
+      .report-heading h1 { font-size: 2.3rem; }
       .control-set { width: 100%; flex-wrap: wrap; }
       .trace-controls { width: 100%; }
       .trace-controls button { flex: 1 1 100%; }
       .scale-controls { flex: 1 1 auto; }
       .scale-controls button { flex: 1 1 0; }
-      .event-list li, .proxy-list li { grid-template-columns: 1fr; gap: 5px; }
       .chart-panel { padding: 14px; }
       .chart-shell, #throughput-chart { min-height: 290px; }
     }
@@ -430,38 +310,26 @@
 </head>
 <body>
   <main class="page-shell">
-    <header class="hero">
-      <div>
-        <p class="eyebrow">Ramsey distributed search / performance history</p>
-        <h1>Fleet throughput, from Java to Metal.</h1>
-        <p>A source-backed performance trace of the work units the search fleet can process each second. Controlled A/B measurements lead; all-fleet stage cadence is kept visibly separate.</p>
-        <div class="hero-key" aria-label="Report key facts">
-          <span class="chip">Dec 2025 → Aug 2026</span>
-          <span class="chip chip--amber">WU/s throughout</span>
-          <span class="chip chip--blue">offline / self-contained</span>
-        </div>
-      </div>
-      <aside class="peak-card" aria-label="Peak controlled result">
-        <p class="metric-label">Peak controlled result</p>
-        <p class="metric-value">559.418 <span>M WU/s</span></p>
-        <p class="metric-note">Dense-64 Metal correction, ABAB mean on the M4 composite. M1 paused; this is not presented as an all-fleet rate.</p>
-      </aside>
+    <header class="report-heading">
+      <p class="eyebrow">Ramsey distributed search</p>
+      <h1>Fleet throughput timeline</h1>
+      <p>Work units per second, from the Java worker through the current Metal-assisted fleet.</p>
     </header>
 
     <section id="chart-panel" aria-labelledby="chart-heading">
       <div class="panel chart-panel">
         <div class="panel-heading">
           <div>
-            <p class="section-kicker">The actual WU/s record</p>
-            <h2 id="chart-heading">A <span id="chart-scale-name">logarithmic</span> trace of the search engine</h2>
-            <p class="panel-description">The primary staircase is made of reported, direct measurements. The dashed blue trace is a separate all-fleet stage-equivalent cadence proxy; use it to see operational change around commits, not as a counter-derived throughput measurement.</p>
+            <p class="section-kicker">Work units per second</p>
+            <h2 id="chart-heading">A <span id="chart-scale-name">logarithmic</span> throughput trace</h2>
+            <p class="panel-description">Direct measurements lead. Turn on the blue proxy only when you want all-fleet stage-cadence context around a deployment.</p>
           </div>
           <div class="chart-controls" aria-label="Chart controls">
             <div class="control-set">
               <span class="control-label">Trace</span>
               <div class="trace-controls" role="group" aria-label="Visible chart layers">
-                <button type="button" data-mode="both" aria-pressed="true">Both traces</button>
-                <button type="button" data-mode="milestones" aria-pressed="false">Measured WU/s</button>
+                <button type="button" data-mode="both" aria-pressed="false">Both traces</button>
+                <button type="button" data-mode="milestones" aria-pressed="true">Measured WU/s</button>
                 <button type="button" data-mode="stage-evidence" aria-pressed="false">Stage-equivalent</button>
               </div>
             </div>
@@ -485,70 +353,28 @@
           <span class="legend-item"><span class="legend-swatch legend-swatch--proxy"></span>stage-equivalent cadence proxy</span>
           <span class="legend-item"><span class="legend-swatch legend-swatch--event"></span>commit / operational event</span>
         </div>
-        <p class="chart-note">Use log to reveal early-era gains; use linear to compare absolute fleet capacity. Hover or focus a point for its source and scope.</p>
+        <p class="chart-note">Use log to reveal early-era gains, linear to compare capacity, and hover or focus any marker for its source.</p>
       </div>
     </section>
 
-    <section class="two-up" aria-label="Supporting evidence">
-      <article class="panel subpanel" aria-labelledby="events-heading">
-        <p class="section-kicker">Unmeasured, but material</p>
-        <h2 id="events-heading">Engineering event rail</h2>
-        <p>These commits changed capability or effective search progression without a retained controlled WU/s sample. They remain visible so the story does not pretend only benchmarked work mattered.</p>
-        <ol id="event-list" class="event-list"></ol>
-      </article>
-      <article class="panel subpanel" aria-labelledby="proxy-heading">
-        <p class="section-kicker">All active campaigns / six-hour windows</p>
-        <h2 id="proxy-heading">Stage-progression context</h2>
-        <p>The derived rate below is intentionally not the headline throughput line. It is a stage-equivalent signal that makes concurrent fleet activity around a deployment visible.</p>
-        <ol id="proxy-list" class="proxy-list"></ol>
-      </article>
-    </section>
-
     <section id="milestone-ledger" class="panel ledger-panel" aria-labelledby="ledger-heading">
-      <p class="section-kicker">Every plotted direct measurement, with its boundary</p>
-      <h2 id="ledger-heading">Milestone ledger</h2>
+      <p class="section-kicker">Evidence</p>
+      <h2 id="ledger-heading">Milestones behind the chart</h2>
       <div class="table-wrap">
-        <table>
+        <table id="evidence-table">
           <thead>
             <tr>
               <th>Date</th>
               <th>Change</th>
-              <th>Measurement</th>
               <th>Rate</th>
-              <th>Scope</th>
               <th>Evidence</th>
             </tr>
           </thead>
           <tbody id="milestone-rows"></tbody>
         </table>
       </div>
+      <p class="source-note"><strong>Reading the proxy:</strong> blue stage-cadence points are a directional operational signal, not persisted total-throughput counters. Early Java and Rust anchors use the same caveat.</p>
     </section>
-
-    <section id="methodology" class="panel method-panel" aria-labelledby="methodology-heading">
-      <p class="section-kicker">Methodology and limits</p>
-      <h2 id="methodology-heading">What each trace does — and does not — say</h2>
-      <div class="method-grid">
-        <div>
-          <h3>Measured milestone trace</h3>
-          <p>These points come from worker throughput output or recorded processed_total samples. They are expressed directly in work units per second. Their labels retain the tested fleet, worker mix, and whether M1 was paused.</p>
-        </div>
-        <div>
-          <h3>Java and initial Rust anchors</h3>
-          <p>The earliest persistence era has no stored processed-work counter. Its two anchors are therefore stage-cadence equivalent estimates: useful for scale, not controlled worker-versus-worker results.</p>
-        </div>
-        <div>
-          <h3>All-fleet stage-equivalent proxy</h3>
-          <p>For a six-hour window, the report sums each ordinary campaign stage transition’s nominal campaign.total_pairs and divides by 21,600 seconds. It combines active campaigns and fleets into one operational signal.</p>
-          <p class="formula">stage-equivalent WU/s = Σ nominal campaign work per ordinary transition ÷ 21,600</p>
-        </div>
-        <div>
-          <h3>The boundary that matters</h3>
-          <p>The stage-equivalent proxy does not represent actual total fleet throughput: source: EXHAUSTIVE records the producer type, not full-stage completion, and early-adopt stages may contain only partial work. Historical per-stage processed counters expire; the durable processed_total counter has no timestamp history.</p>
-        </div>
-      </div>
-    </section>
-
-    <p class="footer-note">Evidence assembled from Ramsey Git history, the investigation notes, and read-only MySQL stage-progression aggregation. Last evidence window: 2026-08-31 12:00 local.</p>
   </main>
 
   <script id="timeline-data" type="application/json">
@@ -565,14 +391,14 @@
       "note": "Low-confidence stage-cadence equivalent, retained only to anchor the Java-to-Rust transition."
     },
     {
-      "date": "2025-12-21",
-      "title": "Rust worker deployed",
-      "rate": 949000,
-      "scope": "Campaign 1 Rust deployment era",
+      "date": "2026-03-01",
+      "title": "Sustained early Rust era",
+      "rate": 58194,
+      "scope": "Campaign 1, Mar 1–Apr 19; nominal stage-cadence equivalent, not a persisted work counter",
       "kind": "legacy-equivalent",
       "commit": "0d41cd8; compose switch 3d45c3f",
-      "source": "campaign 1, stage 13; 427,000,896 nominal units over 449 s",
-      "note": "Early Rust stage-cadence equivalent. It is directional rather than a controlled A/B."
+      "source": "577 campaign-1 stage rows; 246,379,516,992 nominal units over 4,233,793 s",
+      "note": "58,194 WU/s sustained stage-cadence equivalent. It replaces the nonrepresentative 449-second switchover stage and is directional rather than a controlled A/B."
     },
     {
       "date": "2026-07-25",
@@ -697,6 +523,12 @@
   ],
   "events": [
     {
+      "date": "2025-12-21",
+      "title": "Rust worker deployed",
+      "commit": "0d41cd8; compose switch 3d45c3f",
+      "note": "Initial Rust deployment. The lone 449-second switchover-stage estimate was not retained as the sustained Rust anchor."
+    },
+    {
       "date": "2025-12-25",
       "title": "Release build tuning",
       "commit": "40d2237; 9e5406c",
@@ -735,7 +567,7 @@
       const chartDescription = document.getElementById('chart-description');
       const svgNs = 'http://www.w3.org/2000/svg';
       const formatter = new Intl.NumberFormat('en-US');
-      let activeMode = 'both';
+      let activeMode = 'milestones';
       let activeScale = 'log';
 
       function parseDate(value) {
@@ -1057,49 +889,6 @@
         });
       }
 
-      function renderEventRail() {
-        const list = document.getElementById('event-list');
-        list.replaceChildren();
-        data.events.forEach((event) => {
-          const item = document.createElement('li');
-          const date = document.createElement('time');
-          date.className = 'event-date';
-          date.dateTime = event.date;
-          date.textContent = shortDate(event.date);
-          const body = document.createElement('div');
-          const title = document.createElement('strong');
-          title.textContent = event.title;
-          const note = document.createElement('span');
-          note.textContent = event.commit + ' · ' + event.note;
-          body.append(title, note);
-          item.append(date, body);
-          list.append(item);
-        });
-      }
-
-      function renderProxyList() {
-        const list = document.getElementById('proxy-list');
-        list.replaceChildren();
-        const selected = [0, 1, 4, 5, 8, 10, 12, 14, 16, 17];
-        selected.forEach((index) => {
-          const point = data.stageEvidence[index];
-          const item = document.createElement('li');
-          const date = document.createElement('time');
-          date.className = 'event-date';
-          date.dateTime = point.date.replace(' ', 'T');
-          date.textContent = shortDate(point.date);
-          const body = document.createElement('div');
-          const rate = document.createElement('strong');
-          rate.className = 'proxy-rate';
-          rate.textContent = formatRate(point.rate);
-          const note = document.createElement('span');
-          note.textContent = point.label;
-          body.append(rate, note);
-          item.append(date, body);
-          list.append(item);
-        });
-      }
-
       function renderLedger() {
         const body = document.getElementById('milestone-rows');
         body.replaceChildren();
@@ -1108,25 +897,20 @@
           const cells = [
             shortDate(point.date),
             point.title,
-            kindName(point.kind),
             formatRate(point.rate),
-            point.scope,
-            point.commit + ' · ' + point.source,
+            kindName(point.kind) + ' · ' + point.scope + ' · ' + point.commit + ' · ' + point.source,
           ];
           cells.forEach((value, index) => {
             const cell = document.createElement('td');
             if (index === 1) {
               const title = document.createElement('strong');
               title.textContent = value;
-              const detail = document.createElement('span');
-              detail.textContent = point.note;
-              cell.append(title, detail);
+              cell.append(title);
             } else {
               cell.textContent = value;
             }
-            if (index === 2) cell.className = 'measurement';
-            if (index === 3) cell.className = 'rate';
-            if (index === 5) cell.className = 'evidence';
+            if (index === 2) cell.className = 'rate';
+            if (index === 3) cell.className = 'evidence';
             row.append(cell);
           });
           body.append(row);
@@ -1150,8 +934,6 @@
       });
 
       renderChart(activeMode);
-      renderEventRail();
-      renderProxyList();
       renderLedger();
     })();
   </script>
