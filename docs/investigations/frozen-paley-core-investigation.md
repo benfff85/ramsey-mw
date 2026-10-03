@@ -1,5 +1,48 @@
 # The Frozen Paley Core — what campaign 10 was actually searching, and the split criterion
 
+> **September 9, 2026 methodological correction.** This is a historical investigation, not a
+> proof that Paley extensions or larger coordinated reconstructions are impossible. Several
+> conclusions below overstate the recorded evidence:
+>
+> - The heuristic K7-free subset size **105 is a lower bound on the maximum**, not an upper
+>   bound. Even the reported exact upper bound 214 would not exclude the required size 141.
+>   The heuristic ratios in §7 therefore cannot by themselves justify its UNSAT labels.
+> - Exhausting all **single-edge** legal moves establishes isolation only in that move graph;
+>   it does not exclude simultaneous multi-edge or multi-vertex changes. Sampled pair/window
+>   failures likewise do not close larger neighborhoods or an entire construction family.
+> - A large expected number of violations under random glue does not establish the probability
+>   of zero violations. The `exp(-E)` estimate in §10 assumes a distribution/dependence model
+>   that was not proved; it cannot rule out either existence or local-search success.
+> - The observed frozen cores and poor random-glue starts remain useful empirical evidence,
+>   but the categorical “closed,” “impossible,” and “do not retry” conclusions need these limits.
+>
+> Campaign 10 subsequently reached **25,439** (graph 3334326, September 7), independently
+> checked by the primitive notebook counter on September 9. Its labeled Paley(281) core is
+> still unchanged. Current coordinated-boundary experiments and exact scope are documented in
+> `single-flip-check/docs/2026-09-09-boundary-backend-trials.md` at the workspace root.
+> No 282-vertex zero-K8 witness has been found.
+
+> **October 3, 2026 correction — the split criterion misses by one vertex, not ~36.** Paley(281) is
+> K8-free, so every vertex neighbourhood `N(v)` (140 vertices) is **K7-free**: a K7 inside `N(v)`
+> plus `v` would be a K8. Checked directly with an independent pure-Python bitset counter:
+> `Paley(281)[N(0)]` has **74,480 red K6** (the figure in §9) and **0 red K7**; `Nbar(0)` has
+> **0 blue K7**. Therefore `max |K7-free induced subgraph of Paley(281)|` lies in **[140, 214]**,
+> and the necessary condition `>= 141` fails by at most one vertex.
+>
+> - The "measured 105" in §3 and the RUNBOOK came from the `k7free search` heuristic, which never
+>   reached the trivial 140. It is not an estimate of the maximum.
+> - The §7 "phase-transition" table is invalid for the same reason: for any Paley(p) with ω = 7,
+>   `maxK7free / p >= (p-1)/(2p)`, so ratios of 0.35–0.49 cannot be maxima. Its SAT/UNSAT regime
+>   labels and "281 sits well clear of the transition" do not follow.
+> - Consequently whether Paley(281) has a one-vertex K8-free extension is **open** on this
+>   project's evidence. The question is exactly the 281-variable extension CNF of §8 (5.98M
+>   seven-literal clauses), which plain CDCL timed out on; no cube-and-conquer or
+>   automorphism-group symmetry breaking has been tried. The row-count descent (best 25,439)
+>   cannot decide it either way.
+>
+> The rigidity result (§6, 0 of 39,340 single flips), the frozen-core measurement (§1–2) and the
+> rigorous upper bound 214 are unaffected.
+
 **Date:** 2026-08-08
 **Author:** Ben Ferenchak + Claude
 **Status:** CLOSED — the Paley(281)+1 construction is characterised. Its search space is a single

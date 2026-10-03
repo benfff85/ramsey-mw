@@ -1613,3 +1613,159 @@ Anything further probably has to reduce the number of units considered, not the 
 | fleet, m4 only | ~88 M units/sec | ~313 M units/sec |
 | **fleet incl. m1** | — | **321.9 M units/sec** |
 | campaign 3 minimum | 744,468 | 743,721 |
+
+# Part 13 — shape-packed GPU correction dispatch: +7.47% (2026-08-31)
+
+## Result
+
+The native Metal correction queue previously mixed requests with three and four forced vertices in
+the same SIMD group. Their clique walks have different depth and candidate-set distributions, so
+the group follows its slowest lane. The deployed worker now groups a dispatch by the exact seed
+shape (n=3 or n=4), pads each group to the pipeline's runtime thread_execution_width(), and scatters
+results back to the original enumeration order before finish_pair and candidate recording.
+
+This changes scheduling only: the shader, correction formula, threshold semantics, Redis protocol,
+and six-Docker-CPU / ten-native-GPU fleet topology are unchanged. GPU_BUCKETING is a native-only
+kill switch; it defaults to false, and the Linux Docker workers never enter the Metal path.
+
+| block | native configuration | processed total rate (M units/sec) |
+|---|---|---:|
+| A1 | deployed main, GPU_BUCKETING=false | 378.814 |
+| B1 | candidate, shape packing enabled | 417.251 |
+| A2 | deployed main, GPU_BUCKETING=false | 394.479 |
+| B2 | candidate, shape packing enabled | 413.839 |
+| **mean A** | | **386.646** |
+| **mean B** | | **415.545** |
+
+This was an A B A B trial with m1 paused, a five-minute warm-up discarded in each block, and a
+six-minute processed_total:3 sample. The pooled gain is **+7.47%**. The baseline itself drifted up
+4.14% across the sweep; even against its interpolated bracketing baseline B1 is +7.92%, and B2 is
++4.91% over A2. Both candidate comparisons are positive and the pooled result is above the fleet's
+approximately 2% noise floor.
+
+## Correctness gates
+
+- A target-independent dispatch-plan test was added first and observed failing before the plan
+  implementation existed. It proves each real request maps once, padding has no logical slot, and
+  scattering restores original order.
+- cargo test --release --lib: **104 passed, 5 ignored**.
+- The independent Metal-to-CPU correction oracle passed on both real campaign fixture graphs,
+  covering both colours and both n=3/n=4 shapes.
+- The realistic 3,000,000-unit pipeline replay produced identical CPU-only, synchronous GPU,
+  existing pipelined GPU, and shape-packed pipelined outputs. On that replay, shape packing reached
+  67.06 M units/sec versus 62.33 M/s for the prior pipeline.
+
+The native supervisor was restarted onto the rebuilt main binary with GPU_BUCKETING=true.
+Post-deploy verification found ten native workers, six Docker CPU workers, both m1 and m4-max
+running on campaign 3, middleware health 200, and a 12.76B-unit campaign-counter increase in
+30 seconds.
+
+## What this ruled out, and what moved next
+
+The fuller (n, candidate-size) dispatch plan is not a follow-up to deploy blindly: its exact
+common-neighbourhood prepass shortened GPU waits but consumed the CPU/GPU overlap, making the
+end-to-end local pipeline about **5% slower**. Shape-only grouping obtains the useful part without
+that extra CPU cost.
+
+A fresh 30-second sample of a deployed native worker still placed 10,366 of 15,699 active
+main-thread samples (**~66%**) in Metal completion waits. The next largest direct CPU costs were
+the bounded clique path (~13%) and the exact row selector (~8%); the new shape planner itself was
+~1.1% and scatter ~0.3%. That leaves no credible CPU micro-optimization of comparable magnitude.
+The remaining high-ceiling compute research is an exact cooperative/SIMD-group correction kernel,
+which must retain the same CPU oracle and full-pipeline replay before it is ever considered for a
+fleet trial. A separate exact n=4 cooperative prototype did pass the CPU oracle, but reached only
+10.75 M/s versus the current kernel's 44.61 M/s (0.24x): threadgroup coordination and reduction
+cost more than the lane divergence it removes, so that direction is closed rather than queued for
+a fleet trial.
+
+The next bounded candidate is narrower: extend only the n=3 dense correction representation from
+32 to 64 candidate vertices. On frozen live graph 1527569 at its contemporary top-N threshold
+(737,212), an exact selector-aware probe sampled 1,024 evenly spaced red rows (20,273,152 logical
+pairs). The selector retained 5.680% of those pairs; all retained pairs required a correction,
+and n=3 made up 10.839% of those corrections. Of the n=3 requests, 70.617% had 33--64 candidates
+(84,482 at 33--40, 3,652 at 41--48, and 2 at 49--64); none exceeded 64. Therefore the extension
+can touch 7.654% of correction *counts*, not the whole pipeline. The bitset cardinality histogram
+was checked against 1,951 literal all-seed-neighbourhood counts.
+
+Using the previously measured raw correction rates (n=3: 4.28 M/s, n=4: 15.33 M/s), n=3 accounts
+for an estimated 30.3% of current GPU correction service time. If affected cost scaled only with
+its request count, the upper bound would be a 1.273x GPU-service gain; the theoretical 1.435x
+limit requires making every n=3 correction free. A prototype must therefore measure per-size-bin
+GPU service before a fleet A/B; it has a plausible but not yet reportable native-fleet gain.
+
+# Part 14 — n=3 dense-64 Metal correction: +37.41% in A/B/A/B (2026-08-31)
+
+## Result
+
+The narrow prototype from Part 13 is a material fleet improvement. For n=3 correction requests
+whose compressed candidate set has 33--64 vertices, the worker now uses a single-`u64` dense
+Metal clique kernel instead of the wider bitset traversal. Existing c<=32 dense dispatches are
+unchanged; n=4 and c>64 requests retain their previous paths.
+
+`GPU_DENSE64` is a native-Metal kill switch. It was the only changed setting in this trial;
+`GPU_BUCKETING=true` remained enabled in every block, and the six Linux Docker CPU workers were
+otherwise unchanged.
+
+| block | GPU_DENSE64 | processed_total:3 rate (M units/sec) |
+|---|---:|---:|
+| A1 | false | 411.962 |
+| B1 | true | 550.042 |
+| A2 | false | 402.279 |
+| B2 | true | 568.793 |
+| **mean A** | | **407.121** |
+| **mean B** | | **559.418** |
+
+This was an A B A B trial with m1 paused, a five-minute warm-up discarded for each block, and a
+six-minute `processed_total:3` sample. The pooled observed gain is **+37.41%**. Both adjacent
+comparisons are positive: B1 is +33.52% over A1 and B2 is +41.39% over A2. The two baselines
+actually drifted down 2.35%, which makes the repeated treatment result stronger rather than an
+artifact of a rising baseline. This is the tested composite rate for the ten native GPU workers
+plus the unchanged six Docker CPU workers; it should not be generalized to a different campaign
+or fleet topology without another trial.
+
+## Correctness gates
+
+- The dense-64 test compares 5,000 exact correction requests against the CPU oracle. The final
+  implementation passed, with the raw correction service rate increasing from 4.91 to 33.46 M/s
+  (6.81x) in that focused test.
+- The existing real-fixture Metal correction oracle and the 3,000,000-unit CPU/synchronous-GPU/
+  pipelined-GPU/shape-packed pipeline replay remained exact.
+- An intentional off-by-one mutation (`need - 1`) in the dense-64 kernel caused the oracle test to
+  fail, then was immediately reverted.
+- After the reboot restored the Jupyter bind mount, the user's `ramsey-clique-check.ipynb`
+  set-based no-pivot Bron--Kerbosch implementation exactly matched all three persistence spot
+  checks: 1556942 = 369,564 red + 367,535 blue = 737,099; 1556941 = 369,522 + 367,578 =
+  737,100; and 1556939 = 369,189 + 367,910 = 737,099.
+
+## Independent 1,000-stage persistence audit
+
+To move beyond three spot checks, a random 1,000-stage manifest was drawn from the 12,000 most
+recent eligible campaign-3 stages at audit start. Every selected stage had a distinct base graph
+with retained `edge_data`; the manifest is retained by SHA-256
+`f33273f2504c540140654e194c226649d704a35a4a4ea267257a2b721d786c5e`.
+
+The exact set-based, no-pivot Python Bron--Kerbosch cells from the user's
+`ramsey-clique-check.ipynb` were run independently for both colours of every graph. Each result
+required a three-way equality: the stage manifest's stored MySQL count, the middleware graph API's
+stored count, and `red_count + blue_count` from the notebook oracle.
+
+| audit result | count |
+|---|---:|
+| distinct sampled stages | 1,000 |
+| exact three-way matches | 1,000 |
+| mismatches | 0 |
+| execution errors / exhausted retries | 0 |
+
+The m4-max and m1 campaign fleets were paused only while the CPU-bound oracle audit ran, preserving
+their campaign-3 mappings. The wrapper resumed both automatically on completion; fresh post-audit
+checks found both fleets RUNNING with active stages, middleware UP, Redis PONG, ten native workers,
+six Docker CPU workers, and the campaign counter advancing again.
+
+## Deployment and recovery state
+
+The native supervisor now has `GPU_BUCKETING=true` and `GPU_DENSE64=true`, and it runs the tested
+binary from the repository's ignored `target/release` path rather than `/tmp`, so a future reboot
+does not discard the deployed artifact. Post-deploy checks found the launch job running with those
+settings, ten native workers, six Docker CPU workers, middleware health UP (including MySQL and
+Redis), Redis PONG, an advancing campaign counter, and both m1 and m4-max fleets RUNNING on
+campaign 3.
