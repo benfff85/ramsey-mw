@@ -1833,6 +1833,13 @@ Measured from the native workers' own Throughput lines:
 | old code | 72.7% | 26.6% | 99% |
 | new code | 53.8% | 44.8% | 99% |
 
-A stage now takes ~0.3 s, and workers spend most of their idle time waiting for the next one. **Stage
-turnover is the next thing to profile.** The stage-tail taper (#114, closed) addressed idle *inside* a
-stage and cannot help here.
+A stage now takes ~0.3 s. "Work-exhausted" means every unit is *claimed*, not that the stage has
+advanced, so this idle is the stage tail plus QM turnover plus the next stage's cold start.
+
+Batches cap at 4M units (~19 ms with the selector), so the straggler tail is a small share of the
+~130 ms idle per stage. The larger lead is that **every stage starts cold**:
+- `clear_stage_cache` resets the fetch size to the 2,000 floor, which then ramps ×4 per batch;
+- the 39,621 singles run the seeded kernel, because the hoist engages only past index 50,000;
+- yet the carried table is 99.99% present at stage start.
+
+**The stage cold start is the next thing to profile.**
