@@ -1769,3 +1769,70 @@ does not discard the deployed artifact. Post-deploy checks found the launch job 
 settings, ten native workers, six Docker CPU workers, middleware health UP (including MySQL and
 Redis), Redis PONG, an advancing campaign counter, and both m1 and m4-max fleets RUNNING on
 campaign 3.
+
+# Part 15 — recovered, validated and re-measured on campaign 10: +108% end to end (2026-10-03)
+
+## What happened to Parts 13–14
+
+Their code was deployed from an **uncommitted** working tree. After the 2026-10-01 reboot, the
+`com.setminusx.ramsey.gpu-fleet` launch agent restarted the native workers with no environment.
+`scripts/gpu-fleet.sh` defaulted `GPU_BUCKETING` and `GPU_DENSE64` to false, so both were silently
+off.
+
+The same tree also contained a fourth, never-measured change with no kill switch: `SeparableRowPlan`,
+an exact row-level retirement of pair units that provably cannot beat the best-novel threshold.
+
+All four changes are now committed (worker PR #129). The selector gained `ROW_SELECTOR`, and the code
+and the script both default to the measured configuration.
+
+## Correctness first
+
+The oracles are independent of the changed code:
+
+- **Brute force.** 2.47M selector decisions on random 7–11-vertex graphs, recounted by literal
+  subset enumeration: no qualifying pair is ever retired, and the Mixed identity is exact.
+- **Production scale.** On campaign-10 graphs 3334326 / 3665903 / 2665154 at six thresholds, the
+  unchanged bounded evaluator rejects every selector-retired pair (up to 392.3M per run).
+- **Metal.** GPU == CPU oracle on the same graphs, and the 3M-unit replays are identical with every
+  correction sent to the GPU.
+- **Mutations.** Every layer's mutation was caught (e.g. dense-64 `need − 1` gave 15,218 mismatches).
+- **External audit.** 154 graphs written to MySQL during the fleet A/B (140 traced to the new binary
+  through the workers' own `Added to top-10` lines) recount identically with the notebook oracle cell.
+
+## Measurement
+
+Campaign 10, with 10 native GPU workers and 6 unchanged Docker workers, and `m1` paused. Blocks were
+mirrored (A B S K K S B A, then B D G G D B). Each block discarded 270 s of warm-up and measured 420 s
+of `processed_total:10`, using only intervals in which the active base graph stayed below 30,000
+cliques, so an ILS kick could not land in the window.
+
+| arm | config | fleet M u/s | stages/s |
+|---|---|---:|---:|
+| A | pre-selector `develop` | 644.5 (621, 668) | 1.84 |
+| **B** | everything on | **1341.6** (1288, 1396); rerun 1324.3 (1338, 1310) | **3.49** |
+| S | B without row selector | 620.9 | 1.77 |
+| K | B without bucketing | 1325.0 | 3.45 |
+| D | B without dense-64 | 1241.9 | 3.26 |
+| G | B with all GPU changes off, chunk 32,768 | 1272.4 | 3.36 |
+
+- **End to end: +108%** units/s, and both halves agree (+107.4% and +108.9%).
+- **Row selector: +116%.** It is nearly the whole effect: on campaign 10 it retires ~99.9% of pair
+  units.
+- **GPU changes inside the selector config.** Dense-64 is +6.6% and the whole GPU set +4.1%. The sign
+  is positive in both halves, but the magnitude sits below the 5–8% between-block spread.
+- **Bucketing is not resolvable** (+1.3%; the halves give −1.4% and +3.9%).
+- **Without the selector the GPU set gives nothing measurable on this campaign** (S vs A −3.7%).
+  Paley-structured graphs need far fewer corrections than campaign 3's.
+
+## Where the bottleneck went
+
+Measured from the native workers' own Throughput lines:
+
+| | busy | idle | idle cycles that are work-exhausted |
+|---|---:|---:|---:|
+| old code | 72.7% | 26.6% | 99% |
+| new code | 53.8% | 44.8% | 99% |
+
+A stage now takes ~0.3 s, and workers spend most of their idle time waiting for the next one. **Stage
+turnover is the next thing to profile.** The stage-tail taper (#114, closed) addressed idle *inside* a
+stage and cannot help here.
