@@ -44,10 +44,27 @@ public class CampaignController {
         return campaign;
     }
 
+    /**
+     * A campaign's progression, one point per stage.
+     *
+     * With no parameters this is the WHOLE series, which is unbounded: campaign 10 passed 3.66M
+     * stages and 555 MB of JSON (14 s to produce) in Oct 2026, and the dashboard's 2 GB backend ran
+     * out of heap deserialising it. Prefer pages: with {@code sinceStageId} and/or {@code limit}
+     * only the stages after {@code sinceStageId} come back, in stage order, at most {@code limit}
+     * (default and maximum {@value CampaignService#MAX_PROGRESSION_PAGE}) per call. Keep paging
+     * from the last stage returned until a page comes back short.
+     */
     @GetMapping("/{id}/progression")
-    public List<com.setminusx.ramsey.mw.dto.ProgressionDTO> getCampaignProgression(@PathVariable Integer id) {
-        log.info("Fetching progression for campaign with ID: {}", id);
-        return campaignService.getCampaignProgression(id);
+    public List<com.setminusx.ramsey.mw.dto.ProgressionDTO> getCampaignProgression(
+            @PathVariable Integer id,
+            @RequestParam(required = false) Integer sinceStageId,
+            @RequestParam(required = false) Integer limit) {
+        if (sinceStageId == null && limit == null) {
+            log.info("Fetching full progression for campaign with ID: {}", id);
+            return campaignService.getCampaignProgression(id);
+        }
+        log.debug("Fetching progression page for campaign {} after stage {} (limit {})", id, sinceStageId, limit);
+        return campaignService.getCampaignProgressionPage(id, sinceStageId, limit);
     }
 
     @PostMapping
