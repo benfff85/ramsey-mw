@@ -81,7 +81,7 @@ services:
       # Graph storage (docs/superpowers/plans/2026-10-07-graph-delta-lineage.md):
       # OFF = full edge data on every graph via mw derive; SHADOW = full + lineage (verification);
       # DELTA = lineage only, full edge data on snapshots. Fallback to OFF at any time is safe.
-      GRAPH_STORAGE_MODE: "OFF"
+      GRAPH_STORAGE_MODE: "SHADOW"
       GRAPH_CHECKPOINT_INTERVAL: 1000
       SPRING_PROFILES_ACTIVE: dev
       # Fleet abstraction: single campaign-agnostic QM — no RAMSEY_CAMPAIGN_ID.
