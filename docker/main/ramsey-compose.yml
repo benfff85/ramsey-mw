@@ -8,8 +8,10 @@ services:
     # (4.7M members, 461 MB, Oct 2026) as one key, and any access to that key blocks until it is
     # done: 15 s, during which the QM cannot check novelty and no stage advances. At */5 that cost
     # 5% of fleet time. Everything else in Redis is either per-stage with a 1 h TTL or rebuildable.
-    # Before restarting this container, pause the fleets and SAVE so nothing since the last
-    # snapshot is lost (Dragonfly does not save on shutdown).
+    # Dragonfly saves on shutdown, but that save takes ~16 s, and Docker's default 10 s stop
+    # timeout killed it midway on 2026-10-07 (only .tmp files were left). Hence the 2 minute grace
+    # period. Before restarting, still pause the fleets and SAVE explicitly
+    # (ramsey-redis skill: "Restarting Dragonfly without losing data").
     command: dragonfly --maxmemory 7gb --snapshot_cron "0 */8 * * *" --dbfilename dump --dir /data
     stop_grace_period: 2m
     networks:
