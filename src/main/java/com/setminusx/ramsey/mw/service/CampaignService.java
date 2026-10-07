@@ -69,8 +69,27 @@ public class CampaignService {
         campaignRepo.deleteById(id);
     }
 
+    /** Largest progression page served: ~7.5 MB of JSON at campaign 10's row size. */
+    public static final int MAX_PROGRESSION_PAGE = 50_000;
+
     public List<com.setminusx.ramsey.mw.dto.ProgressionDTO> getCampaignProgression(Integer campaignId) {
         return stageRepo.findProgressionByCampaignId(campaignId);
+    }
+
+    /**
+     * Progression points after {@code sinceStageId} (exclusive), in stage order, at most
+     * {@code limit} of them — clamped to [1, {@value #MAX_PROGRESSION_PAGE}], and that maximum
+     * when null. A page shorter than the limit asked for is the last one.
+     */
+    public List<com.setminusx.ramsey.mw.dto.ProgressionDTO> getCampaignProgressionPage(
+            Integer campaignId, Integer sinceStageId, Integer limit) {
+        int pageSize = limit == null ? MAX_PROGRESSION_PAGE : Math.clamp(limit, 1, MAX_PROGRESSION_PAGE);
+        return stageRepo.findProgressionPage(campaignId, sinceStageId == null ? 0 : sinceStageId, pageSize)
+                .stream()
+                .map(r -> new com.setminusx.ramsey.mw.dto.ProgressionDTO(r.getStageId(), r.getGraphId(),
+                        r.getCliqueCount(), r.getCreatedDate(),
+                        r.getStatus() == null ? null : Stage.Status.valueOf(r.getStatus()), r.getDetails()))
+                .toList();
     }
 
 }

@@ -74,6 +74,40 @@ class CampaignServiceTest {
         assertEquals(Campaign.Status.ACTIVE, service.getCampaignById(10).getStatus());
     }
 
+    private record Row(Integer getStageId, Integer getGraphId, Integer getCliqueCount,
+                       java.time.LocalDateTime getCreatedDate, String getStatus, String getDetails)
+            implements com.setminusx.ramsey.mw.dto.ProgressionRow {}
+
+    @Test
+    void progressionPage_mapsRowsInOrder() {
+        java.time.LocalDateTime t = java.time.LocalDateTime.of(2026, 10, 6, 20, 0);
+        when(stageRepo.findProgressionPage(10, 41, 2)).thenReturn(List.of(
+                new Row(42, 7, 25_439, t, "INACTIVE", "PERTURBATION kick from graph 1"),
+                new Row(43, 8, 25_500, t, "ACTIVE", null)));
+
+        var page = service.getCampaignProgressionPage(10, 41, 2);
+
+        assertEquals(List.of(42, 43), page.stream().map(p -> p.getStageId()).toList());
+        assertEquals(7, page.getFirst().getGraphId());
+        assertEquals(25_439, page.getFirst().getCliqueCount());
+        assertEquals(t, page.getFirst().getCreatedDate());
+        assertEquals(Stage.Status.INACTIVE, page.getFirst().getStatus());
+        assertEquals("PERTURBATION kick from graph 1", page.getFirst().getDetails());
+        assertEquals(Stage.Status.ACTIVE, page.get(1).getStatus());
+    }
+
+    /** No caller gets the unbounded series by accident: the page size is always capped. */
+    @Test
+    void progressionPage_clampsTheLimitAndDefaultsTheCursor() {
+        int max = CampaignService.MAX_PROGRESSION_PAGE;
+        service.getCampaignProgressionPage(10, null, null);
+        verify(stageRepo).findProgressionPage(10, 0, max);
+        service.getCampaignProgressionPage(10, 5, max * 10);
+        verify(stageRepo).findProgressionPage(10, 5, max);
+        service.getCampaignProgressionPage(10, 5, 0);
+        verify(stageRepo).findProgressionPage(10, 5, 1);
+    }
+
     private static Campaign byId(List<Campaign> cs, int id) {
         return cs.stream().filter(c -> c.getCampaignId() == id).findFirst().orElseThrow();
     }
