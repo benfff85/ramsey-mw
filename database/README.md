@@ -45,6 +45,7 @@ Applied so far (keep this list in sync with `init-script.ddl`):
 | Date | Change | Why |
 |---|---|---|
 | 2026-07-28 | `stage`: `KEY idx_stage_status (status)` | The QM's cross-campaign ACTIVE-stage query passes `campaignId = null`, which cannot use `idx_stage_campaign_status`. Was a 45 ms full scan of 215k rows on every progression tick and twice per stage advance. See `../docs/investigations/post-hoist-bottleneck-review.md`. |
+| 2026-10-07 | `graph`: `parent_graph_id`, `flipped_edges`, `graph_hash`, `lineage_depth` (ALGORITHM=INSTANT, 0.07 s live) | Delta lineage: ordinary graphs store parent + flips + hash instead of 40 KB of edge data. See `../../docs/superpowers/plans/2026-10-07-graph-delta-lineage.md`. |
 
 ## Pruning `graph.edge_data`
 

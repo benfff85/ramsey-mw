@@ -34,6 +34,10 @@ CREATE TABLE `ramsey-dev`.`graph` (
                          `vertex_count` int DEFAULT NULL,
                          `identified_date` datetime(6) DEFAULT NULL,
                          `edge_data` text,
+                         `parent_graph_id` int DEFAULT NULL,
+                         `flipped_edges` varchar(512) DEFAULT NULL,
+                         `graph_hash` char(64) DEFAULT NULL,
+                         `lineage_depth` int DEFAULT NULL,
                          PRIMARY KEY (`graph_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -120,6 +124,10 @@ CREATE TABLE `ramsey-test`.`graph` (
                                     `vertex_count` int DEFAULT NULL,
                                     `identified_date` datetime(6) DEFAULT NULL,
                                     `edge_data` text,
+                                    `parent_graph_id` int DEFAULT NULL,
+                                    `flipped_edges` varchar(512) DEFAULT NULL,
+                                    `graph_hash` char(64) DEFAULT NULL,
+                                    `lineage_depth` int DEFAULT NULL,
                                     PRIMARY KEY (`graph_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
