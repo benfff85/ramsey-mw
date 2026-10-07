@@ -58,7 +58,14 @@ public class GraphLineageService {
                 for (String f : flips) {
                     GraphBits.flip(bits, target.getVertexCount(), f);
                 }
-                return new String(bits);
+                String rebuilt = new String(bits);
+                // The row recorded the hash of its true bits when it was written. A rebuild that
+                // disagrees (a corrupt flip list, drifted stored bits) must never be served: a QM
+                // restart would re-base the search on it, and materialize would persist it.
+                if (target.getGraphHash() != null && !target.getGraphHash().equals(sha256Hex(rebuilt))) {
+                    throw broken(target, target.getGraphId(), "rebuilt bits do not match graph_hash");
+                }
+                return rebuilt;
             }
             if (parent == null || edges == null) {
                 throw broken(target, id, "no usable edge data and no parent");
@@ -75,6 +82,15 @@ public class GraphLineageService {
             depth = step.getLineageDepth();
             parent = step.getParentGraphId();
             edges = step.getFlippedEdges();
+        }
+    }
+
+    private static String sha256Hex(String bits) {
+        try {
+            return java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(bits.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 not available", e);
         }
     }
 

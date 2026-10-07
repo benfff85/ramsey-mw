@@ -94,6 +94,35 @@ class GraphLineageServiceTest {
                 "FORCE must load edge data only from snapshots, got " + loads.keySet());
     }
 
+    private static String sha256(String s) throws Exception {
+        return java.util.HexFormat.of().formatHex(
+                java.security.MessageDigest.getInstance("SHA-256").digest(s.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+    }
+
+    /**
+     * A row whose flips are corrupt rebuilds to the wrong bits. The row records the hash of its TRUE
+     * bits at creation, so the rebuild must be checked against it and refused, never returned.
+     */
+    @Test
+    void rebuildThatDoesNotMatchTheRecordedHashThrows() throws Exception {
+        String root = "0000000000";                      // n = 5
+        String child = "1000000000";                     // root with {{0:1}} flipped
+        Map<Integer, Graph> rows = new HashMap<>();
+        Graph r = graph(1, null, null, 0, root);
+        r.setVertexCount(5);
+        Graph c = graph(2, 1, "{{0:1}}", 1, null);
+        c.setVertexCount(5);
+        c.setGraphHash(sha256(child));
+        rows.put(1, r);
+        rows.put(2, c);
+        GraphLineageService lineage = new GraphLineageService(repoOver(rows, new HashMap<>()));
+
+        assertEquals(child, lineage.edgeData(c, GraphLineageService.Mode.STORED), "intact lineage rebuilds and verifies");
+
+        c.setFlippedEdges("{{0:2}}");                    // corrupt: rebuilds to 0100000000
+        assertThrows(LineageBrokenException.class, () -> lineage.edgeData(c, GraphLineageService.Mode.STORED));
+    }
+
     @Test
     void brokenChainThrows() {
         Map<Integer, Graph> rows = new HashMap<>();
