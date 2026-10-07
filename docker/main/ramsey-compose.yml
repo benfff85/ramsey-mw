@@ -5,7 +5,7 @@ services:
   redis:
     # Pinned: upstream :latest moved to v2.0.0 on 2026-09-16. Upgrade only via
     # docs/superpowers/plans/2026-10-07-dragonfly-v2-upgrade.md (backup + lossless procedure).
-    image: docker.dragonflydb.io/dragonflydb/dragonfly:v1.39.0
+    image: docker.dragonflydb.io/dragonflydb/dragonfly:v2.0.0
     # Snapshot every 8 hours, not every 5 minutes. A snapshot serialises processed_graph_hashes
     # (4.7M members, 461 MB, Oct 2026) as one key, and any access to that key blocks until it is
     # done: 15 s, during which the QM cannot check novelty and no stage advances. At */5 that cost
