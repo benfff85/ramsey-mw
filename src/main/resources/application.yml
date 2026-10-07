@@ -24,10 +24,6 @@ spring:
           batch_size: ${JDBC_BATCH_SIZE:5000}
         order_inserts: true
         order_updates: true
-  graphql:
-    graphiql:
-      enabled: true
-      path: /graphiql
 
 server:
   forward-headers-strategy: framework # Needed for api docs behind reverse proxy
