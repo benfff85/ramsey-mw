@@ -33,11 +33,12 @@ public class GraphController {
     @GetMapping("/{id}")
     public Graph getGraphByGraphId(
             @PathVariable() Integer id,
-            @RequestParam(required = false) String edgesToFlip) {
+            @RequestParam(required = false) String edgesToFlip,
+            @RequestParam(defaultValue = "stored") String reconstruct) {
 
         log.info("Fetching graph with ID: {}, edgesToFlip: {}", id, edgesToFlip);
 
-        Graph graph = graphService.getGraphByGraphId(id);
+        Graph graph = graphService.getGraphByGraphId(id, reconstruct);
 
         if (graph == null) {
             log.warn("Graph with ID: {} not found", id);
@@ -57,6 +58,15 @@ public class GraphController {
     public Graph createGraph(@RequestBody Graph graph) {
         log.info("Creating a new graph with data: {}", graph);
         return graphService.createOrUpdateGraph(graph);
+    }
+
+    @PutMapping("/{id}/materialize")
+    public Graph materializeGraph(@PathVariable Integer id) {
+        Graph graph = graphService.materialize(id);
+        if (graph == null) {
+            throw new ResponseStatusException(NOT_FOUND, "Graph not found");
+        }
+        return graph;
     }
 
     @PutMapping("/{id}")
