@@ -161,6 +161,14 @@ Login with DBeaver, you may need to set the following in the Driver properties t
 1. `allowPublicKeyRetrieval`: True
 2. `useSSL`: False
 
+## Rolling the middleware back past graph lineage (fallback L2)
+
+The pre-lineage middleware returns NULL `edgeData` for delta rows and ignores lineage fields on
+POST. So: (1) set the QM's `GRAPH_STORAGE_MODE` to `OFF` and recreate it; (2) wait for one stage
+advance; (3) run `database/materialize-graphs.sh`. It refuses until (1) and (2) hold, then writes
+full edge data onto every ACTIVE base and each active campaign's last 5,000 bases. (4) Only then
+retag `ramsey-mw:rollback-pre-delta-lineage` to `:develop` and recreate the mw.
+
 ## Restoring from a backup (last resort)
 
 Backups: `~/Ramsey/Backups/<date>-<label>/` — `mysql.sql.zst`, `mysql-checksums.txt`, `hwm.txt`,

@@ -66,6 +66,18 @@ try:
     broken = "NO ERROR (bad)"
 except urllib.error.HTTPError as e:
     broken = str(e.code)
+# Fallback L2's write path: materialize persists rebuilt bits onto delta rows. Pick deltas from the
+# chain, materialize them, and read them back AS STORED: the row must now hold exactly the true bits.
+mat_bad = 0
+delta_ids = [gid for gid in list(truth)[1:] if gid % 97 == 0][:8]
+for gid in delta_ids:
+    call("PUT", f"{API}/{gid}/materialize")
+    stored = call("GET", f"{API}/{gid}?reconstruct=none")
+    if stored["edgeData"] != truth[gid] or hashlib.sha256(stored["edgeData"].encode()).hexdigest() != stored["graphHash"]:
+        mat_bad += 1
+        print("MATERIALIZE MISMATCH", gid)
+print(f"materialized {len(delta_ids)} delta rows on the real DB, mismatches {mat_bad}")
+bad += mat_bad
 print(f"graphs {len(truth)}, mismatches {bad}, none-mode edgeData null: {none['edgeData'] is None}, "
       f"derive ok: {derived['edgeData'] == ''.join(expect)}, broken chain -> {broken}")
 print("VERDICT:", "PASS" if bad == 0 and none["edgeData"] is None and derived["edgeData"] == "".join(expect) and broken == "409" else "FAIL")

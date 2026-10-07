@@ -20,6 +20,7 @@ DRY_RUN=0
 
 DB_CONTAINER="${DB_CONTAINER:-ramsey-db-mysql}"
 MW_CONTAINER="${MW_CONTAINER:-ramsey-ramsey-mw-1}"
+MW_URL="${MW_URL:-http://localhost:36000}"   # rebuilds delta graphs for the post-prune check
 SCHEMA="${SCHEMA:-ramsey-dev}"
 DB_USER="${DB_USER:-ramsey-user-dev}"
 BATCH="${BATCH:-50000}"
@@ -146,12 +147,26 @@ log "after: $after"
 log "nulled $total rows"
 
 # The failure this is guarding against is silent, so check for it rather than assume it.
+# A base without stored edge data is fine when it is a lineage delta (lineage_depth > 0): the
+# middleware rebuilds it from its snapshot. It is an orphan only when it can no longer be rebuilt --
+# no stored bits AND no lineage (a pre-lineage row the prune nulled, or a snapshot that lost its bits).
 orphans="$(sql "select count(*) from \`$SCHEMA\`.stage s
   join \`$SCHEMA\`.graph g on g.graph_id = s.base_graph_id
-  where g.edge_data is null
+  where g.edge_data is null and (g.lineage_depth is null or g.lineage_depth = 0)
     and (s.status = 'ACTIVE' or s.stage_id > (select max(stage_id) - $KEEP_STAGES from \`$SCHEMA\`.stage));")"
 if [ "$orphans" != "0" ]; then
-  log "WARNING: $orphans live stages now have a NULL base graph — investigate immediately"
+  log "WARNING: $orphans live stages now have a base graph that cannot be rebuilt — investigate immediately"
   exit 1
 fi
-log "verified: no live stage lost its base graph"
+# The QM needs every ACTIVE base in full. Rebuild each through the middleware and check the bits
+# against the hash recorded when the graph was written (pre-lineage rows carry no hash: length only).
+for gid in $(sql "select base_graph_id from \`$SCHEMA\`.stage where status = 'ACTIVE'"); do
+  body="$(curl -sf "$MW_URL/api/ramsey/graphs/$gid")" || { log "WARNING: ACTIVE base $gid could not be rebuilt by the middleware"; exit 1; }
+  bits="$(printf '%s' "$body" | jq -r '.edgeData // empty')"
+  want="$(printf '%s' "$body" | jq -r '.graphHash // empty')"
+  [ -n "$bits" ] || { log "WARNING: ACTIVE base $gid came back without edge data"; exit 1; }
+  if [ -n "$want" ] && [ "$(printf '%s' "$bits" | shasum -a 256 | cut -d' ' -f1)" != "$want" ]; then
+    log "WARNING: ACTIVE base $gid rebuilt to bits that do not match its graph_hash"; exit 1
+  fi
+done
+log "verified: every live stage's base graph is stored or rebuildable, and every ACTIVE base rebuilds"
