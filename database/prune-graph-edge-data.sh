@@ -97,7 +97,10 @@ INSERT IGNORE INTO keep_graphs
   JOIN (SELECT s.campaign_id, MIN(g2.clique_count) mc FROM stage s
         JOIN graph g2 ON g2.graph_id = s.base_graph_id GROUP BY s.campaign_id) m
     ON g.clique_count = m.mc
-  JOIN stage s2 ON s2.base_graph_id = g.graph_id AND s2.campaign_id = m.campaign_id;"
+  JOIN stage s2 ON s2.base_graph_id = g.graph_id AND s2.campaign_id = m.campaign_id;
+-- 5. every lineage snapshot: delta rows are rebuilt from these, so nulling one breaks its chain
+INSERT IGNORE INTO keep_graphs
+  SELECT graph_id FROM graph WHERE lineage_depth = 0;"
 log "retention set: $(sql "select count(*) from \`$SCHEMA\`.keep_graphs;") graphs"
 
 # THE GUARD -- not optional. The retention set is a snapshot, but stages keep advancing while the
