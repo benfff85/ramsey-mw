@@ -4,7 +4,14 @@ services:
 
   redis:
     image: docker.dragonflydb.io/dragonflydb/dragonfly:latest
-    command: dragonfly --maxmemory 7gb --snapshot_cron "*/5 * * * *" --dbfilename dump --dir /data
+    # Snapshot every 8 hours, not every 5 minutes. A snapshot serialises processed_graph_hashes
+    # (4.7M members, 461 MB, Oct 2026) as one key, and any access to that key blocks until it is
+    # done: 15 s, during which the QM cannot check novelty and no stage advances. At */5 that cost
+    # 5% of fleet time. Everything else in Redis is either per-stage with a 1 h TTL or rebuildable.
+    # Before restarting this container, pause the fleets and SAVE so nothing since the last
+    # snapshot is lost (Dragonfly does not save on shutdown).
+    command: dragonfly --maxmemory 7gb --snapshot_cron "0 */8 * * *" --dbfilename dump --dir /data
+    stop_grace_period: 2m
     networks:
       - ramsey-net
     ports:
