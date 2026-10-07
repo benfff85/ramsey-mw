@@ -61,6 +61,7 @@ Retention set (build as a temp table, then null everything outside it):
 - every perturbation kick seed (`stage.details LIKE '%PERTURBATION kick%'`)
 - every ACTIVE stage's base graph
 - each campaign's minimum-`clique_count` graph (the incumbents)
+- every lineage snapshot (`lineage_depth = 0`): delta rows are rebuilt from these
 
 ```sql
 CREATE TABLE keep_graphs (graph_id INT PRIMARY KEY);
