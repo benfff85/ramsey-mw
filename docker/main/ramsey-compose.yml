@@ -49,7 +49,12 @@ services:
       JDBC_BATCH_SIZE: 5000
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      LOGGING_LEVEL_ROOT: INFO
+      # WARN, not INFO: at INFO the mw logged ~23 GB/day, almost all of it GraphController printing
+      # each new graph's full 40 KB edge bitstring (~5.5 graphs/s). Loki ingests it on this Mac's
+      # SSD, at ~29 GB/day of writes (2026-10-07). The config package stays at INFO so the
+      # slow-request timing lines below (0 lines/min when healthy) still flag regressions.
+      LOGGING_LEVEL_ROOT: WARN
+      LOGGING_LEVEL_COM_SETMINUSX_RAMSEY_MW_CONFIG: INFO
       # Per-request timing logs at INFO only at/above this many ms (or on non-2xx). Workers poll
       # the fleet active-stage endpoint every cycle; logging each one was ~73 lines/sec.
       REQUEST_LOG_SLOW_MS: 250
@@ -353,11 +358,10 @@ services:
       API_BASE_URL: http://ramsey-mw:8080
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      # Campaign 3's progression has grown past 800k points. The dashboard's current sampling
-      # path materializes that response before reducing it, so the JDK's container-default 512 MiB
-      # heap OOMs before it can return the bounded result. This is a temporary safety margin until
-      # progression is bounded at the middleware boundary.
+      # Headroom only. Progression is now read in pages and held as a bounded summary
+      # (ramsey-ui#24, ramsey-mw#209), so the heap no longer grows with campaign length.
       JAVA_TOOL_OPTIONS: "-Xmx2g"
+      LOGGING_LEVEL_ROOT: WARN
     depends_on:
       ramsey-mw:
         condition: service_healthy
