@@ -160,3 +160,22 @@ Login with DBeaver, you may need to set the following in the Driver properties t
 
 1. `allowPublicKeyRetrieval`: True
 2. `useSSL`: False
+
+## Restoring from a backup (last resort)
+
+Backups: `~/Ramsey/Backups/<date>-<label>/` — `mysql.sql.zst`, `mysql-checksums.txt`, `hwm.txt`,
+`dragonfly-data/`, `redis-pre.json`, `images.txt`, `git-heads.txt`.
+
+1. Pause every fleet (`POST /api/ramsey/fleets/<platform>/pause`) and stop the QM:
+   `docker stop ramsey-ramsey-queue-manager-1`.
+2. Roll images back to the backup's `images.txt` (`docker tag <id> benferenchak/<repo>:develop`).
+3. MySQL: `docker exec ramsey-db-mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DROP DATABASE \`ramsey-dev\`"'`,
+   then `zstd -dc mysql.sql.zst | docker exec -i ramsey-db-mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD"'`
+   (the dump contains CREATE DATABASE). Re-create grants for `ramsey-user-dev` if missing. Verify
+   with the queries in `backup-mysql.sh` against `mysql-checksums.txt`.
+4. Redis: `docker stop ramsey-redis-1`; replace the volume contents:
+   `docker run --rm -v ramsey_dragonfly-data:/data -v <backup>/dragonfly-data:/src alpine sh -c 'rm -rf /data/* && cp -a /src/. /data/'`;
+   `docker start ramsey-redis-1`; run `compare_fingerprints.py redis-pre.json <fresh>` → LOSSLESS.
+5. Recreate mw then QM via compose; the QM's `ensureActiveStageInitialized` re-seeds any missing
+   stage config. Resume fleets (check `campaignId` first). Stages created after the backup are gone;
+   the search continues from the restored ACTIVE stage.
