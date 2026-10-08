@@ -7,7 +7,10 @@ spring:
     init:
       mode: ${SQL_INIT_MODE:never} # Runs data.sql for inserts [never, always]
   datasource:
-    url: jdbc:mysql://ramsey-db-mysql:3306/ramsey-dev?autoReconnect=true&useSSL=false&rewriteBatchedStatements=true&allowPublicKeyRetrieval=true&cachePrepStmts=true&prepStmtCacheSize=250&prepStmtCacheSqlLimit=2048&useServerPrepStmts=true&useLocalSessionState=true&cacheServerConfiguration=true&maintainTimeStats=false
+    # readOnlyPropagatesToServer=false: Spring Data's read methods run @Transactional(readOnly=true),
+    # and the driver sent SET SESSION TRANSACTION READ ONLY and then READ WRITE around each one
+    # (~89M a week). Read-only is still enforced by Hibernate; MySQL only loses the hint.
+    url: jdbc:mysql://ramsey-db-mysql:3306/ramsey-dev?autoReconnect=true&useSSL=false&rewriteBatchedStatements=true&allowPublicKeyRetrieval=true&cachePrepStmts=true&prepStmtCacheSize=250&prepStmtCacheSqlLimit=2048&useServerPrepStmts=true&useLocalSessionState=true&cacheServerConfiguration=true&maintainTimeStats=false&readOnlyPropagatesToServer=false
     username: ${DB_USER}
     password: ${DB_PASS}
     hikari:
