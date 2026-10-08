@@ -17,9 +17,21 @@ ramsey:
     slow-threshold-ms: ${REQUEST_LOG_SLOW_MS:250}
 
 spring:
+  datasource:
+    hikari:
+      # Pool connections start with autocommit OFF, and Hibernate is told so below. Without that,
+      # Spring turned autocommit off and back on around every transaction: two SET autocommit
+      # round trips each (~101M a week). These two settings must stay together. A pool at
+      # autocommit=true with Hibernate assuming false would autocommit every statement, so
+      # multi-statement transactions would stop being atomic. Safe here because every mw DB access
+      # is a Spring Data repository call, which runs in a transaction (no JdbcTemplate, no
+      # EntityManager). Verified write-by-write against a scratch stack, 2026-10-08.
+      auto-commit: false
   jpa:
     properties:
       hibernate:
+        connection:
+          provider_disables_autocommit: true
         jdbc:
           batch_size: ${JDBC_BATCH_SIZE:5000}
         order_inserts: true
