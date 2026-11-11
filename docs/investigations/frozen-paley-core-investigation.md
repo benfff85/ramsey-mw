@@ -1,5 +1,10 @@
 # The Frozen Paley Core — what campaign 10 was actually searching, and the split criterion
 
+> **Later results (to November 2026).** The extension question this document leaves open was settled exactly:
+> Paley(281) has no K8-free one-vertex extension, and no K8-free colouring of K282 contains Paley(281) minus a
+> vertex (`single-flip-check/docs/2026-10-10-completion-uniqueness.md`, uncertified cube-and-conquer). The best
+> count is now 24,927. See `README.md` for the current state.
+
 > **September 9, 2026 methodological correction.** This is a historical investigation, not a
 > proof that Paley extensions or larger coordinated reconstructions are impossible. Several
 > conclusions below overstate the recorded evidence:
@@ -49,8 +54,8 @@
 281-bit row, not 39,621 edges; the base itself is a rigid, isolated point; and reaching zero from it
 requires a structural property (`max K7-free induced subgraph >= 141`) that it misses by ~36 vertices.
 **Supersedes in part:** the "single/dual edge flip move class" framing in
-`multiseed-basin-program-results.md`, and the coverage claims in `windowed-maxsat-investigation.md`
-and `joint-reoptimization-investigation.md` — see §4.
+`search-history.md`, and the coverage claims in `search-history.md`
+and `search-history.md` — see §4.
 **Tooling:** `single-flip-check/src/bin/k7free.rs` (new), `results/k7free/RUNBOOK.md` (full run log).
 
 ---

@@ -10,7 +10,7 @@
 
 Three trajectory metaheuristics — simulated annealing, tabu search with clique-guided candidate generation, and variable-depth (Lin-Kernighan-style) search — were built, tuned, and A/B-tested against the exhaustive engine at the campaign-2 operating point (282 vertices, ~790K mono-8-cliques, balanced-pair move shape). **Combined: millions of iterations, zero improvements, while the concurrent exhaustive fleet produced every stage advance.**
 
-The common diagnosis: at this graph density, progress comes from finding *different basins*, not from smarter/deeper trajectories within the current one. The landscape is too rugged for narrow-trajectory escape — a conclusion later **hardened to proven-optimal status** by the exact windowed-MaxSAT certification (~1.1M windows, zero escapes, `windowed-maxsat-investigation.md`) and by the construction-side finding that even a 28×-better basin (Paley+1 reseed) re-walls the same way (`search-status-2026-06-14.md`).
+The common diagnosis: at this graph density, progress comes from finding *different basins*, not from smarter/deeper trajectories within the current one. The landscape is too rugged for narrow-trajectory escape — a conclusion later **hardened to proven-optimal status** by the exact windowed-MaxSAT certification (~1.1M windows, zero escapes, `search-history.md`) and by the construction-side finding that even a 28×-better basin (Paley+1 reseed) re-walls the same way (`search-history.md`).
 
 | Method | Retired | Evidence | Concurrent exhaustive |
 |---|---|---|---|
@@ -67,5 +67,5 @@ The most literature-validated technique for Ramsey lower bounds at n > 100 (Exoo
    ```
    The static `CliqueCollection` is fine for *candidate generation* (staleness acceptable) but never for *move scoring*.
 2. **Whole-graph cycle prevention ≠ edge-level tabu.** The QM's `processed_graph_hashes` blocks revisiting graphs; tabu memory shapes trajectories. Complementary — and neither substitutes for the other.
-3. **Zero-improvement evidence compounds.** Each method was retired on a pre-registered decision matrix, not vibes; three independent families failing identically (plus the later exact-window certification) is what justified the strategic pivot to construction-based seeding (`search-status-2026-06-14.md`).
-4. **Algorithmic references for any future re-run:** `../workers/simulated-annealing-worker.md`, `../workers/tabu-clique-guided-worker.md`, `../workers/variable-depth-search-worker.md`. Full original plans/logs: git history of the three replaced docs (removed 2026-07-02).
+3. **Zero-improvement evidence compounds.** Each method was retired on a pre-registered decision matrix, not vibes; three independent families failing identically (plus the later exact-window certification) is what justified the strategic pivot to construction-based seeding (`search-history.md`).
+4. **Algorithmic references for any future re-run:** the retired worker docs (git history before 2026-11-11), the retired worker docs (git history before 2026-11-11), the retired worker docs (git history before 2026-11-11). Full original plans/logs: git history of the three replaced docs (removed 2026-07-02).

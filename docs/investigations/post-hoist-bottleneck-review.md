@@ -3,7 +3,7 @@
 **Date:** 2026-07-28
 **Author:** Ben Ferenchak + Claude
 **Status:** Findings measured on the live system; fixes queued and being applied one at a time (progress table at the end).
-**Context:** `pair-move-hoist-review.md` closed with "making one stage of a pipeline 30× faster does not make the
+**Context:** `engine-performance.md` closed with "making one stage of a pipeline 30× faster does not make the
 pipeline faster; it relocates the bottleneck, usually somewhere nobody was measuring." This doc is the follow-up
 measurement — two days after the hoist deployed — of where it actually relocated to.
 
@@ -256,7 +256,7 @@ adjacency rows; walk `C_b` and `edge_counts[b]` linearly (already adjacent in me
 
 **Deliberately no speedup number here.** This repo has twice recorded a confident estimate in exactly this area
 collapsing on measurement (the "2× kernel win" whose benchmark never aborted, and the "20× pruning win" whose
-soundness precondition failed in production), and `pair-move-hoist-review.md` §4 shows three benchmark windows on
+soundness precondition failed in production), and `engine-performance.md` §4 shows three benchmark windows on
 the same code giving 6.8×, 17.0× and 362.9×. **Measure integrated over a whole sweep**, not in a window.
 
 **Gates before this goes near production:**
@@ -387,7 +387,7 @@ time it is predicted in advance rather than discovered afterwards.
 | **Straggler delay** | 28 starts in 40 min, **zero** reached the 3 s limit; each costs up to one 1 s QM poll | ~1% of wall-clock. The QM only learns `processed_count` on its 1 s tick. Low priority. |
 | **Abandoned work** | worker-1 discarded ~2.7M units in 10 min against ~1.26B processed | **0.2% — not a hot spot. Do not spend effort here.** |
 | **Redis / Dragonfly** | 3.65% CPU, 323 MB, hit ratio 95.3% | Not a bottleneck. |
-| **`graph` table growth** | 226,022 rows / **9.91 GB**, ~1.0 GB/day at current cadence | Not a performance problem (PK lookups are 3 ms), but still no retention policy. Tracked in `july-2026-next-steps.md`. |
+| **`graph` table growth** | 226,022 rows / **9.91 GB**, ~1.0 GB/day at current cadence | Not a performance problem (PK lookups are 3 ms), but still no retention policy. Tracked in `search-history.md`. |
 | **P/E-core skew** | per-worker throughput 1.6–2.3M u/s, uniform across all 14 | No imbalance despite 14 workers on 12P+4E. Leave the worker count alone. |
 
 ---

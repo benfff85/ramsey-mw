@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-18
 **Author:** Ben Ferenchak + Claude
-**Status:** IMPLEMENTED (2026-07-18) across four PRs, **not yet merged/deployed** — this remains the spec of record. Code is on feature branches off develop:
+**Status:** SHIPPED. All four PRs are merged and deployed (July 2026), and Phase 2 (perturbation kicks) was built on it. This remains the spec of record; the live API is summarised in the `ramsey-api` skill. Note that §4.3's `POST /campaigns/{id}/deactivate` was never built: a campaign is retired by setting its ACTIVE stage INACTIVE. The PRs:
 - **1a** (schema + fleet API): ramsey-mw **#165** — `fleet` table, resolve/repoint/pause endpoints, 8 tests.
 - **1b** (worker `RAMSEY_FLEET`): ramsey-worker-rust **#82** — resolve-per-cycle + campaign fallback, 89 tests.
 - **1c** (single QM): ramsey-queue-manager **#76** — campaign-agnostic loops, retire mseed QM, 13 tests.
@@ -264,7 +264,7 @@ The system is live and must not drop work. Each phase is independently deployabl
 Phase 2 adds an **ILS controller** (likely an external process, to keep the production QM clean) that, on a stage-denominated wall, kicks the incumbent-best graph by a tuned magnitude and re-descends. With Phase 1 in place, its retargeting is trivial and deploy-free:
 - Create a new campaign (or new stage) with the kicked seed via existing insert paths.
 - `PUT /fleets/{platform}` to point the fleet at it. The fleet follows automatically.
-Per-kick **new campaigns** give clean per-basin history; the fleet abstraction makes that as cheap as a stage insert. **Prerequisite experiment (before building Phase 2):** the "what kick size *k* escapes the 25,840 basin" probe on graph 8644 — see the Phase-2 doc when written. Note the |F|≤128 MaxSAT locks are *sampled, not exhaustive* (see `windowed-maxsat-investigation.md`), so the unsampled multi-edge space ILS explores is not closed by proof.
+Per-kick **new campaigns** give clean per-basin history; the fleet abstraction makes that as cheap as a stage insert. **Prerequisite experiment (before building Phase 2):** the "what kick size *k* escapes the 25,840 basin" probe on graph 8644 — see the Phase-2 doc when written. Note the |F|≤128 MaxSAT locks are *sampled, not exhaustive* (see `search-history.md`), so the unsampled multi-edge space ILS explores is not closed by proof.
 
 ---
 

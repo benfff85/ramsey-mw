@@ -1,50 +1,45 @@
-# Investigations — index
+# Investigations: index
 
-Goal throughout: a 282-vertex 2-coloring with zero monochromatic K₈ ⇒ **R(8,8) ≥ 283**. Best-known 282-graph: **25,604** mono-8 (graph 276750, campaign 10, 2026-07-28). Superseded values still referenced by older docs, newest first: 25,618 (graph 222120, 2026-07-27), 25,758 (graph 26994), 25,840 (graph 8644). **Anything reading "nothing has ever gone below 25,840" predates 2026-07-27 and is no longer true.**
+Goal: a 2-colouring of K282 with no monochromatic K8, which proves **R(8,8) ≥ 283**. None has been found.
 
-**Start here:** `frozen-paley-core-investigation.md` (what the search space actually was, and why the
-Paley+1 line is closed) → `july-2026-next-steps.md` (live roadmap) → `search-status-2026-06-14.md`
-(consolidated findings + do-not-retry list).
+## Current state (2026-11-11)
 
-> **2026-08-08 — scope correction.** Campaign 10's 281-vertex core was bit-identical to Paley(281)
-> for all 519k stages, so the live search space was one vertex's 281-bit row (0.005% of each stage's
-> work units), and Paley(281) is a rigid isolated base (0 of 39,340 single flips keep it K8-free).
-> Reaching zero needs `max K7-free induced subgraph >= 141`; it is 105, and rigorously <= 214. This
-> narrows the stated scope of the windowed-MaxSAT, joint-reoptimisation and multi-seed results —
-> see `frozen-paley-core-investigation.md` §4. Campaign 10 is retired; both fleets are unmapped.
+- **Best 282-vertex colouring: 24,927 monochromatic K8** (graph 5578937, in the database since 2026-11-02). It is
+  Paley(281) plus one vertex whose row is invariant under an order-14 multiplier group. A two-day fleet run from it
+  (campaign 17, 1.48M stages) found nothing lower; campaign 17 is retired.
+- **Paley(281) has no K8-free one-vertex extension** (exact, 2026-10-11). No descent that keeps the Paley core
+  reaches zero, so the fleet is paused and the work is exact-method research.
+- **That research is not in this repository.** It lives in `single-flip-check/docs/` at the workspace root (the
+  crate is not under version control). Start with:
+  - `2026-11-11-thirty-day-plan.md`: the current plan and its progress log;
+  - `2026-10-26-prescribed-automorphism-screen.md`: the symmetry screens (Cayley, block, primitive, coset);
+  - `2026-10-30-symmetric-row-record.md`: the 24,927 record;
+  - `2026-10-10-completion-uniqueness.md`: the no-extension proof;
+  - `2026-10-19-literature-scan.md`.
 
-## Live / current
+## Documents here
 
-| Doc | What it is |
+| Document | What it is |
 |---|---|
-| `frozen-paley-core-investigation.md` | **The Paley+1 line, characterised and closed** — frozen core, the 281-bit search space, the `>=141` split criterion, base rigidity, phase-transition map, do-not-retry list, and the glue construction as the forward direction |
-| `july-2026-next-steps.md` | **Live roadmap** — multi-seed basin program (campaigns 11+), ranked queue |
-| `post-hoist-bottleneck-review.md` | **Live perf work** — measured wall-clock budget after the hoist shipped; ranked fix queue (stage-status index, regime-aware hoist gate, slice fill, inner loop) with before/after baselines. **Part 4 (2026-08-24)**: stage-turnover latency, not the inner loop, was the largest non-compute cost — the 1 s progression poll quantised every exhausted stage (66% ended within 100 ms of a whole second); fixed event-driven. Also per-stage Redis key TTLs, three cost hypotheses measured and closed, and the inner-loop restructure settled at ~1.05× |
-| `clique-guided-perturbation-proposal.md` | **PROPOSED, not built** — kick edges by mono-8-clique participation instead of uniformly at random. Motivated by 22 kicks / 218,786 stages producing zero improvement on the incumbent: small kicks re-enter the same basin, large ones strand. Queue-manager-only; §8.1 defines a half-day falsification test to run *before* any code |
-| `fleet-abstraction-plan.md` | **SHIPPED** — `RAMSEY_CAMPAIGN_ID` env-pinning replaced by a DB `fleet` table (platform→campaign); single campaign-agnostic QM. Repointing/pausing is a DB update, not a redeploy. Phase 2 (perturbation/ILS) built on it and is also live. |
-| `pair-move-hoist-proposal.md` | **SHIPPED** — the original proposal for hoisting per-edge clique counts out of the pair-move inner loop |
-| `pair-move-hoist-review.md` | **SHIPPED** — measured review of that proposal (found a shared-vertex bug in its pseudocode), plus the outcome: what the kernel change actually bought once the surrounding bottlenecks were removed |
-| `search-status-2026-06-14.md` | Consolidated June findings hub; do-not-retry list; supersedes older strategy docs |
-| `structurally-new-base-investigation.md` | All construction families certified empty: cyclotomic (every prime order ≤ **1021**; p ≡ 3 mod 4 closed by parity theorem), Seidel switching, all four order-282 Cayley groups |
-| `windowed-maxsat-investigation.md` | Exact (complete-solver) windowed MaxSAT: ~1.1M proven-optimal windows, zero escapes, |F| up to 128 |
+| `search-history.md` | **The fleet-era search, April – August 2026, in one place**: record progression, every move class and construction tried, the multi-seed and kick results, and the do-not-repeat list. Read its scope note first |
+| `frozen-paley-core-investigation.md` | Why campaign 10 was only ever searching one vertex's row: the frozen core, the K7-free split criterion, Paley's rigidity. Its banners carry the September and October corrections |
+| `structurally-new-base-investigation.md` | Construction families found empty: cyclotomic colourings for every prime order to 1021, Seidel switching, the four order-282 Cayley groups (hill-climb, not exact) |
+| `paley-graph-investigation.md` | Paley(281) as the base: why it is the record construction, and the corrected extension counts |
+| `retired-trajectory-methods.md` | Simulated annealing, tabu and variable-depth search: built, measured, retired |
+| `engine-performance.md` | **Worker and fleet performance in one place**: what shipped and its measured gain, how the hoist, row selector and best-novel threshold work, what was rejected |
+| `post-hoist-bottleneck-review.md` | The detailed measurement log behind `engine-performance.md`, parts 1–15 (2026-07-28 to 2026-10-03) |
+| `fleet-throughput-timeline.html` (+ `.test.mjs`) | Chart of fleet throughput over the same period |
+| `fleet-abstraction-plan.md` | Specification of the `fleet` table and API (shipped July 2026); source comments point here |
+| `disk-cleanup-2026-09-09.md` | One disk-space incident; `database/README.md` points here |
+| `../workers/exhaustive-worker.md` | How the production worker enumerates and evaluates work units |
 
-## Closed investigations (records; conclusions still load-bearing)
+Operational runbooks (Dragonfly upgrade, graph delta lineage) are in `docs/superpowers/plans/` at the workspace
+root, and the schema and prune procedure in `database/README.md`.
 
-| Doc | Verdict |
-|---|---|
-| `paley-graph-investigation.md` | Paley(281) is the ~50-year world-record base; the whole 282-problem is the added vertex (early "100M+" count corrected in-doc to ~44K random / ~27K optimized) |
-| `row-optimization-investigation.md` | Graph 8348 row-locked (exhaustive 282-vertex sweep, 0 improving rows); tool (`rowopt_pilot`) still actively used to generate construction seeds |
-| `joint-reoptimization-investigation.md` | 2-vertex joint moves locked (0/214 pairs); tool (`joint_pilot`) reusable on future walls |
-| `retired-trajectory-methods.md` | SA, tabu+clique-guided, VDS — all retired, zero improvements across millions of iterations; **do not reactivate** (consolidates three 2026-04/05 docs, originals in git history) |
-| `sat-solver-investigation.md` | Direct SAT infeasible (~10¹³ clauses); the windowed-MaxSAT proposal here was built (see live docs) |
-| `engine-optimization-review.md` | Participation ordering REJECTED (campaign-1 backtest — the lasting artifact); config-win statuses in header |
-| `best-novel-threshold-plan.md` | SHIPPED 2026-06-19 — best-novel threshold design + outcome (~3× stage throughput); reference for the insert-Lua/threshold semantics |
+## Removed on 2026-11-11
 
-## `archive/`
-
-Superseded strategy/roadmap snapshots kept for the historical record (each carries a banner explaining how it resolved): `may-2026-next-steps.md`, `deep-analysis-path-forward.md`.
-
-## Related
-
-- `../workers/` — per-worker-mode algorithmic references (exhaustive is live; SA/tabu/VDS are retired, banners at top).
-- Research tooling lives in the `single-flip-check/` crate (separate, not committed); usage documented in the `ramsey-pilot-tools` Claude skill.
+Merged into `search-history.md`: the June status hub, the May and July roadmaps, the May strategy note, and the
+row-optimisation, joint re-optimisation, windowed-MaxSAT, direct-SAT and multi-seed write-ups. Merged into
+`engine-performance.md`: the June engine review, the best-novel threshold plan, the hoist proposal and its review.
+Deleted outright: the three retired workers' algorithm references, the unbuilt clique-guided perturbation
+proposal, and the plan and spec for the throughput timeline. All are in git history before that date.

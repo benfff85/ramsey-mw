@@ -1,9 +1,14 @@
 # Structurally-New Base Investigation — Cyclotomic / Circulant Search on Z₂₈₁
 
+> **Later results (to November 2026).** The order-282 Cayley result below is a hill-climb, not a proof. Exact
+> screens since then cover Cayley, block, primitive-group and coset-action families of order 281–300 and found only
+> Paley(281) (`single-flip-check/docs/2026-10-26-prescribed-automorphism-screen.md`); about 29,000 Cayley families
+> remain unresolved timeouts. Plain circulants of order 282–300 have not been screened exactly.
+
 **Date:** 2026-06-27 (updated 2026-07-02)
 **Author:** Ben Ferenchak + Claude
 **Status:** CLOSED — no circulant/cyclotomic base beats Paley(281) at any prime order ≤ 461, and no order-282 Cayley 2-coloring (any of the four groups) approaches mono-8-free. Every long-shot follow-up is empty: cyclotomic order > 281 through 461 (Experiments 4/4b: 7.1M+ colorings, zero hits), p ≡ 3 (mod 4) closed by a parity theorem (Experiment 6), Seidel switching 0/8M, |F|=128 windows 0/88,496, non-cyclic order-282 Cayley floors ~0.88–1.1M (Experiment 7). Also fixed en route: the >288-vertex complement-count corruption in the original tool (Experiment-3 correction).
-**Pursues:** the "structurally-new mono-8-free base" next-step — the only direction that searches *outside* Paley's local neighborhood (which the Phase-1/2 windowed-MaxSAT hunt locked across ~1M windows; see `windowed-maxsat-investigation.md`).
+**Pursues:** the "structurally-new mono-8-free base" next-step — the only direction that searches *outside* Paley's local neighborhood (which the Phase-1/2 windowed-MaxSAT hunt locked across ~1M windows; see `search-history.md`).
 
 **Goal:** a mono-8-free 281-vertex graph with **fewer than Paley(281)'s 5,979,680 mono-7-cliques** — a strictly better vertex-extension seed that could floor *below* the current best 282-graph (25,840 mono-8 = Paley(281)+1).
 
@@ -100,7 +105,7 @@ The control reproduces the known ~1M cyclic floor (996k in the 06-19 run — con
 
 Seidel switching flips every edge of a cut S × (V∖S) — a **large, structured, global** move, a different class than the locked small edge-windows (Phase-1/2 windowed MaxSAT, ~1M windows) and the single-distance-class circulant toggles (0/140 probe). `construction_search switch 281` sampled **8,000,000** random subsets S (3M all-sizes, 3M |S| ≤ 8, 2M |S| ≤ 4). **Result: 0 stayed mono-8-free** — every cut-flip destroys Paley's K₈-freeness. Switching is not a viable escape.
 
-*(The parallel "bigger local window" long shot — a fast `|F|=128` base-sweep on Paley(281), the untested top of the window-size ladder — also closed: **0 / 88,496** proven-optimal windows. See `windowed-maxsat-investigation.md`.)*
+*(The parallel "bigger local window" long shot — a fast `|F|=128` base-sweep on Paley(281), the untested top of the window-size ladder — also closed: **0 / 88,496** proven-optimal windows. See `search-history.md`.)*
 
 ---
 
