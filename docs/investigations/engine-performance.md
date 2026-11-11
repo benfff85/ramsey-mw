@@ -53,12 +53,42 @@ is idle and a stage takes roughly 0.13 s. The fleet has been paused since 2026-1
 
 ## Measured and rejected
 
+Each of these looks attractive and has been tried. The first three are the ones most likely to be proposed again.
+
+- **Dirty-edge pruning** ("only re-check moves near the last flip"): 12 times faster and **unsound**. It is valid
+  only if the previous stage swept the whole space, and stages stop at the first improvement. Replayed on 38 real
+  stage transitions, the adopted move lay in the "dirty" set 57.9% of the time (51.7% for improving moves).
+- **Bron–Kerbosch pivoting:** invalid here. Pivoting prunes non-maximal cliques, and the kernel counts every
+  k-clique.
+- **Capping the hoist's per-edge precompute:** unsafe and saves nothing. 1,171 edges exceed a cap of 1,024, and a
+  capped count below the usable limit is simply wrong.
+- **Red-edge sharing** (hoisting only the red half): superseded by the full hoist. Its first benchmark, which
+  showed no gain, was itself buggy (no early abort).
+- **Bound-skip** of units a cached bound excludes: no measurable gain near the floor, because the threshold sits
+  at or above the base count. Kept only because it is correct and free.
+- **Seeding the stage-start threshold at the base count:** do not. It hides the equal-or-slightly-worse novel
+  results that exhaustion fallback needs.
+
 - Profile-guided optimisation (a wash), a stage-tail taper (mechanism works, net zero), `TARGET_CPU` builds,
   removing the per-unit allocation (0.2% of time), the sequential inner-loop restructure (1.05×), Postgres.
 - GPU offload from a CPU worker (0.94×); 18 workers on 16 cores; adding Docker workers once turnover-bound (+1%).
 - Running the M1 fleet on the M4's campaign: −42%, because its slower batches gate each stage.
 - Participation-ordered enumeration (see `search-history.md`).
 - An incumbent-relative guard for doomed kicks (about 12% margin, too small).
+
+Never built, so not evidence either way: result logging (`PUBLISH_RESULTS` stayed off), which gates any learned
+enumeration order; and the mid-batch stage-death check from the June review, which the `stage_advanced` channel
+and adaptive batch size later made unnecessary.
+
+## Traps found along the way
+
+- **The hoist proposal's pseudocode was wrong for pairs sharing a vertex**: 1.4% of the space, 63 of 63 sampled
+  pairs wrong, by up to 182 cliques. Only the full-stage replay made it visible.
+- **A single benchmark window misleads.** Three windows of the same stage gave 6.8, 17.0 and 363 times.
+- **Recreating workers mid-stage** leaves that stage's best-results set with entries from the old build. Harmless
+  (the queue manager's fallback handles it), but do not read that stage as evidence.
+- **`MAX_INCREMENTAL_FLIPS` "not worth changing"** was measured only at a wall; in descents the fallback rate was
+  51%. A broken metric likewise reported 3% peer coverage of the shared fill when the truth was 31–81%.
 
 ## Lessons
 

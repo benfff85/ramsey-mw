@@ -52,7 +52,12 @@ Graph 8348 (775,642), all with tools in `single-flip-check/`:
 - **One vertex's whole row** (`rowopt_pilot`, SATLike local search): 0 of 282 vertices; not even a neutral flip.
 - **Two vertices jointly** (`joint_pilot`): 0 of 214 pairs (14 targeted, 200 random).
 - **Participation-ordered enumeration:** rejected. A backtest on 4,637 campaign-1 winners found them uniform in
-  participation rank.
+  participation rank (median at 53% of the ordered sweep).
+- The row and joint probes are local search (about 134,000 SATLike moves per vertex, calibrated on a known hard
+  positive). They cannot certify optimality; the exact windows below are what turned "could not escape" into a
+  proof for the windows sampled.
+- The May "two-flip wall" was an artefact of the move shape: campaign 1 never searched single flips, and adding
+  singles of both colours (2026-06-12) restarted the descent.
 
 ### The Paley + 1 construction and its descent (June – July)
 
@@ -77,8 +82,19 @@ Graph 8348 (775,642), all with tools in `single-flip-check/`:
 - **Perturbation kicks (ILS, from 2026-07-20)** did go lower: four records down to 25,604. Then 22 kicks over
   218,786 stages produced nothing. x32 kicks returned to a 91-unit band just above the incumbent in 15 of 16
   cases; x64 kicks stranded at 30–53 times the incumbent in 5 of 5 and were reverted. Kicks fire on basin
-  staleness (`PERTURBATION_BASIN_STALE_STAGES`), not a fixed stage count. A clique-guided kick shape was proposed
-  and never built.
+  staleness (`PERTURBATION_BASIN_STALE_STAGES`), not a fixed stage count.
+- **Clique-guided kicks were proposed (2026-07-31) and never built**, so kick shape is untested, not closed. What
+  the scoping established, for anyone who picks it up:
+  - The hoist's per-edge table cannot supply participation: it is keyed to the graph being swept, expires in
+    seconds, and holds cliques a flip would create, not cliques an edge is in.
+  - Bias the choice, do not take the top edges. A greedy kick is close to a descent step and walks back into the
+    basin.
+  - The staleness clock is not broken. A doomed descent and a healthy one both keep setting new minima, so no
+    clock tells them apart; do not "fix" it.
+  - An incumbent-relative guard was measured and rejected: healthy basins sit at 51–61 times the incumbent at
+    stage 1,000 and stranded ones at 68–80 times, too thin a margin on 15 and 6 samples.
+  - Judge any kick change by the floor reached per kick cycle, never by stage rate. The control band is the 15
+    healthy x32 epochs, 25,705–25,796.
 
 ### Exact windows (June – July)
 
@@ -113,14 +129,30 @@ that analysis led to.
 
 ### Literature (June)
 
-R(8,8) ≥ 282 is Paley(281) being K8-free (Burling and Reyner, 1972). 282 is not prime, the next Paley prime 293
+282 ≤ R(8,8) ≤ 1518 (an early note here quoted a stale upper bound of 6,090). The lower bound is Paley(281) being
+K8-free (Burling and Reyner, 1972). 282 is not prime, the next Paley prime 293
 contains a K8, and Exoo and Tatarevic found no circulant colouring of order 282–286. The current literature scan
 is `single-flip-check/docs/2026-10-19-literature-scan.md`.
+
+## Proposed in this period and never run
+
+These appear in the old roadmaps. None was tried, so none is evidence, and none should be assumed closed.
+
+- Automorphism pruning with nauty (assumed useless on evolved graphs with trivial symmetry).
+- A learned or ML-ranked enumeration order (gated on result logging, which was never switched on).
+- Genetic crossover between campaigns. The eight-campaign "population" of spring 2026 was independent forks, with
+  no crossover, and was retired on 2026-05-03.
+- The "corrected" simulated-annealing design (incremental evaluation, basin-scale temperature).
+- An in-process MaxSAT solver for larger exact windows ("Phase 4"). The later CaDiCaL-based exact work in
+  `single-flip-check` took its place.
+- A pivot to R(5,5): set aside, because the complete methods that work at k = 5 do not transfer to k = 8.
 
 ## Do not repeat
 
 1. SA, tabu or VDS in their built form.
 2. Row, pair or joint probes on graphs 8348, 8644 or 15491, and exact windows on 8644 or Paley(281) up to |F| = 128.
+   (Graph 15491's exact check is thin: 5,920 windows at |F| = 48 against about 102,000 for 8644.) Do not build
+   joint moves into production without a hit from the pilot first.
 3. Campaign 2, or anything seeded from an unconstrained 282- or 288-vertex graph (vertex reduction included).
 4. Participation-ordered enumeration.
 5. Fresh Paley + row-optimum seeds expecting a lower basin: seven seeds, none below the first.
